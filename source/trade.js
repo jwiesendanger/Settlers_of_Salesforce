@@ -147,12 +147,6 @@ function drawBackdrop(){
   sv("path", {d:"M0 -38 L6 -6 L0 0 L-6 -6 Z M0 38 L6 6 L0 0 L-6 6 Z", fill:"#6b5733"}, cr);
   sv("path", {d:"M-38 0 L-6 -6 L0 0 L-6 6 Z M38 0 L6 -6 L0 0 L6 6 Z", fill:"#b49a64"}, cr);
   const n = sv("text", {y:-42, "text-anchor":"middle", class:"tm-compass"}, cr); n.textContent = "N";
-  /* cartouche */
-  const ct = sv("g", {transform:`translate(${OX + 66} ${OY + 58})`, "pointer-events":"none"}, svg);
-  sv("rect", {x:0, y:0, width:252, height:54, rx:6, fill:"#f6ecd2", stroke:"#7d6a45", "stroke-width":"2"}, ct);
-  sv("rect", {x:5, y:5, width:242, height:44, rx:4, fill:"none", stroke:"#b49a64", "stroke-width":"1"}, ct);
-  const t1 = sv("text", {x:126, y:26, "text-anchor":"middle", class:"tm-title"}, ct); t1.textContent = "The Trade Routes";
-  const t2 = sv("text", {x:126, y:42, "text-anchor":"middle", class:"tm-subtitle"}, ct); t2.textContent = "of Salesforce Ops";
   layerRoutes = sv("g", {class:"tm-routes"}, svg);
   layerTowns = sv("g", {class:"tm-towns"}, svg);
   layerLabels = sv("g", {class:"tm-labels", "pointer-events":"none"}, svg);
