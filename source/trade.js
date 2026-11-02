@@ -10,18 +10,18 @@ const MW = 3000, MH = 2000;          /* the whole continent; the first map sits 
 const OX = 900, OY = 600;            /* where the original 1200×800 map sits inside it */
 
 /* guilds of traders: each integration tool gets a color and line style */
-const TOOLS = {
+const TOOLS = {   /* alphabetical, so every list of tools reads A to Z */
+  azure:     {label:"Azure Pipelines", color:"#6a4fc2", dash:null},
+  connector: {label:"Connector / App", color:"#a8323e", dash:null},
+  dataload:  {label:"Data Load",       color:"#7a5a2e", dash:"10 5"},
+  view:      {label:"HANA View",       color:"#178f99", dash:null},
   mulesoft:  {label:"MuleSoft",        color:"#1f7fc4", dash:null},
-  talend:    {label:"Talend",          color:"#d0641c", dash:null},
-  azure:     {label:"Azure pipelines", color:"#6a4fc2", dash:null},
+  tbd:       {label:"Not Chosen Yet",  color:"#6d6a63", dash:"2 7"},
   automate:  {label:"Power Automate",  color:"#13896f", dash:null},
-  connector: {label:"Connector / app", color:"#a8323e", dash:null},
-  dataload:  {label:"Data load",       color:"#7a5a2e", dash:"10 5"},
-  view:      {label:"HANA view",       color:"#178f99", dash:null},
-  tbd:       {label:"Not chosen yet",  color:"#6d6a63", dash:"2 7"}
+  talend:    {label:"Talend",          color:"#d0641c", dash:null}
 };
-const KINDS = {capital:"Capital (core platform)", system:"System (town)", source:"Source (mine)"};
-const STATUS = {live:"Live", building:"Being built", planned:"Planned", retired:"Retired"};
+const KINDS = {capital:"Capital (Core Platform)", source:"Source (Mine)", system:"System (Town)"};
+const STATUS = {building:"Being Built", live:"Live", planned:"Planned", retired:"Retired"};
 
 /* the starting map, drawn from the team's Asana tasks. Tools and directions are best guesses until someone corrects them. */
 const SEED_S = [
@@ -52,26 +52,26 @@ const SEED_R = [
   {id:"r-grant",    name:"Grant Responsibility",     from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"Ed Cloud migration build."},
   {id:"r-prireg",   name:"Priority Registration",    from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"Ed Cloud migration build."},
   {id:"r-esc",      name:"Enrolled Student Comms",   from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"Ed Cloud migration build."},
-  {id:"r-email",    name:"uky-email-sapi",           from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"MuleSoft system API for UK email."},
+  {id:"r-email",    name:"UKY-Email-SAPI",           from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"MuleSoft system API for UK email."},
   {id:"r-commpref", name:"Communication Preferences", from:"sf", to:"hana", tool:"mulesoft", flow:"two", status:"building", note:"Ed Cloud migration build."},
   {id:"r-ukinv",    name:"UK Invests",               from:"ukinvests", to:"sf", tool:"mulesoft", flow:"one", status:"live", note:"Fed from a view; new fields added for Fall 2026."},
   {id:"r-ukirads",  name:"UK Invests › IRADS",       from:"sf", to:"irads", tool:"mulesoft", flow:"one", status:"building", note:"Outbound integration."},
-  {id:"r-iers",     name:"IERS outbound",            from:"sf", to:"iers", tool:"mulesoft", flow:"one", status:"building", note:"Outbound integration."},
+  {id:"r-iers",     name:"IERS Outbound",            from:"sf", to:"iers", tool:"mulesoft", flow:"one", status:"building", note:"Outbound integration."},
   {id:"r-slateug",  name:"Slate Undergrad",          from:"slate", to:"sf", tool:"talend", flow:"one", status:"live", note:""},
   {id:"r-slategr",  name:"Slate Grad",               from:"slate", to:"sf", tool:"talend", flow:"one", status:"live", note:"Handles term-shifted applications."},
   {id:"r-slateev",  name:"Slate Events",             from:"slate", to:"sf", tool:"talend", flow:"one", status:"live", note:"Preview and yield event handler flow."},
   {id:"r-recev",    name:"Recruiting Event Intake",  from:"slate", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"uky-recruiting-event-intake-eapi. Check which system it starts from."},
   {id:"r-transfer", name:"UK Transfer Portal",       from:"transfer", to:"sf", tool:"talend", flow:"one", status:"live", note:"Contacts, recruitments and RFIs; also reads from HANA."},
-  {id:"r-scoir",    name:"Scoir data load",          from:"scoir", to:"sf", tool:"dataload", flow:"one", status:"live", note:"Added to the team's dataload tool."},
-  {id:"r-radar",    name:"HANA › RADAR pipelines",   from:"hana", to:"radar", tool:"azure", flow:"one", status:"live", note:"One main Azure pipeline runs all HANA-to-RADAR pipelines in sequence. Includes linkblue as work email."},
-  {id:"r-evertrue", name:"EverTrue cultivation",     from:"evertrue", to:"radar", tool:"connector", flow:"one", status:"live", note:"Cultivation updates into RADAR."},
+  {id:"r-scoir",    name:"Scoir Data Load",          from:"scoir", to:"sf", tool:"dataload", flow:"one", status:"live", note:"Added to the team's dataload tool."},
+  {id:"r-radar",    name:"HANA › RADAR Pipelines",   from:"hana", to:"radar", tool:"azure", flow:"one", status:"live", note:"One main Azure pipeline runs all HANA-to-RADAR pipelines in sequence. Includes linkblue as work email."},
+  {id:"r-evertrue", name:"EverTrue Cultivation",     from:"evertrue", to:"radar", tool:"connector", flow:"one", status:"live", note:"Cultivation updates into RADAR."},
   {id:"r-mc",       name:"Marketing Cloud Connect",  from:"sf", to:"mc", tool:"connector", flow:"two", status:"live", note:"Synchronized data extensions."},
   {id:"r-sms",      name:"SMS Magic",                from:"sf", to:"sms", tool:"connector", flow:"two", status:"live", note:""},
   {id:"r-outlook",  name:"Outlook Integration",      from:"outlook", to:"sf", tool:"connector", flow:"one", status:"live", note:"EDC contacts, businesses and opportunities from Outlook."},
-  {id:"r-bookings", name:"Bookings flows",           from:"bookings", to:"sf", tool:"automate", flow:"one", status:"live", note:"Power Automate flows send an EventFilterKey."},
-  {id:"r-eventbr",  name:"Eventbrite registrations", from:"eventbrite", to:"sf", tool:"connector", flow:"one", status:"live", note:""},
-  {id:"r-dedupe",   name:"Cloudingo dedupe",         from:"sf", to:"cloudingo", tool:"connector", flow:"two", status:"live", note:"Runs as the Cloudingo integration user."},
-  {id:"r-five9",    name:"Five9 status sync",        from:"five9", to:"sf", tool:"connector", flow:"two", status:"planned", note:"Proof of concept: Five9 statuses with Omni-Channel."},
+  {id:"r-bookings", name:"Bookings Flows",           from:"bookings", to:"sf", tool:"automate", flow:"one", status:"live", note:"Power Automate flows send an EventFilterKey."},
+  {id:"r-eventbr",  name:"Eventbrite Registrations", from:"eventbrite", to:"sf", tool:"connector", flow:"one", status:"live", note:""},
+  {id:"r-dedupe",   name:"Cloudingo Dedupe",         from:"sf", to:"cloudingo", tool:"connector", flow:"two", status:"live", note:"Runs as the Cloudingo integration user."},
+  {id:"r-five9",    name:"Five9 Status Sync",        from:"five9", to:"sf", tool:"connector", flow:"two", status:"planned", note:"Proof of concept: Five9 statuses with Omni-Channel."},
   {id:"r-icims",    name:"Salary.com / iCIMS",       from:"icims", to:"sf", tool:"tbd", flow:"one", status:"planned", note:"Potential integration."}
 ];
 SEED_S.forEach(s => { s.x += OX; s.y += OY; });
@@ -451,7 +451,8 @@ function linkText(text){
   if (last < text.length) p.appendChild(document.createTextNode(text.slice(last)));
   return p;
 }
-function townOpts(){ return [...S.values()].sort((a, b) => a.name.localeCompare(b.name)).map(s => [s.id, s.name]); }
+const byName = (a, b) => a.localeCompare(b, undefined, {sensitivity:"base", numeric:true});
+function townOpts(){ return [...S.values()].sort((a, b) => byName(a.name, b.name)).map(s => [s.id, s.name]); }
 
 function renderPanel(){
   panel.textContent = "";
@@ -515,7 +516,7 @@ function settlementCard(body, s){
   body.appendChild(mk("div", "tm-kicker", KINDS[s.kind] || s.kind));
   body.appendChild(mk("h4", "tm-name", s.name));
   if (s.blurb) body.appendChild(linkText(s.blurb));
-  const rs = routesOf(s.id).sort((a, b) => a.name.localeCompare(b.name));
+  const rs = routesOf(s.id).sort((a, b) => byName(a.name, b.name));
   const ts = tablesOf(s.id);
   if (s.kind === "source") tableSection(body, s, ts);
   body.appendChild(mk("h4", null, "Trade routes"));
@@ -603,7 +604,7 @@ function endsEditor(r){
     line.append(mk("span", "tm-endlbl", label), s, pb, go);
     return line;
   };
-  const flip = btn(r.flow === "two" ? "⇄ Both ways" : "↓ One way", "tm-btn ghost tm-mini tm-flip", async () => {
+  const flip = btn(r.flow === "two" ? "⇄ Both Ways" : "↓ One Way", "tm-btn ghost tm-mini tm-flip", async () => {
     const cur = R.get(r.id); if (!cur) return;
     const next = Object.assign({}, cur, {flow: cur.flow === "two" ? "one" : "two"});
     if (await save(r.id, routeDoc(next))){ sfx("chime"); renderPanel(); }
@@ -658,7 +659,7 @@ function routeForm(body){
   const name = textEl(draft.name, "e.g. Course Enrollment", 50);
   const from = selectEl(townOpts(), draft.from), to = selectEl(townOpts(), draft.to);
   const tool = selectEl(Object.entries(TOOLS).map(([k, t]) => [k, t.label]), draft.tool);
-  const flow = selectEl([["one", "One way (From → To)"], ["two", "Both ways (⇄)"]], draft.flow);
+  const flow = selectEl([["two", "Both Ways (⇄)"], ["one", "One Way (From → To)"]], draft.flow);
   const status = selectEl(Object.entries(STATUS), draft.status);
   const note = textEl(draft.note, "Optional: what it carries, schedule, owner", 160);
   const pair = mk("div", "tm-pair"); pair.append(field("From", from), field("To", to));
