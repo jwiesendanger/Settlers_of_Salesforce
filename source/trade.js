@@ -17,21 +17,22 @@ const TOOLS = {
   automate:  {label:"Power Automate",  color:"#13896f", dash:null},
   connector: {label:"Connector / app", color:"#a8323e", dash:null},
   dataload:  {label:"Data load",       color:"#7a5a2e", dash:"10 5"},
+  view:      {label:"HANA view",       color:"#178f99", dash:null},
   tbd:       {label:"Not chosen yet",  color:"#6d6a63", dash:"2 7"}
 };
 const KINDS = {capital:"Capital (core platform)", system:"System (town)", source:"Source (mine)"};
-const STATUS = {live:"Live", building:"Being built", planned:"Planned"};
+const STATUS = {live:"Live", building:"Being built", planned:"Planned", retired:"Retired"};
 
 /* the starting map, drawn from the team's Asana tasks. Tools and directions are best guesses until someone corrects them. */
 const SEED_S = [
   {id:"sf",         name:"Salesforce (Ed Cloud)", kind:"capital", blurb:"The capital: UK's CRM, moving to Education Cloud.", x:600, y:400},
-  {id:"radar",      name:"RADAR",               kind:"system",  blurb:"Advancement's Salesforce org.", x:170, y:615},
-  {id:"hana",       name:"SAP HANA",            kind:"source",  blurb:"HR and student records, the great mine of the realm.", x:215, y:395},
+  {id:"radar",      name:"RADAR",               kind:"system",  blurb:"Advancement's Salesforce org.", x:330, y:960},
+  {id:"hana",       name:"SAP HANA",            kind:"system",  blurb:"HR and student records. Its views are the mines around it.", x:215, y:395},
   {id:"slate",      name:"Slate",               kind:"source",  blurb:"Admissions: undergraduate, graduate and events.", x:440, y:690},
   {id:"transfer",   name:"UK Transfer Portal",  kind:"source",  blurb:"Transfer student inquiries.", x:700, y:712},
   {id:"ukinvests",  name:"UK Invests",          kind:"source",  blurb:"UK Invests program data.", x:300, y:190},
   {id:"scoir",      name:"Scoir",               kind:"source",  blurb:"College search inquiries.", x:565, y:722},
-  {id:"evertrue",   name:"EverTrue",            kind:"source",  blurb:"Donor engagement data.", x:300, y:722},
+  {id:"evertrue",   name:"EverTrue",            kind:"source",  blurb:"Donor engagement data.", x:580, y:1000},
   {id:"mc",         name:"Marketing Cloud",     kind:"system",  blurb:"Email and SMS journeys, data extensions.", x:962, y:335},
   {id:"sms",        name:"SMS Magic",           kind:"system",  blurb:"Texting from inside Salesforce.", x:914, y:502},
   {id:"outlook",    name:"Outlook",             kind:"system",  blurb:"Outlook plugin used by EDC.", x:880, y:160},
@@ -74,7 +75,12 @@ const SEED_R = [
   {id:"r-icims",    name:"Salary.com / iCIMS",       from:"icims", to:"sf", tool:"tbd", flow:"one", status:"planned", note:"Potential integration."}
 ];
 SEED_S.forEach(s => { s.x += OX; s.y += OY; });
-const SEED_IDS = new Set([...SEED_S, ...SEED_R].map(x => x.id));
+/* mines recreated from the Ed Cloud data dictionary (already in full-map coordinates) */
+const ORES = window.__TRADE_ORES || {settlements:[], routes:[], tables:[]};
+SEED_S.push(...ORES.settlements.map(o => Object.assign({}, o)));
+SEED_R.push(...ORES.routes.map(o => Object.assign({}, o)));
+const SEED_T = ORES.tables;
+const SEED_IDS = new Set([...SEED_S, ...SEED_R, ...SEED_T].map(x => x.id));
 
 let docs = new Map();          /* id -> stored override or addition */
 let db = null, readOnly = false;
@@ -99,8 +105,8 @@ function rebuild(){
     if (v.t === "s" && v.v !== 2 && typeof v.x === "number"){ o.x = v.x + OX; o.y = v.y + OY; }
     tgt.set(id, o);
   });
-  T = new Map();
-  docs.forEach((v, id) => { if (v.t === "tbl" && !v.removed && S.has(v.mine) && Array.isArray(v.rows)) T.set(id, Object.assign({}, v, {id})); });
+  T = new Map(SEED_T.filter(t => S.has(t.mine)).map(t => [t.id, Object.assign({t:"tbl"}, t)]));
+  docs.forEach((v, id) => { if (v.t !== "tbl") return; if (v.removed){ T.delete(id); return; } if (S.has(v.mine) && Array.isArray(v.rows)) T.set(id, Object.assign({}, v, {id})); });
   R.forEach((r, id) => { if (!S.has(r.from) || !S.has(r.to) || r.from === r.to) R.delete(id); if (!TOOLS[r.tool]) r.tool = "tbd"; });
   if (sel && !(sel.type === "s" ? S : R).has(sel.id)) sel = null;
 }
@@ -191,7 +197,7 @@ function drawRoutes(){
     const g = sv("g", {class:"tm-route", "data-id":r.id, tabindex:"0", role:"button", "aria-label":`${r.name}: ${S.get(r.from).name} to ${S.get(r.to).name} by ${tool.label}`}, layerRoutes);
     const pid = "tm-p-" + r.id.replace(/[^\w-]/g, "_"), lid = "tm-l-" + r.id.replace(/[^\w-]/g, "_");
     sv("path", {d:g0.d, class:"tm-road-edge"}, g);
-    sv("path", {id:pid, d:g0.d, class:"tm-road", stroke:tool.color, "stroke-dasharray": r.status === "planned" ? "2 8" : tool.dash, opacity: r.status === "planned" ? .8 : 1}, g);
+    sv("path", {id:pid, d:g0.d, class:"tm-road", stroke:tool.color, "stroke-dasharray": r.status === "planned" ? "2 8" : r.status === "retired" ? "1 7" : tool.dash, opacity: r.status === "planned" ? .8 : r.status === "retired" ? .45 : 1}, g);
     if (r.status === "building") sv("path", {d:g0.d, class:"tm-build", "stroke-dasharray":"1 13"}, g);
     sv("path", {d:g0.d, class:"tm-hit"}, g);
     sv("path", {id:lid, d:g0.lr, fill:"none", stroke:"none"}, g);
@@ -200,7 +206,7 @@ function drawRoutes(){
       const tp = sv("textPath", {href:"#" + lid, startOffset:"50%", "text-anchor":"middle"}, t);
       tp.textContent = r.name;
     }
-    if (r.status !== "planned"){
+    if (r.status !== "planned" && r.status !== "retired"){
       const dur = Math.max(5, g0.len / (r.status === "building" ? 26 : 48));
       const cart = (rev, delay) => {
         const c = sv("g", {class:"tm-cart"}, g);
@@ -468,7 +474,7 @@ function helpCard(body){
   body.appendChild(mk("h4", null, "Reading the map"));
   body.appendChild(mk("p", "tm-p", "Zoom with the + and − buttons, Ctrl + scroll, or a pinch. Drag empty ground to pan. Fit brings everything back into view."));
   const ul = mk("ul", "tm-help");
-  [["Castle and towns", "the systems we run or send data to"], ["Mines", "sources of record where data comes from"], ["Roads", "integrations, colored by the tool that carries them"], ["Carts", "travel the way data flows; two carts mean it flows both ways"], ["Gravel roads", "integrations still being built; dotted roads are only planned"]]
+  [["Castle and towns", "the systems we run or send data to"], ["Mines", "sources of record where data comes from"], ["Roads", "integrations, colored by the tool that carries them"], ["Carts", "travel the way data flows; two carts mean it flows both ways"], ["Gravel roads", "integrations still being built; dotted roads are only planned, and faint ones are retired"]]
     .forEach(([a, b]) => { const li = mk("li"); li.append(mk("b", null, a + ": "), document.createTextNode(b)); ul.appendChild(li); });
   body.appendChild(ul);
   body.appendChild(mk("h4", null, "Changing the map"));
@@ -860,8 +866,8 @@ async function removeItems(ids){
   if (!canEdit()) return false;
   try{
     for (const id of ids){
-      const isS = S.has(id), item = isS ? S.get(id) : R.get(id);
-      if (SEED_IDS.has(id)){ const body = {t: isS ? "s" : "r", removed:true}; await retry(() => db.collection("trade").doc(id).set(body)); docs.set(id, body); }
+      const isS = S.has(id), item = isS ? S.get(id) : R.get(id) || T.get(id);
+      if (SEED_IDS.has(id)){ const body = {t: isS ? "s" : T.has(id) ? "tbl" : "r", removed:true}; await retry(() => db.collection("trade").doc(id).set(body)); docs.set(id, body); }
       else { await retry(() => db.collection("trade").doc(id).delete()); docs.delete(id); }
       if (!item) continue;
     }
