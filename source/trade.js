@@ -6,7 +6,8 @@ function sv(tag, attrs, parent){ const e = document.createElementNS(SVGNS, tag);
 function mk(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const sfx = n => { try{ if (window.__sfx) window.__sfx(n); }catch(e){} };
-const MW = 1200, MH = 800;
+const MW = 3000, MH = 2000;          /* the whole continent; the first map sits in the middle, with room to grow on every side */
+const OX = 900, OY = 600;            /* where the original 1200×800 map sits inside it */
 
 /* guilds of traders: each integration tool gets a color and line style */
 const TOOLS = {
@@ -72,6 +73,7 @@ const SEED_R = [
   {id:"r-five9",    name:"Five9 status sync",        from:"five9", to:"sf", tool:"connector", flow:"two", status:"planned", note:"Proof of concept: Five9 statuses with Omni-Channel."},
   {id:"r-icims",    name:"Salary.com / iCIMS",       from:"icims", to:"sf", tool:"tbd", flow:"one", status:"planned", note:"Potential integration."}
 ];
+SEED_S.forEach(s => { s.x += OX; s.y += OY; });
 const SEED_IDS = new Set([...SEED_S, ...SEED_R].map(x => x.id));
 
 let docs = new Map();          /* id -> stored override or addition */
@@ -92,7 +94,10 @@ function rebuild(){
     const tgt = v.t === "s" ? S : v.t === "r" ? R : null;
     if (!tgt) return;
     if (v.removed){ tgt.delete(id); return; }
-    tgt.set(id, Object.assign({}, tgt.get(id) || {}, v, {id}));
+    const o = Object.assign({}, tgt.get(id) || {}, v, {id});
+    /* positions saved before the map grew were measured on the smaller map */
+    if (v.t === "s" && v.v !== 2 && typeof v.x === "number"){ o.x = v.x + OX; o.y = v.y + OY; }
+    tgt.set(id, o);
   });
   T = new Map();
   docs.forEach((v, id) => { if (v.t === "tbl" && !v.removed && S.has(v.mine) && Array.isArray(v.rows)) T.set(id, Object.assign({}, v, {id})); });
@@ -105,7 +110,7 @@ function routesOf(sid){ return [...R.values()].filter(r => r.from === sid || r.t
 
 /* ---------- drawing ---------- */
 const svg = $("trade-svg");
-svg.setAttribute("viewBox", `0 0 ${MW} ${MH}`);
+svg.setAttribute("viewBox", `${OX} ${OY} 1200 800`);
 let layerRoutes, layerTowns, layerLabels;
 
 function drawBackdrop(){
@@ -119,23 +124,31 @@ function drawBackdrop(){
   sv("rect", {x:0, y:0, width:MW, height:MH, fill:"#a8c6c0"}, svg);
   sv("rect", {x:0, y:0, width:MW, height:MH, fill:"url(#tm-waves)"}, svg);
   const coast = "M70 120 C 120 40 300 46 420 58 C 560 30 700 62 820 48 C 960 34 1100 70 1150 140 C 1186 220 1160 300 1172 380 C 1190 470 1170 560 1150 640 C 1120 730 1000 772 880 764 C 760 776 640 768 520 772 C 380 780 240 770 150 724 C 70 680 52 600 46 520 C 36 420 40 330 48 250 C 52 190 46 160 70 120 Z";
-  sv("path", {d:coast, fill:"#8fb2ad", transform:"translate(6 8)"}, svg);
-  sv("path", {d:coast, fill:"url(#tm-parch)", stroke:"#7d6a45", "stroke-width":"2.5"}, svg);
-  sv("path", {d:coast, fill:"none", stroke:"#7d6a45", "stroke-width":"1", "stroke-dasharray":"3 6", transform:"translate(600 400) scale(.975) translate(-600 -400)", opacity:".6"}, svg);
+  const K = `scale(${MW/1200} ${MH/800})`;
+  sv("path", {d:coast, fill:"#8fb2ad", transform:K + " translate(4 5)"}, svg);
+  sv("path", {d:coast, fill:"url(#tm-parch)", stroke:"#7d6a45", "stroke-width":"3", "vector-effect":"non-scaling-stroke", transform:K}, svg);
+  sv("path", {d:coast, fill:"none", stroke:"#7d6a45", "stroke-width":"1.2", "stroke-dasharray":"3 6", "vector-effect":"non-scaling-stroke", transform:K + " translate(600 400) scale(.985) translate(-600 -400)", opacity:".6"}, svg);
   /* hills by the mines, woods by the towns: decoration only */
   const deco = sv("g", {opacity:".55", "pointer-events":"none"}, svg);
-  [[150,300],[190,270],[290,300],[170,620],[300,520],[120,560],[470,620],[520,180],[700,190],[1010,230],[1110,520],[760,710]].forEach(([x, y], i) => {
+  const spots = [[150,300],[190,270],[290,300],[170,620],[300,520],[120,560],[470,620],[520,180],[700,190],[1010,230],[1110,520],[760,710]].map(([x, y]) => [x + OX, y + OY]);
+  let seed = 11; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  for (let i = 0; i < 90; i++){
+    const x = 260 + rnd() * (MW - 520), y = 240 + rnd() * (MH - 480);
+    if (x > OX - 40 && x < OX + 1240 && y > OY - 40 && y < OY + 840) continue;   /* the charted middle already has its own */
+    spots.push([x, y]);
+  }
+  spots.forEach(([x, y], i) => {
     if (i % 3 === 2){ sv("path", {d:`M${x-9} ${y+6} L${x} ${y-12} L${x+9} ${y+6} Z`, fill:"#6d8a4a"}, deco); sv("path", {d:`M${x+12} ${y+9} L${x+19} ${y-4} L${x+26} ${y+9} Z`, fill:"#5f7c40"}, deco); }
     else sv("path", {d:`M${x-20} ${y+8} Q ${x-6} ${y-14} ${x+8} ${y+8} M${x-2} ${y+8} Q ${x+10} ${y-6} ${x+22} ${y+8}`, fill:"none", stroke:"#8a7146", "stroke-width":"2"}, deco);
   });
   /* compass rose */
-  const cr = sv("g", {transform:"translate(1112 716)", opacity:".8", "pointer-events":"none"}, svg);
+  const cr = sv("g", {transform:`translate(${OX + 1112} ${OY + 716})`, opacity:".8", "pointer-events":"none"}, svg);
   sv("circle", {r:30, fill:"none", stroke:"#6b5733", "stroke-width":"1.2"}, cr);
   sv("path", {d:"M0 -38 L6 -6 L0 0 L-6 -6 Z M0 38 L6 6 L0 0 L-6 6 Z", fill:"#6b5733"}, cr);
   sv("path", {d:"M-38 0 L-6 -6 L0 0 L-6 6 Z M38 0 L6 -6 L0 0 L6 6 Z", fill:"#b49a64"}, cr);
   const n = sv("text", {y:-42, "text-anchor":"middle", class:"tm-compass"}, cr); n.textContent = "N";
   /* cartouche */
-  const ct = sv("g", {transform:"translate(66 58)", "pointer-events":"none"}, svg);
+  const ct = sv("g", {transform:`translate(${OX + 66} ${OY + 58})`, "pointer-events":"none"}, svg);
   sv("rect", {x:0, y:0, width:252, height:54, rx:6, fill:"#f6ecd2", stroke:"#7d6a45", "stroke-width":"2"}, ct);
   sv("rect", {x:5, y:5, width:242, height:44, rx:4, fill:"none", stroke:"#b49a64", "stroke-width":"1"}, ct);
   const t1 = sv("text", {x:126, y:26, "text-anchor":"middle", class:"tm-title"}, ct); t1.textContent = "The Trade Routes";
@@ -300,6 +313,7 @@ let drag = null;
 function toMap(ev){ const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
 function startDrag(ev, s, g){
   if (ev.button !== 0) return;
+  ev.stopPropagation();
   const p = toMap(ev);
   drag = {id:s.id, dx:p.x - s.x, dy:p.y - s.y, sx:ev.clientX, sy:ev.clientY, moved:false, ox:s.x, oy:s.y};
   hideTip();
@@ -327,6 +341,96 @@ function startDrag(ev, s, g){
   g.addEventListener("pointermove", move); g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
 }
 
+
+/* ---------- zoom and pan: the viewBox is the camera ---------- */
+const frame = $("trade-frame");
+const VIEW_KEY = "settlers-trade-view";
+let view = null;
+const MIN_W = 320, MAX_W = MW * 1.15;
+function boxSize(){ const r = frame.getBoundingClientRect(); return {w:r.width, h:r.height}; }
+function applyView(){ if (view) svg.setAttribute("viewBox", `${view.x.toFixed(1)} ${view.y.toFixed(1)} ${view.w.toFixed(1)} ${view.h.toFixed(1)}`); }
+function saveView(){ try{ if (view) localStorage.setItem(VIEW_KEY, JSON.stringify(view)); }catch(e){} }
+function clampView(){
+  const {w, h} = boxSize(); if (!w || !h) return;
+  view.w = Math.min(MAX_W, Math.max(MIN_W, view.w)); view.h = view.w * h / w;
+  const padX = view.w * .4, padY = view.h * .4;
+  view.x = Math.min(MW - view.w + padX, Math.max(-padX, view.x)); view.y = Math.min(MH - view.h + padY, Math.max(-padY, view.y));
+}
+function fitView(){
+  const {w, h} = boxSize(); if (!w || !h) return false;
+  const pts = [...S.values()]; if (!pts.length) pts.push({x:MW/2, y:MH/2});
+  let x1 = Math.min(...pts.map(p => p.x)) - 150, x2 = Math.max(...pts.map(p => p.x)) + 150;
+  let y1 = Math.min(...pts.map(p => p.y)) - 140, y2 = Math.max(...pts.map(p => p.y)) + 90;
+  let bw = x2 - x1, bh = y2 - y1; const ar = w / h;
+  if (bw / bh > ar){ const nh = bw / ar; y1 -= (nh - bh) / 2; bh = nh; } else { const nw = bh * ar; x1 -= (nw - bw) / 2; bw = nw; }
+  view = {x:x1, y:y1, w:bw, h:bh}; clampView(); applyView(); saveView(); return true;
+}
+function zoomAt(f, cx, cy){
+  if (!view) return;
+  const nw = Math.min(MAX_W, Math.max(MIN_W, view.w / f)), k = nw / view.w;
+  view.x = cx - (cx - view.x) * k; view.y = cy - (cy - view.y) * k; view.w = nw; view.h *= k;
+  clampView(); applyView(); saveView();
+}
+function zoomCenter(f){ if (view) zoomAt(f, view.x + view.w / 2, view.y + view.h / 2); }
+function showPoint(x, y){
+  if (!view) return;
+  if (x > view.x + 80 && x < view.x + view.w - 80 && y > view.y + 80 && y < view.y + view.h - 80) return;
+  view.x = x - view.w / 2; view.y = y - view.h / 2; clampView(); applyView(); saveView();
+}
+let lastSize = null;
+new ResizeObserver(() => {
+  const {w, h} = boxSize(); if (!w || !h) return;
+  if (!view){
+    try{ const v = JSON.parse(localStorage.getItem(VIEW_KEY) || "null"); if (v && v.w > 0) view = v; }catch(e){}
+    if (!view){ fitView(); lastSize = {w, h}; return; }
+  } else if (lastSize){ view.w *= w / lastSize.w; }
+  lastSize = {w, h}; clampView(); applyView();
+}).observe(frame);
+$("tm-zin").addEventListener("click", () => zoomCenter(1.35));
+$("tm-zout").addEventListener("click", () => zoomCenter(1 / 1.35));
+$("tm-zfit").addEventListener("click", () => fitView());
+svg.addEventListener("wheel", ev => {
+  if (!ev.ctrlKey && !ev.metaKey){ hint(); return; }
+  ev.preventDefault();
+  const p = toMap(ev); zoomAt(Math.exp(-ev.deltaY * .0025), p.x, p.y);
+}, {passive:false});
+let hintT = 0;
+function hint(){ const h = $("tm-hint"); h.classList.add("show"); clearTimeout(hintT); hintT = setTimeout(() => h.classList.remove("show"), 1400); }
+/* drag empty ground (or a road) to pan; two fingers to pinch-zoom */
+const pts = new Map(); let pan = null, pinch = null, swallowClick = false;
+svg.addEventListener("pointerdown", ev => {
+  if (ev.button !== 0 || !view) return;
+  swallowClick = false;
+  pts.set(ev.pointerId, {x:ev.clientX, y:ev.clientY});
+  if (pts.size === 2){
+    const [a, b] = [...pts.values()];
+    pinch = {d:Math.hypot(a.x - b.x, a.y - b.y), w:view.w}; pan = null; return;
+  }
+  pan = {sx:ev.clientX, sy:ev.clientY, vx:view.x, vy:view.y, moved:false, id:ev.pointerId};
+});
+svg.addEventListener("pointermove", ev => {
+  if (!pts.has(ev.pointerId)) return;
+  pts.set(ev.pointerId, {x:ev.clientX, y:ev.clientY});
+  if (pinch && pts.size === 2){
+    const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    const mid = toMap({clientX:(a.x + b.x) / 2, clientY:(a.y + b.y) / 2});
+    zoomAt((pinch.w / view.w) * (d / pinch.d), mid.x, mid.y); swallowClick = true; return;
+  }
+  if (!pan) return;
+  const dx = ev.clientX - pan.sx, dy = ev.clientY - pan.sy;
+  if (!pan.moved && Math.hypot(dx, dy) < 5) return;
+  if (!pan.moved){ pan.moved = true; svg.classList.add("panning"); hideTip(); try{ svg.setPointerCapture(pan.id); }catch(e){} }
+  const k = view.w / boxSize().w;
+  view.x = pan.vx - dx * k; view.y = pan.vy - dy * k; clampView(); applyView();
+});
+const endPointer = ev => {
+  pts.delete(ev.pointerId);
+  if (pts.size < 2) pinch = null;
+  if (pan && pan.id === ev.pointerId){ if (pan.moved){ swallowClick = true; saveView(); } pan = null; svg.classList.remove("panning"); }
+};
+svg.addEventListener("pointerup", endPointer); svg.addEventListener("pointercancel", endPointer);
+svg.addEventListener("click", ev => { if (swallowClick){ swallowClick = false; ev.stopPropagation(); ev.preventDefault(); } }, true);
+
 /* ---------- tooltip ---------- */
 const tip = mk("div", "tm-tip"); tip.hidden = true; document.body.appendChild(tip);
 function routeTip(r){ const t = TOOLS[r.tool]; return [r.name, `${S.get(r.from).name} ${r.flow === "two" ? "⇄" : "→"} ${S.get(r.to).name}`, `${t.label} · ${STATUS[r.status] || r.status}`]; }
@@ -346,16 +450,19 @@ function townOpts(){ return [...S.values()].sort((a, b) => a.name.localeCompare(
 
 function renderPanel(){
   panel.textContent = "";
+  const col1 = mk("div", "tm-col tm-col1"), col3 = mk("div", "tm-col tm-col3");
   const head = mk("div", "tm-phead");
   head.append(mk("h3", null, "Trade Ledger"), mk("div", "tm-count", `${S.size} settlements · ${R.size} trade routes`));
-  panel.appendChild(head);
-  const acts = mk("div", "tm-acts");
+  col1.appendChild(head);
+  const acts = mk("div", "tm-acts tm-stack");
   acts.append(
     btn("Found a settlement", "tm-btn", () => { mode = "newS"; draft = {name:"", kind:"system", blurb:""}; renderPanel(); }, !canEdit()),
     btn("Open a trade route", "tm-btn", () => { mode = "newR"; draft = {name:"", from: sel && sel.type === "s" ? sel.id : "sf", to:"sf", tool:"mulesoft", flow:"one", status:"live", note:""}; if (draft.from === "sf") draft.to = [...S.keys()].find(k => k !== "sf") || "sf"; renderPanel(); }, !canEdit())
   );
-  panel.appendChild(acts);
-  const body = mk("div", "tm-pbody"); panel.appendChild(body);
+  col1.appendChild(acts);
+  const body = mk("div", "tm-pbody");
+  legend(col3);
+  panel.append(col1, body, col3);
   if (mode === "newS" || mode === "editS") return settlementForm(body);
   if (mode === "newT" || mode === "editT") return tableForm(body);
   if (mode === "newR" || mode === "editR") return routeForm(body);
@@ -365,16 +472,16 @@ function renderPanel(){
 }
 function helpCard(body){
   body.appendChild(mk("h4", null, "Reading the map"));
+  body.appendChild(mk("p", "tm-p", "Zoom with the + and − buttons, Ctrl + scroll, or a pinch. Drag empty ground to pan. Fit brings everything back into view."));
   const ul = mk("ul", "tm-help");
   [["Castle and towns", "the systems we run or send data to"], ["Mines", "sources of record where data comes from"], ["Roads", "integrations, colored by the tool that carries them"], ["Carts", "travel the way data flows; two carts mean it flows both ways"], ["Gravel roads", "integrations still being built; dotted roads are only planned"]]
     .forEach(([a, b]) => { const li = mk("li"); li.append(mk("b", null, a + ": "), document.createTextNode(b)); ul.appendChild(li); });
   body.appendChild(ul);
   body.appendChild(mk("h4", null, "Changing the map"));
   body.appendChild(mk("p", "tm-p", canEdit()
-    ? "Click a settlement or road to see its details, then Edit or remove it. Drag a settlement to move it. Use the buttons above to add new ones. Everyone sees your changes."
+    ? "Click a settlement or road to see its details, then Edit or remove it. Drag a settlement to move it. Use the buttons on the left to add new ones. Everyone sees your changes."
     : db ? "You have view-only access, so you can look but not change the map." : "This copy can't save changes. Open the shared page to edit the map."));
   body.appendChild(mk("p", "tm-note", "The starting map was drawn from your Asana tasks. Tools and directions are best guesses, so correct any that are wrong."));
-  legend(body);
 }
 function legend(body){
   body.appendChild(mk("h4", null, "Traders' guilds"));
@@ -470,7 +577,8 @@ function settlementForm(body){
     go.disabled = true;
     const id = isNew ? "s-" + Math.random().toString(36).slice(2, 10) : draft.id;
     const spot = isNew ? freeSpot(kind.value) : {x:draft.x, y:draft.y};
-    const ok = await save(id, {t:"s", name:nm, kind:kind.value, blurb:blurb.value.trim(), x:spot.x, y:spot.y});
+    const ok = await save(id, {t:"s", v:2, name:nm, kind:kind.value, blurb:blurb.value.trim(), x:spot.x, y:spot.y});
+    if (ok) showPoint(spot.x, spot.y);
     go.disabled = false;
     if (ok){ sfx(isNew ? "grant" : "chime"); select({type:"s", id}); pulse(id); }
   });
@@ -671,8 +779,8 @@ function openTable(t){
   draw(); q.focus();
 }
 function freeSpot(kind){
-  const c = kind === "source" ? {x:250, y:420} : kind === "capital" ? {x:600, y:400} : {x:950, y:420};
-  for (let r = 0; r < 600; r += 30){
+  const c = kind === "source" ? {x:OX + 250, y:OY + 420} : kind === "capital" ? {x:OX + 600, y:OY + 400} : {x:OX + 950, y:OY + 420};
+  for (let r = 0; r < 1400; r += 30){
     for (let a = 0; a < 360; a += 24){
       const x = Math.round(c.x + r * Math.cos(a * Math.PI / 180)), y = Math.round(c.y + r * .8 * Math.sin(a * Math.PI / 180));
       if (x < 90 || x > MW - 90 || y < 130 || y > MH - 80) continue;
@@ -682,7 +790,7 @@ function freeSpot(kind){
   return {x:c.x, y:c.y};
 }
 function pulse(id){ setTimeout(() => { const e = svg.querySelector(`.tm-town[data-id="${id}"]`) || svg.querySelector(".tm-route.on"); if (e){ e.classList.remove("tm-pulse"); void e.getBoundingClientRect(); e.classList.add("tm-pulse"); } }, 60); }
-function settlementDoc(s){ return {t:"s", name:s.name, kind:s.kind, blurb:s.blurb || "", x:s.x, y:s.y}; }
+function settlementDoc(s){ return {t:"s", v:2, name:s.name, kind:s.kind, blurb:s.blurb || "", x:s.x, y:s.y}; }
 
 /* ---------- saving (shared db) ---------- */
 const note = (text, kind) => { const n = $("trade-note"); n.textContent = text; n.className = "tm-status" + (kind ? " " + kind : ""); };
