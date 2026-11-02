@@ -5,6 +5,7 @@ html{overflow-x:clip}
 .trade-map{position:relative;height:clamp(480px,calc(100vh - 96px),1600px);border:2px solid #c9a24a;border-radius:14px;overflow:hidden;background:#a8c6c0;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 svg#trade-svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 svg#trade-svg.panning{cursor:grabbing}
+.tm-carts{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .tm-zoom{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:2}
 .tm-zoom button{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;border-radius:10px;box-shadow:0 3px 0 rgba(0,0,0,.25)}
 .tm-zoom button.fit{font-size:11.5px;letter-spacing:.04em}
@@ -44,7 +45,8 @@ svg#trade-svg.panning{cursor:grabbing}
 .tm-sname{font-family:var(--f-display);font-weight:700;font-size:13px;fill:#3a2a17}
 .tm-sname.cap{font-size:14.5px}
 .tm-ribbon{transition:opacity .15s}
-.tm-flag{animation:tmflag 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:0 50%}
+/* flags stay still: any motion inside the map's SVG makes the whole map repaint every frame */
+.tm-flag{}
 @keyframes tmflag{0%,100%{transform:skewY(0) scaleX(1)}50%{transform:skewY(6deg) scaleX(.85)}}
 .tm-pulse{animation:tmpulse .9s ease-out}
 @keyframes tmpulse{0%{filter:drop-shadow(0 0 0 #ffdc85)}40%{filter:drop-shadow(0 0 14px #ffdc85)}100%{filter:drop-shadow(0 0 0 #ffdc85)}}

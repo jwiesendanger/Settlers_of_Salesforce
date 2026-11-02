@@ -368,6 +368,7 @@ html{overflow-x:clip}
 .trade-map{position:relative;height:clamp(480px,calc(100vh - 96px),1600px);border:2px solid #c9a24a;border-radius:14px;overflow:hidden;background:#a8c6c0;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 svg#trade-svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 svg#trade-svg.panning{cursor:grabbing}
+.tm-carts{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .tm-zoom{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:2}
 .tm-zoom button{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;border-radius:10px;box-shadow:0 3px 0 rgba(0,0,0,.25)}
 .tm-zoom button.fit{font-size:11.5px;letter-spacing:.04em}
@@ -407,7 +408,8 @@ svg#trade-svg.panning{cursor:grabbing}
 .tm-sname{font-family:var(--f-display);font-weight:700;font-size:13px;fill:#3a2a17}
 .tm-sname.cap{font-size:14.5px}
 .tm-ribbon{transition:opacity .15s}
-.tm-flag{animation:tmflag 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:0 50%}
+/* flags stay still: any motion inside the map's SVG makes the whole map repaint every frame */
+.tm-flag{}
 @keyframes tmflag{0%,100%{transform:skewY(0) scaleX(1)}50%{transform:skewY(6deg) scaleX(.85)}}
 .tm-pulse{animation:tmpulse .9s ease-out}
 @keyframes tmpulse{0%{filter:drop-shadow(0 0 0 #ffdc85)}40%{filter:drop-shadow(0 0 14px #ffdc85)}100%{filter:drop-shadow(0 0 0 #ffdc85)}}
@@ -2802,7 +2804,7 @@ function geometry(){
       const F = S.get(r.from), T = S.get(r.to);
       const d = `M${F.x.toFixed(1)} ${F.y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${T.x.toFixed(1)} ${T.y.toFixed(1)}`;
       const lr = F.x <= T.x ? d : `M${T.x.toFixed(1)} ${T.y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${F.x.toFixed(1)} ${F.y.toFixed(1)}`;
-      geo.set(r.id, {d, lr, len:L});
+      geo.set(r.id, {d, lr, len:L, q:[F.x, F.y, cx, cy, T.x, T.y]});
     });
   });
   return geo;
@@ -2816,7 +2818,7 @@ function focusSet(){
 }
 
 function drawRoutes(){
-  layerRoutes.textContent = "";
+  layerRoutes.textContent = ""; carts.length = 0;
   const geo = geometry();
   [...R.values()].forEach(r => {
     if (hidden.has(r.tool)) return;
@@ -2836,19 +2838,8 @@ function drawRoutes(){
     }
     if (r.status !== "planned" && r.status !== "retired" && r.status !== "none"){
       const dur = Math.max(5, g0.len / (r.status === "building" ? 26 : 48));
-      const cart = (rev, delay) => {
-        const c = sv("g", {class:"tm-cart"}, g);
-        sv("rect", {x:-6, y:-4, width:12, height:7, rx:1.5, fill:tool.color, stroke:"#2a1d0c", "stroke-width":".8"}, c);
-        sv("rect", {x:-4.5, y:-7, width:9, height:3.5, rx:1, fill:"#f0c25a", stroke:"#2a1d0c", "stroke-width":".6"}, c);
-        sv("circle", {cx:-3.5, cy:4, r:2, fill:"#2a1d0c"}, c); sv("circle", {cx:3.5, cy:4, r:2, fill:"#2a1d0c"}, c);
-        if (REDUCED){
-          const p = $(pid), L = p.getTotalLength(), pt = p.getPointAtLength(L * (rev ? .38 : .62));
-          c.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
-          return;
-        }
-        const am = sv("animateMotion", {dur:dur.toFixed(1) + "s", repeatCount:"indefinite", rotate:"auto", begin:(-delay).toFixed(1) + "s", keyPoints: rev ? "1;0" : "0;1", keyTimes:"0;1", calcMode:"linear"}, c);
-        sv("mpath", {href:"#" + pid}, am);
-      };
+      /* carts are painted on a canvas above the map (see cartLoop), so the map itself never has to repaint for them */
+      const cart = (rev, delay) => carts.push({id:r.id, g, q:g0.q, dur, delay, rev, color:tool.color});
       cart(false, (r.name.length * 1.7) % dur);
       if (r.flow === "two") cart(true, (r.name.length * 3.1 + dur / 2) % dur);
     }
@@ -2969,6 +2960,49 @@ function startDrag(ev, s, g){
   g.addEventListener("pointermove", move); g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
 }
 
+
+/* ---------- carts: one canvas, one animation loop ---------- */
+const carts = [];
+const cartCanvas = document.createElement("canvas"); cartCanvas.className = "tm-carts"; cartCanvas.setAttribute("aria-hidden", "true");
+$("trade-frame").insertBefore(cartCanvas, $("trade-frame").querySelector(".tm-corner"));
+const cctx = cartCanvas.getContext("2d");
+let cartRaf = 0, lastPaint = 0, frameVisible = true;
+function qpt(q, t){ const u = 1 - t; return [u*u*q[0] + 2*u*t*q[2] + t*t*q[4], u*u*q[1] + 2*u*t*q[3] + t*t*q[5]]; }
+function qdir(q, t){ const u = 1 - t; return Math.atan2(2*u*(q[3] - q[1]) + 2*t*(q[5] - q[3]), 2*u*(q[2] - q[0]) + 2*t*(q[4] - q[2])); }
+function paintCarts(now){
+  const fr = $("trade-frame"), rect = fr.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  const W = Math.round(rect.width * dpr), H = Math.round(rect.height * dpr);
+  if (cartCanvas.width !== W || cartCanvas.height !== H){ cartCanvas.width = W; cartCanvas.height = H; }
+  cctx.setTransform(1, 0, 0, 1, 0, 0); cctx.clearRect(0, 0, W, H);
+  const m = svg.getScreenCTM(); if (!m || !carts.length) return;
+  const k = Math.hypot(m.a, m.b), size = Math.min(2.2, Math.max(.45, k));   /* cart scale follows the zoom, within limits */
+  const ox = rect.left, oy = rect.top, sec = now / 1000;
+  for (const c of carts){
+    let t = REDUCED ? (c.rev ? .38 : .62) : ((sec + c.delay) / c.dur) % 1; if (c.rev && !REDUCED) t = 1 - t;
+    const [x, y] = qpt(c.q, t);
+    const sx = (m.a * x + m.c * y + m.e - ox) * dpr, sy = (m.b * x + m.d * y + m.f - oy) * dpr;
+    if (sx < -30 || sy < -30 || sx > W + 30 || sy > H + 30) continue;
+    const ang = qdir(c.q, t) + (c.rev ? Math.PI : 0);
+    cctx.setTransform(size * dpr, 0, 0, size * dpr, sx, sy); cctx.rotate(ang);
+    cctx.globalAlpha = c.g.classList.contains("dim") ? .22 : 1;
+    cctx.fillStyle = c.color; cctx.strokeStyle = "#2a1d0c"; cctx.lineWidth = .8;
+    cctx.beginPath(); cctx.rect(-6, -4, 12, 7); cctx.fill(); cctx.stroke();
+    cctx.fillStyle = "#f0c25a"; cctx.lineWidth = .6; cctx.beginPath(); cctx.rect(-4.5, -7, 9, 3.5); cctx.fill(); cctx.stroke();
+    cctx.fillStyle = "#2a1d0c"; cctx.beginPath(); cctx.arc(-3.5, 4, 2, 0, 6.283); cctx.arc(3.5, 4, 2, 0, 6.283); cctx.fill();
+  }
+  cctx.globalAlpha = 1;
+}
+function cartLoop(now){
+  cartRaf = 0;
+  if ($("tab-trade").hidden || document.hidden || !frameVisible) return;   /* asleep until the map is on screen again */
+  if (now - lastPaint >= 1000 / 40){ lastPaint = now; paintCarts(now); }
+  cartRaf = requestAnimationFrame(cartLoop);
+}
+function wakeCarts(){ if (!cartRaf) cartRaf = requestAnimationFrame(cartLoop); }
+new IntersectionObserver(es => { frameVisible = es.some(e => e.isIntersecting); if (frameVisible) wakeCarts(); }).observe($("trade-frame"));
+document.addEventListener("visibilitychange", wakeCarts);
+$("tabbtn-trade").addEventListener("click", () => setTimeout(wakeCarts, 30));
+wakeCarts();
 
 /* ---------- zoom and pan: the viewBox is the camera ---------- */
 const frame = $("trade-frame");
