@@ -296,7 +296,7 @@ function drawTowns(){
     g.addEventListener("mousemove", moveTip);
     g.addEventListener("mouseleave", () => { if (drag) return; hover = null; restyle(); hideTip(); });
     g.addEventListener("pointerdown", ev => startDrag(ev, s, g));
-    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); select({type:"s", id:s.id}); } });
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); townActivated(s.id); } });
   });
 }
 /* hover and selection only change classes, so the elements under the pointer stay put */
@@ -321,7 +321,7 @@ function startDrag(ev, s, g){
   const move = e => {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) return;
-    if (!canEdit()) return;
+    if (!canEdit() || pick) return;
     drag.moved = true;
     const q = toMap(e), t = S.get(drag.id); if (!t) return;
     t.x = Math.round(Math.min(MW - 60, Math.max(60, q.x - drag.dx))); t.y = Math.round(Math.min(MH - 50, Math.max(70, q.y - drag.dy)));
@@ -333,7 +333,7 @@ function startDrag(ev, s, g){
     g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", up); g.removeEventListener("pointercancel", up);
     const d = drag; drag = null;
     if (!d) return;
-    if (!d.moved){ select({type:"s", id:d.id}); return; }
+    if (!d.moved){ townActivated(d.id); return; }
     const t = S.get(d.id); if (!t) return;
     const ok = await save(d.id, settlementDoc(t));
     if (!ok){ t.x = d.ox; t.y = d.oy; renderMap(); }
@@ -535,11 +535,14 @@ function routeCard(body, r){
   const k = mk("div", "tm-kicker"); const sw = mk("i"); sw.style.background = t.color; k.append(sw, document.createTextNode(`${t.label} · ${STATUS[r.status] || r.status}`));
   body.appendChild(k);
   body.appendChild(mk("h4", "tm-name", r.name));
-  const path = mk("div", "tm-path");
-  const a = btn(S.get(r.from).name, "tm-link plain", () => select({type:"s", id:r.from}));
-  const z = btn(S.get(r.to).name, "tm-link plain", () => select({type:"s", id:r.to}));
-  path.append(a, mk("span", "tm-arrow", r.flow === "two" ? "⇄" : "→"), z);
-  body.appendChild(path);
+  if (canEdit()) body.appendChild(endsEditor(r));
+  else {
+    const path = mk("div", "tm-path");
+    const a = btn(S.get(r.from).name, "tm-link plain", () => select({type:"s", id:r.from}));
+    const z = btn(S.get(r.to).name, "tm-link plain", () => select({type:"s", id:r.to}));
+    path.append(a, mk("span", "tm-arrow", r.flow === "two" ? "⇄" : "→"), z);
+    body.appendChild(path);
+  }
   if (r.note) body.appendChild(mk("p", "tm-p", r.note));
   if (mode === "razeR") return razeBox(body, `Close the ${r.name} route?`, "", async () => {
     const ok = await removeItems([r.id]);
@@ -550,6 +553,57 @@ function routeCard(body, r){
     btn("Close route", "tm-btn danger", () => { mode = "razeR"; renderPanel(); }, !canEdit()),
     btn("Back", "tm-btn ghost", () => select(null)));
   body.appendChild(acts);
+}
+/* change where a route starts or ends right from its card: pick from a list, or click a settlement on the map */
+let pick = null;   /* {route, end:"from"|"to"} while choosing on the map */
+function routeDoc(r){ return {t:"r", name:r.name, from:r.from, to:r.to, tool:r.tool, flow:r.flow, status:r.status, note:r.note || ""}; }
+async function setEnd(r, end, sid){
+  const cur = R.get(r.id); if (!cur || cur[end] === sid) return;
+  const other = end === "to" ? cur.from : cur.to;
+  if (sid === other){ note("A route needs two different settlements.", "err"); renderPanel(); return; }
+  const next = Object.assign({}, cur, {[end]:sid});
+  const ok = await save(r.id, routeDoc(next));
+  if (ok){ sfx("chime"); sel = {type:"r", id:r.id}; mode = "view"; restyle(); renderPanel(); pulse(r.id); note(`${next.name} now runs ${S.get(next.from).name} ${next.flow === "two" ? "⇄" : "→"} ${S.get(next.to).name}.`, ""); }
+}
+function startPick(r, end){
+  pick = {route:r.id, end}; svg.classList.add("picking"); hideTip();
+  note(`Click the settlement ${r.name} should ${end === "to" ? "go to" : "start from"}. Press Esc to cancel.`, "");
+  renderPanel();
+}
+function cancelPick(){ if (!pick) return; pick = null; svg.classList.remove("picking"); note("", ""); renderPanel(); }
+document.addEventListener("keydown", ev => { if (ev.key === "Escape" && pick) cancelPick(); });
+function townActivated(id){
+  if (pick){ const p = pick, r = R.get(p.route); pick = null; svg.classList.remove("picking"); if (r) setEnd(r, p.end, id); return; }
+  select({type:"s", id});
+}
+function endsEditor(r){
+  const box = mk("div", "tm-ends");
+  const row = (label, end) => {
+    const line = mk("div", "tm-end");
+    const s = selectEl(townOpts(), r[end]); s.setAttribute("aria-label", label + " settlement");
+    s.addEventListener("change", () => setEnd(r, end, s.value));
+    const picking = pick && pick.route === r.id && pick.end === end;
+    const pb = btn(picking ? "Click a settlement…" : "Pick on map", "tm-btn ghost tm-mini" + (picking ? " active" : ""), () => picking ? cancelPick() : startPick(r, end));
+    pb.title = picking ? "Cancel picking" : `Choose the ${label.toLowerCase()} settlement by clicking it on the map`;
+    const go = btn("Show", "tm-btn ghost tm-mini", () => { const t = S.get(r[end]); if (t) showPoint(t.x, t.y); select({type:"s", id:r[end]}); });
+    go.title = "Open this settlement";
+    line.append(mk("span", "tm-endlbl", label), s, pb, go);
+    return line;
+  };
+  const flip = btn(r.flow === "two" ? "⇄ Both ways" : "↓ One way", "tm-btn ghost tm-mini tm-flip", async () => {
+    const cur = R.get(r.id); if (!cur) return;
+    const next = Object.assign({}, cur, {flow: cur.flow === "two" ? "one" : "two"});
+    if (await save(r.id, routeDoc(next))){ sfx("chime"); renderPanel(); }
+  });
+  flip.title = "Switch between one-way and both ways";
+  const swap = btn("Swap ends", "tm-btn ghost tm-mini", async () => {
+    const cur = R.get(r.id); if (!cur) return;
+    if (await save(r.id, routeDoc(Object.assign({}, cur, {from:cur.to, to:cur.from})))){ sfx("chime"); renderPanel(); }
+  });
+  swap.title = "Reverse the direction data flows";
+  const mid = mk("div", "tm-endmid"); mid.append(flip, swap);
+  box.append(row("From", "from"), mid, row("To", "to"));
+  return box;
 }
 function razeBox(body, q, extra, fn){
   const box = mk("div", "tm-raze");
