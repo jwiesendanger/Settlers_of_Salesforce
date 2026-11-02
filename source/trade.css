@@ -1,5 +1,7 @@
 /* ---------- Trade Map ---------- */
-.trade-wrap{display:flex;flex-direction:column;gap:12px}
+.trade-wrap{display:flex;flex-direction:column;gap:12px;width:calc(100vw - 48px);max-width:2400px;margin-left:calc(50% - min(50vw - 24px, 1200px))}
+html{overflow-x:clip}
+@media (max-width:600px){.trade-wrap{width:calc(100vw - 32px);margin-left:calc(50% - 50vw + 16px)}}
 .trade-map{position:relative;height:clamp(480px,calc(100vh - 96px),1600px);border:2px solid #c9a24a;border-radius:14px;overflow:hidden;background:#a8c6c0;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 svg#trade-svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 svg#trade-svg.panning{cursor:grabbing}
