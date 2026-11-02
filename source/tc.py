@@ -1,5 +1,5 @@
 import re
-ACR = {"HANA","SAP","RADAR","KCTCS","GSA","IRADS","IERS","UK","HR","SMS","RFI","SIR","GPA","CIP","ACT","EDC","IES","EEO","CRM","SF","API","ID","SSIS","NRCCUA","PTLW","EAPI","SAPI","HED","URL","PDF","MC","UKY"}
+ACR = {"HANA","SAP","RADAR","KCTCS","GSA","IRADS","IERS","UK","HR","SMS","RFI","SIR","GPA","CIP","ACT","EDC","IES","EEO","CRM","SF","API","ID","SSIS","NRCCUA","PTLW","EAPI","SAPI","HED","URL","PDF","MC","UKY","UKNAA","UKAA","EGATS","FPM","WUKY","EPIC","ITS","RM","HIPAA","SFTP","S/4"}
 ACR_IF_CAPS = {"ED","FA"}
 KEEP = {"icims":"iCIMS","linkblue":"linkblue","clearcost":"ClearCost","youvisit":"YouVisit","evertrue":"EverTrue","mulesoft":"MuleSoft","salesforce":"Salesforce","dempgraphics":"Demographics","affliliatio":"Affiliation","five9":"Five9","scoir":"Scoir","formassembly":"FormAssembly","rifs":"RFIs","rfis":"RFIs"}
 SMALL = {"a","an","and","as","at","but","by","for","in","of","on","or","the","to","with","from","via"}

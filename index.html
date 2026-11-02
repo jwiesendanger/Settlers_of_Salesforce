@@ -2886,12 +2886,12 @@ const TOOLS = {   /* alphabetical, so every list of tools reads A to Z */
   dataload:  {label:"Data Load",       color:"#7a5a2e", dash:"10 5"},
   view:      {label:"HANA View",       color:"#178f99", dash:null},
   mulesoft:  {label:"MuleSoft",        color:"#1f7fc4", dash:null},
-  tbd:       {label:"Not Chosen Yet",  color:"#6d6a63", dash:"2 7"},
+  tbd:       {label:"Not Chosen Yet",  color:"#6d6a63", dash:null},
   automate:  {label:"Power Automate",  color:"#13896f", dash:null},
   talend:    {label:"Talend",          color:"#d0641c", dash:null}
 };
 const KINDS = {capital:"Capital (Core Platform)", source:"Source (Mine)", system:"System (Town)"};
-const STATUS = {building:"Being Built", live:"Live", planned:"Planned", retired:"Retired"};
+const STATUS = {building:"Being Built", live:"Live", none:"Not Integrating", planned:"Planned", retired:"Retired"};
 
 /* the starting map, drawn from the team's Asana tasks. Tools and directions are best guesses until someone corrects them. */
 const SEED_S = [
@@ -3061,7 +3061,7 @@ function drawRoutes(){
     const g = sv("g", {class:"tm-route", "data-id":r.id, tabindex:"0", role:"button", "aria-label":`${r.name}: ${S.get(r.from).name} to ${S.get(r.to).name} by ${tool.label}`}, layerRoutes);
     const pid = "tm-p-" + r.id.replace(/[^\w-]/g, "_"), lid = "tm-l-" + r.id.replace(/[^\w-]/g, "_");
     sv("path", {d:g0.d, class:"tm-road-edge"}, g);
-    sv("path", {id:pid, d:g0.d, class:"tm-road", stroke:tool.color, "stroke-dasharray": r.status === "planned" ? "2 8" : r.status === "retired" ? "1 7" : tool.dash, opacity: r.status === "planned" ? .8 : r.status === "retired" ? .45 : 1}, g);
+    sv("path", {id:pid, d:g0.d, class:"tm-road", stroke:tool.color, "stroke-dasharray": r.status === "planned" ? "2 8" : r.status === "retired" || r.status === "none" ? "1 7" : tool.dash, opacity: r.status === "planned" ? .8 : r.status === "retired" || r.status === "none" ? .45 : 1}, g);
     if (r.status === "building") sv("path", {d:g0.d, class:"tm-build", "stroke-dasharray":"1 13"}, g);
     sv("path", {d:g0.d, class:"tm-hit"}, g);
     sv("path", {id:lid, d:g0.lr, fill:"none", stroke:"none"}, g);
@@ -3070,7 +3070,7 @@ function drawRoutes(){
       const tp = sv("textPath", {href:"#" + lid, startOffset:"50%", "text-anchor":"middle"}, t);
       tp.textContent = r.name;
     }
-    if (r.status !== "planned" && r.status !== "retired"){
+    if (r.status !== "planned" && r.status !== "retired" && r.status !== "none"){
       const dur = Math.max(5, g0.len / (r.status === "building" ? 26 : 48));
       const cart = (rev, delay) => {
         const c = sv("g", {class:"tm-cart"}, g);
@@ -3356,7 +3356,7 @@ function helpCard(body){
   body.appendChild(mk("h4", null, "Reading the map"));
   body.appendChild(mk("p", "tm-p", "Zoom with the + and − buttons, Ctrl + scroll, or a pinch. Drag empty ground to pan. Fit brings everything back into view."));
   const ul = mk("ul", "tm-help");
-  [["Castle and towns", "the systems we run or send data to"], ["Mines", "sources of record where data comes from"], ["Roads", "integrations, colored by the tool that carries them"], ["Carts", "travel the way data flows; two carts mean it flows both ways"], ["Gravel roads", "integrations still being built; dotted roads are only planned, and faint ones are retired"]]
+  [["Castle and towns", "the systems we run or send data to"], ["Mines", "sources of record where data comes from"], ["Roads", "integrations, colored by the tool that carries them"], ["Carts", "travel the way data flows; two carts mean it flows both ways"], ["Gravel roads", "integrations still being built; dotted roads are only planned, and faint ones are retired or not integrating"]]
     .forEach(([a, b]) => { const li = mk("li"); li.append(mk("b", null, a + ": "), document.createTextNode(b)); ul.appendChild(li); });
   body.appendChild(ul);
   body.appendChild(mk("h4", null, "Changing the map"));
@@ -3388,7 +3388,7 @@ function settlementCard(body, s){
   if (s.blurb) body.appendChild(linkText(s.blurb));
   const rs = routesOf(s.id).sort((a, b) => byName(a.name, b.name));
   const ts = tablesOf(s.id);
-  if (s.kind === "source") tableSection(body, s, ts);
+  tableSection(body, s, ts);
   body.appendChild(mk("h4", null, "Trade routes"));
   body.appendChild(mk("div", "tm-sub", rs.length ? `${rs.length} trade route${rs.length === 1 ? "" : "s"}` : "No trade routes yet"));
   const ul = mk("ul", "tm-list");
@@ -3594,7 +3594,7 @@ function shapeText(rows){ const w = rows[0] ? rows[0].length : 0; return `${rows
 
 function tableSection(body, s, ts){
   body.appendChild(mk("h4", null, "Tables on file"));
-  if (!ts.length) body.appendChild(mk("p", "tm-note", canEdit() ? "Paste a table here to keep it with this mine for later reference: field lists, mappings, sample rows, codes." : "No tables kept at this mine yet."));
+  if (!ts.length) body.appendChild(mk("p", "tm-note", canEdit() ? "Paste a table here to keep it here for later reference: field lists, mappings, sample rows, codes." : "No tables kept here yet."));
   const ul = mk("ul", "tm-list tm-tables");
   ts.forEach(t => {
     const li = mk("li"); const b = mk("button", "tm-link"); b.type = "button";
