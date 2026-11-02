@@ -7,6 +7,7 @@ A Catan-style view of the Enterprise Salesforce Ops Group's Asana work, plus the
 - Each person connects with their own **Asana personal access token** the first time they open the page. The token is saved only in that browser's local storage and is sent only to `app.asana.com`.
 - **The Board** and **The Treasure Hoard** read open and recently completed tasks live from Asana.
 - Clicking a block lets you comment on the task in Asana (posted under your own name) or open it.
+- **Trade Map** shows systems and data sources as settlements and integrations as trade routes, colored by the tool that carries them. Anyone with access can add, edit, move or remove settlements and routes. Those changes are stored in the same Guild Hall Ledger project.
 - **Guild Hall** data (responsibilities, recruits, dismissals, class changes) is stored as tasks in the Asana project **Guild Hall Ledger (Settlers of Salesforce Ops)**, so everyone sees the same thing. To edit it, a person needs access to that project. It's private to the Enterprise Salesforce Operations Group team.
 
 ## Hosting on GitHub Pages

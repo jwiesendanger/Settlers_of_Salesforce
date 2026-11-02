@@ -367,6 +367,85 @@ aside .who-sub{color:var(--muted);font-size:13px;margin-top:2px}
 @keyframes newItem{0%{background:#ffe7a3;transform:scale(.96)}100%{background:#fffaf0;transform:none}}
 @media (prefers-reduced-motion:reduce){.fx-float{animation:fadeOnly 1.4s ease-out forwards}.char.fx-levelup,.char.fx-hit,.sheet ol li.fx-new{animation:none}@keyframes fadeOnly{0%,70%{opacity:1}100%{opacity:0}}}
 
+/* ---------- Trade Map ---------- */
+.trade-wrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start}
+@media (max-width:1000px){.trade-wrap{grid-template-columns:minmax(0,1fr)}}
+.trade-map{border:2px solid #c9a24a;border-radius:14px;overflow:hidden;background:#a8c6c0;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+svg#trade-svg{width:100%;height:auto;display:block}
+.tm-title{font-family:"MedievalSharp","Alegreya SC",Georgia,serif;font-size:22px;fill:#3a2a17}
+.tm-subtitle{font-family:var(--f-display);font-size:13px;fill:#6b5733;letter-spacing:.06em}
+.tm-compass{font-family:var(--f-display);font-size:13px;fill:#6b5733;font-weight:800}
+.tm-road-edge{fill:none;stroke:#f6ecd2;stroke-width:6.5;stroke-linecap:round;opacity:.85}
+.tm-road{fill:none;stroke-width:3.4;stroke-linecap:round}
+.tm-build{fill:none;stroke:#f6ecd2;stroke-width:2.2;stroke-linecap:round}
+.tm-hit{fill:none;stroke:transparent;stroke-width:14}
+.tm-route{cursor:pointer;transition:opacity .15s}
+.tm-route.on .tm-road{stroke-width:5.5}
+.tm-route.on .tm-road-edge{stroke:#fff;stroke-width:10;opacity:1}
+.tm-route:hover .tm-road{stroke-width:5}
+.tm-route:focus{outline:none}
+.tm-route:focus-visible .tm-road-edge{stroke:var(--brick-hi);opacity:1}
+.tm-rname{font-family:var(--f-body);font-weight:700;font-size:11.5px;fill:#2e2213;paint-order:stroke;stroke:#f4e8c8;stroke-width:3.2px;stroke-linejoin:round;pointer-events:none}
+.tm-route.dim,.tm-town.dim,.tm-ribbon.dim{opacity:.22}
+.tm-town{cursor:pointer;transition:opacity .15s}
+.tm-town.movable{cursor:grab}
+.tm-town.movable:active{cursor:grabbing}
+.tm-town:focus{outline:none}
+.tm-town:focus-visible .tm-halo,.tm-town.on .tm-halo{opacity:1}
+.tm-halo{fill:rgba(255,236,170,.35);stroke:#fff3c4;stroke-width:3;stroke-dasharray:6 5;opacity:0}
+.tm-town:hover .tm-halo{opacity:.6}
+.tm-sname{font-family:var(--f-display);font-weight:700;font-size:13px;fill:#3a2a17}
+.tm-sname.cap{font-size:14.5px}
+.tm-ribbon{transition:opacity .15s}
+.tm-flag{animation:tmflag 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:0 50%}
+@keyframes tmflag{0%,100%{transform:skewY(0) scaleX(1)}50%{transform:skewY(6deg) scaleX(.85)}}
+.tm-pulse{animation:tmpulse .9s ease-out}
+@keyframes tmpulse{0%{filter:drop-shadow(0 0 0 #ffdc85)}40%{filter:drop-shadow(0 0 14px #ffdc85)}100%{filter:drop-shadow(0 0 0 #ffdc85)}}
+.tm-tip{position:fixed;z-index:60;max-width:280px;background:var(--parch);color:var(--parch-ink);border:2px solid var(--frame);border-radius:8px;padding:7px 10px;font-size:13px;line-height:1.35;box-shadow:0 6px 18px rgba(0,0,0,.35);pointer-events:none}
+.tm-tip b{font-family:var(--f-display);font-size:14.5px;display:block}
+.tm-status{font-size:13px;color:var(--muted);min-height:1.2em}
+.tm-status.err{color:var(--brick-hi)}
+.trade-panel{background:var(--panel);border:1px solid var(--panel-line);border-top:3px solid var(--frame);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.tm-phead h3{margin:0;font-family:var(--f-display);font-weight:800;font-size:21px;color:var(--frame)}
+.tm-count{color:var(--muted);font-size:13px}
+.tm-acts{display:flex;flex-wrap:wrap;gap:6px}
+.tm-btn{font-size:13px;padding:5px 10px}
+.tm-btn.danger{background:#f3d6cc;border-color:#e0907a;color:#7a1f12}
+.tm-btn.ghost{background:transparent;color:var(--frame);border-color:var(--panel-line)}
+.tm-btn.ghost:hover{background:rgba(255,255,255,.06)}
+.tm-pbody{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--panel-line);padding-top:10px}
+.tm-pbody h4{margin:4px 0 0;font-family:var(--f-display);font-size:16px;color:var(--frame)}
+.tm-pbody h4.tm-name{font-size:20px;margin:0;color:var(--ink)}
+.tm-kicker{display:flex;align-items:center;gap:6px;font-family:var(--f-label);font-size:12px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.tm-kicker i,.tm-link i,.tm-chip i{display:inline-block;width:16px;height:5px;border-radius:3px;flex:none}
+.tm-p{margin:0;font-size:14px;line-height:1.45;color:var(--ink)}
+.tm-note{margin:0;font-size:13px;line-height:1.4;color:var(--muted);font-style:italic}
+.tm-sub{font-size:13px;color:var(--muted)}
+.tm-help{margin:0;padding-left:18px;font-size:13.5px;line-height:1.45;display:flex;flex-direction:column;gap:3px}
+.tm-help b{color:var(--frame)}
+.tm-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;max-height:320px;overflow:auto}
+.tm-link{display:flex;align-items:center;gap:7px;width:100%;text-align:left;background:transparent;border:1px solid transparent;color:var(--ink);font-family:var(--f-body);font-weight:500;font-size:13.5px;letter-spacing:0;padding:4px 6px;border-radius:6px}
+.tm-link:hover{background:rgba(255,255,255,.07);border-color:var(--panel-line)}
+.tm-link span{flex:1;min-width:0}
+.tm-link em{font-style:normal;color:var(--muted);font-size:12.5px;text-align:right}
+.tm-link.plain{display:inline-flex;width:auto;border-color:var(--panel-line);font-weight:700}
+.tm-path{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tm-arrow{font-size:18px;color:var(--frame)}
+.tm-legend{display:flex;flex-direction:column;gap:3px}
+.tm-chip{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid transparent;color:var(--ink);font-family:var(--f-body);font-weight:500;font-size:13.5px;letter-spacing:0;padding:3px 6px;border-radius:6px;text-align:left}
+.tm-chip i{width:22px;height:6px}
+.tm-chip span{flex:1}
+.tm-chip em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+.tm-chip:hover{background:rgba(255,255,255,.07)}
+.tm-chip[aria-pressed="false"]{opacity:.4}
+.tm-toggle{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink);cursor:pointer}
+.tm-form{display:flex;flex-direction:column;gap:8px}
+.tm-field{display:flex;flex-direction:column;gap:3px;font-size:12px;font-family:var(--f-label);letter-spacing:.05em;color:var(--muted);min-width:0}
+.tm-field input,.tm-field select{font-family:var(--f-body);font-size:14px;letter-spacing:0;padding:6px 8px;border-radius:6px;border:1px solid var(--frame);background:var(--parch);color:var(--parch-ink);min-width:0;width:100%;box-sizing:border-box}
+.tm-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tm-msg{color:var(--brick-hi);font-size:13px;min-height:1em}
+.tm-raze{background:rgba(224,72,47,.12);border:1px solid #a24a3a;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+@media (prefers-reduced-motion:reduce){.tm-flag,.tm-pulse{animation:none}}
 
 /* ---------- standalone: Asana connection ---------- */
 body{margin:0}
@@ -404,6 +483,7 @@ body{margin:0}
     <button class="tab" role="tab" id="tabbtn-board" aria-controls="tab-board" aria-selected="true" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 20 7.5v9L12 21 4 16.5v-9z"/></svg>The Board</button>
     <button class="tab" role="tab" id="tabbtn-guild" aria-controls="tab-guild" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 19 6v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M12 8v8M9 11h6"/></svg>Guild Hall</button>
     <button class="tab" role="tab" id="tabbtn-village" aria-controls="tab-village" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21h18M5 21V11l7-6 7 6v10"/><path d="M10 21v-5h4v5"/></svg>Village Square</button>
+    <button class="tab" role="tab" id="tabbtn-trade" aria-controls="tab-trade" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="7" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M7 6.5c4 0 6 .3 10 .5M6.3 8 11 16.2M17.8 9 13.3 16.2" stroke-dasharray="2.5 2"/></svg>Trade Map</button>
   </nav>
 
   <div id="tab-board" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-board">
@@ -473,6 +553,13 @@ body{margin:0}
     <div class="village-foot" id="village-foot"></div>
     <div class="village-notes" id="village-notes"></div>
   </section>
+  <section id="tab-trade" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-trade" hidden>
+    <div class="tm-status" id="trade-note" aria-live="polite"></div>
+    <div class="trade-wrap">
+      <div class="trade-map"><svg id="trade-svg" role="img" aria-label="Trade map: systems and data sources as settlements, integrations as trade routes between them"></svg></div>
+      <aside class="trade-panel" id="trade-panel" aria-label="Trade ledger"></aside>
+    </div>
+  </section>
 </div>
 <div class="tip" id="tip" hidden></div>
 <div class="connect-back" id="connect" hidden>
@@ -529,7 +616,7 @@ body{margin:0}
 const CONFIG = {
   workspace: "71309345811105",
   ledgerProject: "1219951921516481",
-  ledgerSections: {duties: "1219952038707160", heroes: "1219951921525417", classes: "1219951921525417"},
+  ledgerSections: {duties: "1219952038707160", heroes: "1219951921525417", classes: "1219951921525417", trade: "1219951921525417"},
   api: "https://app.asana.com/api/1.0",
   pollMs: 30000
 };
@@ -581,7 +668,7 @@ const mcp = {
 const PREFIX = "guild:";
 let records = [];            /* {gid, coll, id, data} */
 let loaded = false, loading = null;
-const subs = {duties: new Set(), heroes: new Set(), classes: new Set()};
+const subs = {duties: new Set(), heroes: new Set(), classes: new Set(), trade: new Set()};
 function parseTask(t){
   const line = String(t.notes || "").split("\n").find(l => l.startsWith(PREFIX));
   if (!line) return null;
@@ -589,6 +676,7 @@ function parseTask(t){
   if (m.t === "duty") return {gid: t.gid, coll: "duties", id: t.gid, data: {person: m.person || "", text: t.name || "", note: m.note || "", createdAt: Date.parse(t.created_at) || 0}};
   if (m.t === "hero" && m.id) return {gid: t.gid, coll: "heroes", id: m.id, data: m.body || {}};
   if (m.t === "class" && m.id) return {gid: t.gid, coll: "classes", id: m.id, data: {cls: m.cls}};
+  if (m.t === "trade" && m.id) return {gid: t.gid, coll: "trade", id: m.id, data: m.body || {}};
   return null;
 }
 async function refresh(){
@@ -631,6 +719,15 @@ function docRef(coll, id){
             const json = await asana("POST", "/tasks", {body: {name: body.text, notes, projects: [CONFIG.ledgerProject], memberships: [{project: CONFIG.ledgerProject, section: CONFIG.ledgerSections.duties}]}});
             const gid = json.data.gid; ref.id = gid;
             records.push({gid, coll, id: gid, data: Object.assign({}, body)});
+          }
+        } else if (coll === "trade"){
+          const existing = records.find(r => r.coll === coll && r.id === id);
+          const notes = PREFIX + JSON.stringify({t: "trade", id, body});
+          const name = (body.removed ? "Trade (removed): " : body.t === "s" ? "Settlement: " : "Trade route: ") + (body.name || id);
+          if (existing){ await asana("PUT", `/tasks/${existing.gid}`, {body: {name, notes}}); existing.data = Object.assign({}, body); }
+          else {
+            const json = await asana("POST", "/tasks", {body: {name, notes, projects: [CONFIG.ledgerProject], memberships: [{project: CONFIG.ledgerProject, section: CONFIG.ledgerSections.trade}]}});
+            records.push({gid: json.data.gid, coll, id, data: Object.assign({}, body)});
           }
         } else {
           const kind = coll === "heroes" ? "hero" : "class";
@@ -1563,7 +1660,7 @@ const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- tabs ---------- */
 const TAB_KEY = "settlers-tab";
-const TABS = ["board", "guild", "village"];
+const TABS = ["board", "guild", "village", "trade"];
 function showTab(name){
   if (!TABS.includes(name)) name = "board";
   TABS.forEach(t => {
@@ -1794,6 +1891,7 @@ function sfx(name){
   const a = audio(); if (!a || !SOUNDS[name]) return;
   try{ SOUNDS[name](a); }catch(e){}
 }
+window.__sfx = sfx;
 function renderSoundBtn(){
   const b = $("sound-btn");
   b.setAttribute("aria-pressed", String(soundOn));
@@ -2701,6 +2799,561 @@ if (!$("tab-village").hidden) villageOpen(false);
     snap.docs.forEach(d => { if (d.exists) next[d.id] = Object.assign({}, d.data() || {}); });
     heroDocs = next; renderKeep();
   }, e => dbFail(e, "load the roster"));
+})();
+})();
+</script>
+<script>
+(function(){
+/* ================= Trade Map: systems and sources are settlements; integrations are the trade routes between them ================= */
+const $ = id => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+function sv(tag, attrs, parent){ const e = document.createElementNS(SVGNS, tag); if (attrs) for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function mk(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sfx = n => { try{ if (window.__sfx) window.__sfx(n); }catch(e){} };
+const MW = 1200, MH = 800;
+
+/* guilds of traders: each integration tool gets a color and line style */
+const TOOLS = {
+  mulesoft:  {label:"MuleSoft",        color:"#1f7fc4", dash:null},
+  talend:    {label:"Talend",          color:"#d0641c", dash:null},
+  azure:     {label:"Azure pipelines", color:"#6a4fc2", dash:null},
+  automate:  {label:"Power Automate",  color:"#13896f", dash:null},
+  connector: {label:"Connector / app", color:"#a8323e", dash:null},
+  dataload:  {label:"Data load",       color:"#7a5a2e", dash:"10 5"},
+  tbd:       {label:"Not chosen yet",  color:"#6d6a63", dash:"2 7"}
+};
+const KINDS = {capital:"Capital (core platform)", system:"System (town)", source:"Source (mine)"};
+const STATUS = {live:"Live", building:"Being built", planned:"Planned"};
+
+/* the starting map, drawn from the team's Asana tasks. Tools and directions are best guesses until someone corrects them. */
+const SEED_S = [
+  {id:"sf",         name:"Salesforce (Ed Cloud)", kind:"capital", blurb:"The capital: UK's CRM, moving to Education Cloud.", x:600, y:400},
+  {id:"radar",      name:"RADAR",               kind:"system",  blurb:"Advancement's Salesforce org.", x:170, y:615},
+  {id:"hana",       name:"SAP HANA",            kind:"source",  blurb:"HR and student records, the great mine of the realm.", x:215, y:395},
+  {id:"slate",      name:"Slate",               kind:"source",  blurb:"Admissions: undergraduate, graduate and events.", x:440, y:690},
+  {id:"transfer",   name:"UK Transfer Portal",  kind:"source",  blurb:"Transfer student inquiries.", x:700, y:712},
+  {id:"ukinvests",  name:"UK Invests",          kind:"source",  blurb:"UK Invests program data.", x:300, y:190},
+  {id:"scoir",      name:"Scoir",               kind:"source",  blurb:"College search inquiries.", x:565, y:722},
+  {id:"evertrue",   name:"EverTrue",            kind:"source",  blurb:"Donor engagement data.", x:300, y:722},
+  {id:"mc",         name:"Marketing Cloud",     kind:"system",  blurb:"Email and SMS journeys, data extensions.", x:962, y:335},
+  {id:"sms",        name:"SMS Magic",           kind:"system",  blurb:"Texting from inside Salesforce.", x:914, y:502},
+  {id:"outlook",    name:"Outlook",             kind:"system",  blurb:"Outlook plugin used by EDC.", x:880, y:160},
+  {id:"bookings",   name:"Microsoft Bookings",  kind:"source",  blurb:"Appointments, carried in by Power Automate.", x:990, y:680},
+  {id:"eventbrite", name:"Eventbrite",          kind:"source",  blurb:"Event registrations.", x:785, y:628},
+  {id:"irads",      name:"IRADS",               kind:"system",  blurb:"Institutional research and analytics.", x:585, y:108},
+  {id:"iers",       name:"IERS",                kind:"system",  blurb:"Receives an outbound integration.", x:470, y:178},
+  {id:"cloudingo",  name:"Cloudingo",           kind:"system",  blurb:"Duplicate cleanup.", x:695, y:212},
+  {id:"five9",      name:"Five9",               kind:"system",  blurb:"HR Contact Center phones.", x:1072, y:410},
+  {id:"icims",      name:"Salary.com / iCIMS",  kind:"system",  blurb:"A possible future integration.", x:1062, y:212}
+];
+const SEED_R = [
+  {id:"r-emp",      name:"Employee Contact & Assignment", from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"live", note:"The HANA-HR load. Picks up Beyond Blue employees."},
+  {id:"r-ies",      name:"IES & Job History",        from:"hana", to:"sf", tool:"talend",   flow:"one", status:"live", note:""},
+  {id:"r-progenr",  name:"Program Enrollment",       from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"Ed Cloud migration build."},
+  {id:"r-address",  name:"Address",                  from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"Ed Cloud migration build."},
+  {id:"r-grant",    name:"Grant Responsibility",     from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"Ed Cloud migration build."},
+  {id:"r-prireg",   name:"Priority Registration",    from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"Ed Cloud migration build."},
+  {id:"r-esc",      name:"Enrolled Student Comms",   from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"Ed Cloud migration build."},
+  {id:"r-email",    name:"uky-email-sapi",           from:"hana", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"MuleSoft system API for UK email."},
+  {id:"r-commpref", name:"Communication Preferences", from:"sf", to:"hana", tool:"mulesoft", flow:"two", status:"building", note:"Ed Cloud migration build."},
+  {id:"r-ukinv",    name:"UK Invests",               from:"ukinvests", to:"sf", tool:"mulesoft", flow:"one", status:"live", note:"Fed from a view; new fields added for Fall 2026."},
+  {id:"r-ukirads",  name:"UK Invests › IRADS",       from:"sf", to:"irads", tool:"mulesoft", flow:"one", status:"building", note:"Outbound integration."},
+  {id:"r-iers",     name:"IERS outbound",            from:"sf", to:"iers", tool:"mulesoft", flow:"one", status:"building", note:"Outbound integration."},
+  {id:"r-slateug",  name:"Slate Undergrad",          from:"slate", to:"sf", tool:"talend", flow:"one", status:"live", note:""},
+  {id:"r-slategr",  name:"Slate Grad",               from:"slate", to:"sf", tool:"talend", flow:"one", status:"live", note:"Handles term-shifted applications."},
+  {id:"r-slateev",  name:"Slate Events",             from:"slate", to:"sf", tool:"talend", flow:"one", status:"live", note:"Preview and yield event handler flow."},
+  {id:"r-recev",    name:"Recruiting Event Intake",  from:"slate", to:"sf", tool:"mulesoft", flow:"one", status:"building", note:"uky-recruiting-event-intake-eapi. Check which system it starts from."},
+  {id:"r-transfer", name:"UK Transfer Portal",       from:"transfer", to:"sf", tool:"talend", flow:"one", status:"live", note:"Contacts, recruitments and RFIs; also reads from HANA."},
+  {id:"r-scoir",    name:"Scoir data load",          from:"scoir", to:"sf", tool:"dataload", flow:"one", status:"live", note:"Added to the team's dataload tool."},
+  {id:"r-radar",    name:"HANA › RADAR pipelines",   from:"hana", to:"radar", tool:"azure", flow:"one", status:"live", note:"One main Azure pipeline runs all HANA-to-RADAR pipelines in sequence. Includes linkblue as work email."},
+  {id:"r-evertrue", name:"EverTrue cultivation",     from:"evertrue", to:"radar", tool:"connector", flow:"one", status:"live", note:"Cultivation updates into RADAR."},
+  {id:"r-mc",       name:"Marketing Cloud Connect",  from:"sf", to:"mc", tool:"connector", flow:"two", status:"live", note:"Synchronized data extensions."},
+  {id:"r-sms",      name:"SMS Magic",                from:"sf", to:"sms", tool:"connector", flow:"two", status:"live", note:""},
+  {id:"r-outlook",  name:"Outlook Integration",      from:"outlook", to:"sf", tool:"connector", flow:"one", status:"live", note:"EDC contacts, businesses and opportunities from Outlook."},
+  {id:"r-bookings", name:"Bookings flows",           from:"bookings", to:"sf", tool:"automate", flow:"one", status:"live", note:"Power Automate flows send an EventFilterKey."},
+  {id:"r-eventbr",  name:"Eventbrite registrations", from:"eventbrite", to:"sf", tool:"connector", flow:"one", status:"live", note:""},
+  {id:"r-dedupe",   name:"Cloudingo dedupe",         from:"sf", to:"cloudingo", tool:"connector", flow:"two", status:"live", note:"Runs as the Cloudingo integration user."},
+  {id:"r-five9",    name:"Five9 status sync",        from:"five9", to:"sf", tool:"connector", flow:"two", status:"planned", note:"Proof of concept: Five9 statuses with Omni-Channel."},
+  {id:"r-icims",    name:"Salary.com / iCIMS",       from:"icims", to:"sf", tool:"tbd", flow:"one", status:"planned", note:"Potential integration."}
+];
+const SEED_IDS = new Set([...SEED_S, ...SEED_R].map(x => x.id));
+
+let docs = new Map();          /* id -> stored override or addition */
+let db = null, readOnly = false;
+let S = new Map(), R = new Map();
+let sel = null;                /* {type:"s"|"r", id} */
+let hover = null;
+let mode = "view";             /* view | newS | newR | editS | editR | razeS | razeR */
+let draft = null;
+const hidden = new Set();      /* tools toggled off */
+let showNames = true;
+try{ showNames = localStorage.getItem("settlers-trade-names") !== "0"; }catch(e){}
+
+function rebuild(){
+  S = new Map(SEED_S.map(s => [s.id, Object.assign({}, s)]));
+  R = new Map(SEED_R.map(r => [r.id, Object.assign({}, r)]));
+  docs.forEach((v, id) => {
+    const tgt = v.t === "s" ? S : v.t === "r" ? R : null;
+    if (!tgt) return;
+    if (v.removed){ tgt.delete(id); return; }
+    tgt.set(id, Object.assign({}, tgt.get(id) || {}, v, {id}));
+  });
+  R.forEach((r, id) => { if (!S.has(r.from) || !S.has(r.to) || r.from === r.to) R.delete(id); if (!TOOLS[r.tool]) r.tool = "tbd"; });
+  if (sel && !(sel.type === "s" ? S : R).has(sel.id)) sel = null;
+}
+const canEdit = () => !!db && !readOnly;
+function routesOf(sid){ return [...R.values()].filter(r => r.from === sid || r.to === sid); }
+
+/* ---------- drawing ---------- */
+const svg = $("trade-svg");
+svg.setAttribute("viewBox", `0 0 ${MW} ${MH}`);
+let layerRoutes, layerTowns, layerLabels;
+
+function drawBackdrop(){
+  svg.textContent = "";
+  const defs = sv("defs", null, svg);
+  const pg = sv("radialGradient", {id:"tm-parch", cx:"50%", cy:"45%", r:"75%"}, defs);
+  sv("stop", {offset:"0%", "stop-color":"#f1e4c0"}, pg); sv("stop", {offset:"100%", "stop-color":"#d9c597"}, pg);
+  const wv = sv("pattern", {id:"tm-waves", width:"46", height:"20", patternUnits:"userSpaceOnUse"}, defs);
+  sv("path", {d:"M0 10 q11.5 -7 23 0 t23 0", fill:"none", stroke:"#6f9a9c", "stroke-width":"1.2", opacity:".55"}, wv);
+  /* sea, then the continent */
+  sv("rect", {x:0, y:0, width:MW, height:MH, fill:"#a8c6c0"}, svg);
+  sv("rect", {x:0, y:0, width:MW, height:MH, fill:"url(#tm-waves)"}, svg);
+  const coast = "M70 120 C 120 40 300 46 420 58 C 560 30 700 62 820 48 C 960 34 1100 70 1150 140 C 1186 220 1160 300 1172 380 C 1190 470 1170 560 1150 640 C 1120 730 1000 772 880 764 C 760 776 640 768 520 772 C 380 780 240 770 150 724 C 70 680 52 600 46 520 C 36 420 40 330 48 250 C 52 190 46 160 70 120 Z";
+  sv("path", {d:coast, fill:"#8fb2ad", transform:"translate(6 8)"}, svg);
+  sv("path", {d:coast, fill:"url(#tm-parch)", stroke:"#7d6a45", "stroke-width":"2.5"}, svg);
+  sv("path", {d:coast, fill:"none", stroke:"#7d6a45", "stroke-width":"1", "stroke-dasharray":"3 6", transform:"translate(600 400) scale(.975) translate(-600 -400)", opacity:".6"}, svg);
+  /* hills by the mines, woods by the towns: decoration only */
+  const deco = sv("g", {opacity:".55", "pointer-events":"none"}, svg);
+  [[150,300],[190,270],[290,300],[170,620],[300,520],[120,560],[470,620],[520,180],[700,190],[1010,230],[1110,520],[760,710]].forEach(([x, y], i) => {
+    if (i % 3 === 2){ sv("path", {d:`M${x-9} ${y+6} L${x} ${y-12} L${x+9} ${y+6} Z`, fill:"#6d8a4a"}, deco); sv("path", {d:`M${x+12} ${y+9} L${x+19} ${y-4} L${x+26} ${y+9} Z`, fill:"#5f7c40"}, deco); }
+    else sv("path", {d:`M${x-20} ${y+8} Q ${x-6} ${y-14} ${x+8} ${y+8} M${x-2} ${y+8} Q ${x+10} ${y-6} ${x+22} ${y+8}`, fill:"none", stroke:"#8a7146", "stroke-width":"2"}, deco);
+  });
+  /* compass rose */
+  const cr = sv("g", {transform:"translate(1112 716)", opacity:".8", "pointer-events":"none"}, svg);
+  sv("circle", {r:30, fill:"none", stroke:"#6b5733", "stroke-width":"1.2"}, cr);
+  sv("path", {d:"M0 -38 L6 -6 L0 0 L-6 -6 Z M0 38 L6 6 L0 0 L-6 6 Z", fill:"#6b5733"}, cr);
+  sv("path", {d:"M-38 0 L-6 -6 L0 0 L-6 6 Z M38 0 L6 -6 L0 0 L6 6 Z", fill:"#b49a64"}, cr);
+  const n = sv("text", {y:-42, "text-anchor":"middle", class:"tm-compass"}, cr); n.textContent = "N";
+  /* cartouche */
+  const ct = sv("g", {transform:"translate(66 58)", "pointer-events":"none"}, svg);
+  sv("rect", {x:0, y:0, width:252, height:54, rx:6, fill:"#f6ecd2", stroke:"#7d6a45", "stroke-width":"2"}, ct);
+  sv("rect", {x:5, y:5, width:242, height:44, rx:4, fill:"none", stroke:"#b49a64", "stroke-width":"1"}, ct);
+  const t1 = sv("text", {x:126, y:26, "text-anchor":"middle", class:"tm-title"}, ct); t1.textContent = "The Trade Routes";
+  const t2 = sv("text", {x:126, y:42, "text-anchor":"middle", class:"tm-subtitle"}, ct); t2.textContent = "of Salesforce Ops";
+  layerRoutes = sv("g", {class:"tm-routes"}, svg);
+  layerTowns = sv("g", {class:"tm-towns"}, svg);
+  layerLabels = sv("g", {class:"tm-labels", "pointer-events":"none"}, svg);
+}
+
+function geometry(){
+  /* routes between the same two settlements fan out side by side */
+  const groups = new Map();
+  [...R.values()].forEach(r => { const k = [r.from, r.to].sort().join("|"); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+  const geo = new Map();
+  groups.forEach((list, k) => {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+    const [ia, ib] = k.split("|"); const A = S.get(ia), B = S.get(ib);
+    const dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+    const gap = Math.min(46, 400 / Math.max(list.length, 1)), base = list.length > 2 ? 0 : 26;
+    list.forEach((r, i) => {
+      const off = base + (i - (list.length - 1) / 2) * gap;
+      const cx = (A.x + B.x) / 2 + nx * off, cy = (A.y + B.y) / 2 + ny * off;
+      const F = S.get(r.from), T = S.get(r.to);
+      const d = `M${F.x.toFixed(1)} ${F.y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${T.x.toFixed(1)} ${T.y.toFixed(1)}`;
+      const lr = F.x <= T.x ? d : `M${T.x.toFixed(1)} ${T.y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${F.x.toFixed(1)} ${F.y.toFixed(1)}`;
+      geo.set(r.id, {d, lr, len:L});
+    });
+  });
+  return geo;
+}
+
+function focusSet(){
+  const f = hover || sel; if (!f) return null;
+  if (f.type === "r"){ const r = R.get(f.id); return r ? {routes:new Set([r.id]), towns:new Set([r.from, r.to])} : null; }
+  const rs = routesOf(f.id);
+  return {routes:new Set(rs.map(r => r.id)), towns:new Set([f.id, ...rs.flatMap(r => [r.from, r.to])])};
+}
+
+function drawRoutes(){
+  layerRoutes.textContent = "";
+  const geo = geometry();
+  [...R.values()].forEach(r => {
+    if (hidden.has(r.tool)) return;
+    const g0 = geo.get(r.id); if (!g0) return;
+    const tool = TOOLS[r.tool];
+    const g = sv("g", {class:"tm-route", "data-id":r.id, tabindex:"0", role:"button", "aria-label":`${r.name}: ${S.get(r.from).name} to ${S.get(r.to).name} by ${tool.label}`}, layerRoutes);
+    const pid = "tm-p-" + r.id.replace(/[^\w-]/g, "_"), lid = "tm-l-" + r.id.replace(/[^\w-]/g, "_");
+    sv("path", {d:g0.d, class:"tm-road-edge"}, g);
+    sv("path", {id:pid, d:g0.d, class:"tm-road", stroke:tool.color, "stroke-dasharray": r.status === "planned" ? "2 8" : tool.dash, opacity: r.status === "planned" ? .8 : 1}, g);
+    if (r.status === "building") sv("path", {d:g0.d, class:"tm-build", "stroke-dasharray":"1 13"}, g);
+    sv("path", {d:g0.d, class:"tm-hit"}, g);
+    sv("path", {id:lid, d:g0.lr, fill:"none", stroke:"none"}, g);
+    if (showNames){
+      const t = sv("text", {class:"tm-rname", dy:"-5"}, g);
+      const tp = sv("textPath", {href:"#" + lid, startOffset:"50%", "text-anchor":"middle"}, t);
+      tp.textContent = r.name;
+    }
+    if (r.status !== "planned"){
+      const dur = Math.max(5, g0.len / (r.status === "building" ? 26 : 48));
+      const cart = (rev, delay) => {
+        const c = sv("g", {class:"tm-cart"}, g);
+        sv("rect", {x:-6, y:-4, width:12, height:7, rx:1.5, fill:tool.color, stroke:"#2a1d0c", "stroke-width":".8"}, c);
+        sv("rect", {x:-4.5, y:-7, width:9, height:3.5, rx:1, fill:"#f0c25a", stroke:"#2a1d0c", "stroke-width":".6"}, c);
+        sv("circle", {cx:-3.5, cy:4, r:2, fill:"#2a1d0c"}, c); sv("circle", {cx:3.5, cy:4, r:2, fill:"#2a1d0c"}, c);
+        if (REDUCED){
+          const p = $(pid), L = p.getTotalLength(), pt = p.getPointAtLength(L * (rev ? .38 : .62));
+          c.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
+          return;
+        }
+        const am = sv("animateMotion", {dur:dur.toFixed(1) + "s", repeatCount:"indefinite", rotate:"auto", begin:(-delay).toFixed(1) + "s", keyPoints: rev ? "1;0" : "0;1", keyTimes:"0;1", calcMode:"linear"}, c);
+        sv("mpath", {href:"#" + pid}, am);
+      };
+      cart(false, (r.name.length * 1.7) % dur);
+      if (r.flow === "two") cart(true, (r.name.length * 3.1 + dur / 2) % dur);
+    }
+    g.addEventListener("mouseenter", ev => { hover = {type:"r", id:r.id}; restyle(); showTip(ev, routeTip(r)); });
+    g.addEventListener("mousemove", moveTip);
+    g.addEventListener("mouseleave", () => { hover = null; restyle(); hideTip(); });
+    const pick = ev => { ev.preventDefault(); ev.stopPropagation(); hideTip(); select({type:"r", id:r.id}); };
+    g.addEventListener("click", pick);
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") pick(ev); });
+  });
+}
+
+function townSize(s){ const n = routesOf(s.id).length; return s.kind === "capital" ? 3 : n >= 6 ? 3 : n >= 3 ? 2 : 1; }
+function drawCastle(g){
+  sv("ellipse", {cx:0, cy:14, rx:58, ry:12, fill:"#2b1d08", opacity:".22"}, g);
+  sv("rect", {x:-40, y:-20, width:80, height:32, fill:"#d8d0bb", stroke:"#4a3d2a", "stroke-width":"2"}, g);
+  for (let i = 0; i < 5; i++) sv("rect", {x:-40 + i*17, y:-27, width:9, height:8, fill:"#d8d0bb", stroke:"#4a3d2a", "stroke-width":"1.6"}, g);
+  [[-48, -42], [32, -42]].forEach(([x, y]) => { sv("rect", {x, y, width:16, height:54, fill:"#cbc2aa", stroke:"#4a3d2a", "stroke-width":"2"}, g); sv("path", {d:`M${x-3} ${y} L${x+8} ${y-18} L${x+19} ${y} Z`, fill:"#9e3b33", stroke:"#4a3d2a", "stroke-width":"1.6"}, g); });
+  sv("rect", {x:-11, y:-58, width:22, height:40, fill:"#cbc2aa", stroke:"#4a3d2a", "stroke-width":"2"}, g);
+  sv("path", {d:"M-15 -58 L0 -80 L15 -58 Z", fill:"#9e3b33", stroke:"#4a3d2a", "stroke-width":"1.6"}, g);
+  sv("path", {d:"M0 -80 V-98", stroke:"#4a3d2a", "stroke-width":"1.6"}, g);
+  sv("path", {class:"tm-flag", d:"M0 -98 L18 -93 L0 -87 Z", fill:"#1f7fc4"}, g);
+  sv("path", {d:"M-9 12 V-4 a9 9 0 0 1 18 0 V12 Z", fill:"#4a3420", stroke:"#2b1d08", "stroke-width":"1.5"}, g);
+  sv("rect", {x:-4, y:-48, width:8, height:11, rx:4, fill:"#3a2a17"}, g);
+}
+function drawTown(g, size){
+  const spots = [[[0, 0]], [[-12, 2], [12, -2]], [[-18, 4], [0, -6], [18, 4]]][size - 1];
+  sv("ellipse", {cx:0, cy:12, rx:18 + size*10, ry:8, fill:"#2b1d08", opacity:".2"}, g);
+  sv("ellipse", {cx:0, cy:6, rx:16 + size*10, ry:12, fill:"none", stroke:"#8a6a3a", "stroke-width":"2", "stroke-dasharray":"3 2"}, g);
+  spots.forEach(([x, y], i) => {
+    const w = 18, h = 14;
+    sv("rect", {x:x - w/2, y:y - h + 6, width:w, height:h, fill:["#e8dcc0", "#dccfae", "#efe3c8"][i % 3], stroke:"#4a3d2a", "stroke-width":"1.5"}, g);
+    sv("path", {d:`M${x - w/2 - 3} ${y - h + 7} L${x} ${y - h - 8} L${x + w/2 + 3} ${y - h + 7} Z`, fill:["#a8423a", "#8a5a2e", "#6a4a8a"][i % 3], stroke:"#4a3d2a", "stroke-width":"1.4"}, g);
+    sv("rect", {x:x - 3, y:y - 2, width:6, height:8, fill:"#4a3420"}, g);
+  });
+}
+function drawMine(g, size){
+  const k = .8 + size * .15;
+  sv("ellipse", {cx:0, cy:12, rx:34*k, ry:8, fill:"#2b1d08", opacity:".2"}, g);
+  sv("path", {d:`M${-34*k} 10 Q ${-20*k} ${-30*k} 0 ${-32*k} Q ${22*k} ${-30*k} ${34*k} 10 Z`, fill:"#9a7b50", stroke:"#4a3d2a", "stroke-width":"1.8"}, g);
+  sv("path", {d:`M${-11*k} 10 V${-6*k} a${11*k} ${11*k} 0 0 1 ${22*k} 0 V10 Z`, fill:"#2b1d08"}, g);
+  sv("path", {d:`M${-13*k} 10 V${-7*k} M${13*k} 10 V${-7*k} M${-14*k} ${-8*k} H${14*k}`, stroke:"#6b4a26", "stroke-width":"3.2", "stroke-linecap":"round"}, g);
+  /* a cart of ore at the entrance */
+  sv("path", {d:`M${18*k} 2 h16 l-3 8 h-10 Z`, fill:"#6b4a26", stroke:"#2b1d08", "stroke-width":"1"}, g);
+  [[22, 0], [27, -1], [31, 1]].forEach(([x, y]) => sv("circle", {cx:x*k + (1-k)*8, cy:y, r:2.6, fill:"#f0c25a", stroke:"#7a4f12", "stroke-width":".7"}, g));
+  sv("circle", {cx:24*k + 2, cy:11, r:1.8, fill:"#2b1d08"}, g); sv("circle", {cx:31*k + 2, cy:11, r:1.8, fill:"#2b1d08"}, g);
+}
+
+function drawTowns(){
+  layerTowns.textContent = ""; layerLabels.textContent = "";
+  [...S.values()].sort((a, b) => a.y - b.y).forEach(s => {
+    const g = sv("g", {class:"tm-town" + (canEdit() ? " movable" : ""), transform:`translate(${s.x} ${s.y})`, tabindex:"0", role:"button", "aria-label":`${s.name}, ${KINDS[s.kind] || s.kind}`, "data-id":s.id}, layerTowns);
+    sv("circle", {r: s.kind === "capital" ? 70 : 44, cy:-6, class:"tm-halo"}, g);
+    sv("circle", {r: s.kind === "capital" ? 62 : 38, cy:-6, fill:"transparent"}, g);
+    const size = townSize(s);
+    if (s.kind === "capital") drawCastle(g); else if (s.kind === "source") drawMine(g, size); else drawTown(g, size);
+    /* name ribbon */
+    const ly = s.kind === "capital" ? 34 : 28, w = Math.max(60, s.name.length * 7.6 + 22);
+    const lg = sv("g", {class:"tm-ribbon", "data-id":s.id, transform:`translate(${s.x} ${s.y + ly})`}, layerLabels);
+    sv("path", {d:`M${-w/2 - 8} 2 l8 -9 v18 Z M${w/2 + 8} 2 l-8 -9 v18 Z`, fill:"#c9b07a", stroke:"#7d6a45", "stroke-width":"1"}, lg);
+    sv("rect", {x:-w/2, y:-9, width:w, height:20, rx:3, fill:"#f6ecd2", stroke:"#7d6a45", "stroke-width":"1.4"}, lg);
+    const t = sv("text", {y:5.5, "text-anchor":"middle", class: s.kind === "capital" ? "tm-sname cap" : "tm-sname"}, lg); t.textContent = s.name;
+    g.addEventListener("mouseenter", ev => { if (drag) return; hover = {type:"s", id:s.id}; restyle(); showTip(ev, townTip(s)); });
+    g.addEventListener("mousemove", moveTip);
+    g.addEventListener("mouseleave", () => { if (drag) return; hover = null; restyle(); hideTip(); });
+    g.addEventListener("pointerdown", ev => startDrag(ev, s, g));
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); select({type:"s", id:s.id}); } });
+  });
+}
+/* hover and selection only change classes, so the elements under the pointer stay put */
+function restyle(){
+  const fs = focusSet();
+  layerRoutes.querySelectorAll(".tm-route").forEach(e => { const id = e.getAttribute("data-id"); e.classList.toggle("dim", !!fs && !fs.routes.has(id)); e.classList.toggle("on", !!sel && sel.type === "r" && sel.id === id); });
+  layerTowns.querySelectorAll(".tm-town").forEach(e => { const id = e.getAttribute("data-id"); e.classList.toggle("dim", !!fs && !fs.towns.has(id)); e.classList.toggle("on", !!sel && sel.type === "s" && sel.id === id); });
+  layerLabels.querySelectorAll(".tm-ribbon").forEach(e => { const id = e.getAttribute("data-id"); e.classList.toggle("dim", !!fs && !fs.towns.has(id)); });
+}
+function renderMap(){ if (!layerRoutes) drawBackdrop(); drawRoutes(); drawTowns(); restyle(); }
+
+/* ---------- dragging a settlement to a new spot ---------- */
+let drag = null;
+function toMap(ev){ const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+function startDrag(ev, s, g){
+  if (ev.button !== 0) return;
+  const p = toMap(ev);
+  drag = {id:s.id, dx:p.x - s.x, dy:p.y - s.y, sx:ev.clientX, sy:ev.clientY, moved:false, ox:s.x, oy:s.y};
+  hideTip();
+  try{ g.setPointerCapture(ev.pointerId); }catch(e){}
+  const move = e => {
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) return;
+    if (!canEdit()) return;
+    drag.moved = true;
+    const q = toMap(e), t = S.get(drag.id); if (!t) return;
+    t.x = Math.round(Math.min(MW - 60, Math.max(60, q.x - drag.dx))); t.y = Math.round(Math.min(MH - 50, Math.max(70, q.y - drag.dy)));
+    g.setAttribute("transform", `translate(${t.x} ${t.y})`);
+    const rb = layerLabels.querySelector(`.tm-ribbon[data-id="${t.id}"]`); if (rb) rb.setAttribute("transform", `translate(${t.x} ${t.y + (t.kind === "capital" ? 34 : 28)})`);
+    if (!drag.raf) drag.raf = requestAnimationFrame(() => { if (drag){ drag.raf = 0; drawRoutes(); restyle(); } });
+  };
+  const up = async () => {
+    g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", up); g.removeEventListener("pointercancel", up);
+    const d = drag; drag = null;
+    if (!d) return;
+    if (!d.moved){ select({type:"s", id:d.id}); return; }
+    const t = S.get(d.id); if (!t) return;
+    const ok = await save(d.id, settlementDoc(t));
+    if (!ok){ t.x = d.ox; t.y = d.oy; renderMap(); }
+  };
+  g.addEventListener("pointermove", move); g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
+}
+
+/* ---------- tooltip ---------- */
+const tip = mk("div", "tm-tip"); tip.hidden = true; document.body.appendChild(tip);
+function routeTip(r){ const t = TOOLS[r.tool]; return [r.name, `${S.get(r.from).name} ${r.flow === "two" ? "⇄" : "→"} ${S.get(r.to).name}`, `${t.label} · ${STATUS[r.status] || r.status}`]; }
+function townTip(s){ const n = routesOf(s.id).length; return [s.name, s.blurb || KINDS[s.kind], `${n} trade route${n === 1 ? "" : "s"}${canEdit() ? " · drag to move" : ""}`]; }
+function showTip(ev, lines){ tip.textContent = ""; lines.forEach((l, i) => { if (l) tip.appendChild(mk(i ? "div" : "b", null, l)); }); tip.hidden = false; moveTip(ev); }
+function moveTip(ev){ if (tip.hidden) return; const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 14; if (x + w > innerWidth - 8) x = ev.clientX - w - 14; if (y + h > innerHeight - 8) y = ev.clientY - h - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function hideTip(){ tip.hidden = true; }
+
+/* ---------- the ledger panel ---------- */
+const panel = $("trade-panel");
+function select(s){ sel = s; mode = "view"; draft = null; restyle(); renderPanel(); }
+function btn(label, cls, fn, disabled){ const b = mk("button", cls, label); b.type = "button"; b.disabled = !!disabled; b.addEventListener("click", fn); return b; }
+function field(label, input){ const l = mk("label", "tm-field"); l.append(mk("span", null, label), input); return l; }
+function selectEl(opts, value){ const s = mk("select"); opts.forEach(([v, t]) => { const o = mk("option", null, t); o.value = v; s.appendChild(o); }); if (value != null) s.value = value; return s; }
+function textEl(value, ph, max){ const i = mk("input"); i.type = "text"; i.value = value || ""; i.placeholder = ph || ""; i.maxLength = max || 80; return i; }
+function townOpts(){ return [...S.values()].sort((a, b) => a.name.localeCompare(b.name)).map(s => [s.id, s.name]); }
+
+function renderPanel(){
+  panel.textContent = "";
+  const head = mk("div", "tm-phead");
+  head.append(mk("h3", null, "Trade Ledger"), mk("div", "tm-count", `${S.size} settlements · ${R.size} trade routes`));
+  panel.appendChild(head);
+  const acts = mk("div", "tm-acts");
+  acts.append(
+    btn("Found a settlement", "tm-btn", () => { mode = "newS"; draft = {name:"", kind:"system", blurb:""}; renderPanel(); }, !canEdit()),
+    btn("Open a trade route", "tm-btn", () => { mode = "newR"; draft = {name:"", from: sel && sel.type === "s" ? sel.id : "sf", to:"sf", tool:"mulesoft", flow:"one", status:"live", note:""}; if (draft.from === "sf") draft.to = [...S.keys()].find(k => k !== "sf") || "sf"; renderPanel(); }, !canEdit())
+  );
+  panel.appendChild(acts);
+  const body = mk("div", "tm-pbody"); panel.appendChild(body);
+  if (mode === "newS" || mode === "editS") return settlementForm(body);
+  if (mode === "newR" || mode === "editR") return routeForm(body);
+  if (sel && sel.type === "s" && S.has(sel.id)) return settlementCard(body, S.get(sel.id));
+  if (sel && sel.type === "r" && R.has(sel.id)) return routeCard(body, R.get(sel.id));
+  helpCard(body);
+}
+function helpCard(body){
+  body.appendChild(mk("h4", null, "Reading the map"));
+  const ul = mk("ul", "tm-help");
+  [["Castle and towns", "the systems we run or send data to"], ["Mines", "sources of record where data comes from"], ["Roads", "integrations, colored by the tool that carries them"], ["Carts", "travel the way data flows; two carts mean it flows both ways"], ["Gravel roads", "integrations still being built; dotted roads are only planned"]]
+    .forEach(([a, b]) => { const li = mk("li"); li.append(mk("b", null, a + ": "), document.createTextNode(b)); ul.appendChild(li); });
+  body.appendChild(ul);
+  body.appendChild(mk("h4", null, "Changing the map"));
+  body.appendChild(mk("p", "tm-p", canEdit()
+    ? "Click a settlement or road to see its details, then Edit or remove it. Drag a settlement to move it. Use the buttons above to add new ones. Everyone sees your changes."
+    : db ? "You have view-only access, so you can look but not change the map." : "Connect to Asana to change the map."));
+  body.appendChild(mk("p", "tm-note", "The starting map was drawn from your Asana tasks. Tools and directions are best guesses, so correct any that are wrong."));
+  legend(body);
+}
+function legend(body){
+  body.appendChild(mk("h4", null, "Traders' guilds"));
+  const lg = mk("div", "tm-legend");
+  Object.entries(TOOLS).forEach(([k, t]) => {
+    const n = [...R.values()].filter(r => r.tool === k).length;
+    const b = mk("button", "tm-chip"); b.type = "button"; b.setAttribute("aria-pressed", String(!hidden.has(k)));
+    const sw = mk("i"); sw.style.background = t.color; if (t.dash) sw.style.backgroundImage = "repeating-linear-gradient(90deg, transparent 0 4px, #f6ecd2 4px 7px)";
+    b.append(sw, mk("span", null, t.label), mk("em", null, String(n)));
+    b.title = hidden.has(k) ? "Show " + t.label + " routes" : "Hide " + t.label + " routes";
+    b.addEventListener("click", () => { if (hidden.has(k)) hidden.delete(k); else hidden.add(k); renderMap(); renderPanel(); });
+    lg.appendChild(b);
+  });
+  body.appendChild(lg);
+  const nm = mk("label", "tm-toggle"); const cb = mk("input"); cb.type = "checkbox"; cb.checked = showNames;
+  cb.addEventListener("change", () => { showNames = cb.checked; try{ localStorage.setItem("settlers-trade-names", showNames ? "1" : "0"); }catch(e){} renderMap(); });
+  nm.append(cb, mk("span", null, "Show route names on the map")); body.appendChild(nm);
+}
+function settlementCard(body, s){
+  body.appendChild(mk("div", "tm-kicker", KINDS[s.kind] || s.kind));
+  body.appendChild(mk("h4", "tm-name", s.name));
+  if (s.blurb) body.appendChild(mk("p", "tm-p", s.blurb));
+  const rs = routesOf(s.id).sort((a, b) => a.name.localeCompare(b.name));
+  body.appendChild(mk("div", "tm-sub", rs.length ? `${rs.length} trade route${rs.length === 1 ? "" : "s"}` : "No trade routes yet"));
+  const ul = mk("ul", "tm-list");
+  rs.forEach(r => {
+    const other = S.get(r.from === s.id ? r.to : r.from), arrow = r.flow === "two" ? "⇄" : r.from === s.id ? "→" : "←";
+    const li = mk("li"); const b = mk("button", "tm-link"); b.type = "button";
+    const sw = mk("i"); sw.style.background = TOOLS[r.tool].color;
+    b.append(sw, mk("span", null, r.name), mk("em", null, `${arrow} ${other.name}`));
+    b.addEventListener("click", () => select({type:"r", id:r.id}));
+    li.appendChild(b); ul.appendChild(li);
+  });
+  body.appendChild(ul);
+  if (mode === "razeS") return razeBox(body, `Raze ${s.name}?`, rs.length ? `Its ${rs.length} trade route${rs.length === 1 ? "" : "s"} will close too.` : "", async () => {
+    const ok = await removeItems([s.id, ...rs.map(r => r.id)]);
+    if (ok){ sfx("revoke"); sel = null; mode = "view"; renderMap(); renderPanel(); }
+  });
+  const acts = mk("div", "tm-acts");
+  acts.append(btn("Edit", "tm-btn", () => { mode = "editS"; draft = Object.assign({}, s); renderPanel(); }, !canEdit()),
+    btn("Open a route from here", "tm-btn", () => { mode = "newR"; draft = {name:"", from:s.id, to: s.id === "sf" ? ([...S.keys()].find(k => k !== "sf")) : "sf", tool:"mulesoft", flow:"one", status:"live", note:""}; renderPanel(); }, !canEdit()),
+    btn("Raze", "tm-btn danger", () => { mode = "razeS"; renderPanel(); }, !canEdit()),
+    btn("Back", "tm-btn ghost", () => select(null)));
+  body.appendChild(acts);
+}
+function routeCard(body, r){
+  const t = TOOLS[r.tool];
+  const k = mk("div", "tm-kicker"); const sw = mk("i"); sw.style.background = t.color; k.append(sw, document.createTextNode(`${t.label} · ${STATUS[r.status] || r.status}`));
+  body.appendChild(k);
+  body.appendChild(mk("h4", "tm-name", r.name));
+  const path = mk("div", "tm-path");
+  const a = btn(S.get(r.from).name, "tm-link plain", () => select({type:"s", id:r.from}));
+  const z = btn(S.get(r.to).name, "tm-link plain", () => select({type:"s", id:r.to}));
+  path.append(a, mk("span", "tm-arrow", r.flow === "two" ? "⇄" : "→"), z);
+  body.appendChild(path);
+  if (r.note) body.appendChild(mk("p", "tm-p", r.note));
+  if (mode === "razeR") return razeBox(body, `Close the ${r.name} route?`, "", async () => {
+    const ok = await removeItems([r.id]);
+    if (ok){ sfx("revoke"); sel = null; mode = "view"; renderMap(); renderPanel(); }
+  });
+  const acts = mk("div", "tm-acts");
+  acts.append(btn("Edit", "tm-btn", () => { mode = "editR"; draft = Object.assign({}, r); renderPanel(); }, !canEdit()),
+    btn("Close route", "tm-btn danger", () => { mode = "razeR"; renderPanel(); }, !canEdit()),
+    btn("Back", "tm-btn ghost", () => select(null)));
+  body.appendChild(acts);
+}
+function razeBox(body, q, extra, fn){
+  const box = mk("div", "tm-raze");
+  box.append(mk("b", null, q)); if (extra) box.append(mk("div", null, extra));
+  const acts = mk("div", "tm-acts");
+  const yes = btn("Yes, remove it", "tm-btn danger", async () => { yes.disabled = true; await fn(); yes.disabled = false; });
+  acts.append(yes, btn("Keep it", "tm-btn ghost", () => { mode = "view"; renderPanel(); }));
+  box.appendChild(acts); body.appendChild(box);
+}
+function settlementForm(body){
+  const isNew = mode === "newS";
+  body.appendChild(mk("h4", null, isNew ? "Found a settlement" : "Edit " + draft.name));
+  const f = mk("form", "tm-form");
+  const name = textEl(draft.name, "e.g. Canvas", 40), kind = selectEl(Object.entries(KINDS), draft.kind), blurb = textEl(draft.blurb, "What it is, in a few words", 90);
+  f.append(field("Name", name), field("Kind", kind), field("Description", blurb));
+  const msg = mk("div", "tm-msg");
+  const acts = mk("div", "tm-acts");
+  const go = mk("button", "tm-btn", isNew ? "Found it" : "Save"); go.type = "submit";
+  acts.append(go, btn("Cancel", "tm-btn ghost", () => { mode = "view"; renderPanel(); }));
+  f.append(msg, acts);
+  f.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const nm = name.value.trim(); if (!nm){ msg.textContent = "Give the settlement a name."; name.focus(); return; }
+    if ([...S.values()].some(s => s.name.toLowerCase() === nm.toLowerCase() && s.id !== draft.id)){ msg.textContent = "There's already a settlement with that name."; return; }
+    go.disabled = true;
+    const id = isNew ? "s-" + Math.random().toString(36).slice(2, 10) : draft.id;
+    const spot = isNew ? freeSpot(kind.value) : {x:draft.x, y:draft.y};
+    const ok = await save(id, {t:"s", name:nm, kind:kind.value, blurb:blurb.value.trim(), x:spot.x, y:spot.y});
+    go.disabled = false;
+    if (ok){ sfx(isNew ? "grant" : "chime"); select({type:"s", id}); pulse(id); }
+  });
+  body.appendChild(f); name.focus();
+}
+function routeForm(body){
+  const isNew = mode === "newR";
+  body.appendChild(mk("h4", null, isNew ? "Open a trade route" : "Edit " + draft.name));
+  const f = mk("form", "tm-form");
+  const name = textEl(draft.name, "e.g. Course Enrollment", 50);
+  const from = selectEl(townOpts(), draft.from), to = selectEl(townOpts(), draft.to);
+  const tool = selectEl(Object.entries(TOOLS).map(([k, t]) => [k, t.label]), draft.tool);
+  const flow = selectEl([["one", "One way (From → To)"], ["two", "Both ways (⇄)"]], draft.flow);
+  const status = selectEl(Object.entries(STATUS), draft.status);
+  const note = textEl(draft.note, "Optional: what it carries, schedule, owner", 160);
+  const pair = mk("div", "tm-pair"); pair.append(field("From", from), field("To", to));
+  const pair2 = mk("div", "tm-pair"); pair2.append(field("Direction", flow), field("Status", status));
+  f.append(field("Name", name), pair, field("Tool", tool), pair2, field("Notes", note));
+  const msg = mk("div", "tm-msg");
+  const acts = mk("div", "tm-acts");
+  const go = mk("button", "tm-btn", isNew ? "Open the route" : "Save"); go.type = "submit";
+  acts.append(go, btn("Cancel", "tm-btn ghost", () => { mode = "view"; renderPanel(); }));
+  f.append(msg, acts);
+  f.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const nm = name.value.trim(); if (!nm){ msg.textContent = "Give the route a name."; name.focus(); return; }
+    if (from.value === to.value){ msg.textContent = "A route needs two different settlements."; return; }
+    go.disabled = true;
+    const id = isNew ? "r-" + Math.random().toString(36).slice(2, 10) : draft.id;
+    const ok = await save(id, {t:"r", name:nm, from:from.value, to:to.value, tool:tool.value, flow:flow.value, status:status.value, note:note.value.trim()});
+    go.disabled = false;
+    if (ok){ sfx(isNew ? "grant" : "chime"); select({type:"r", id}); pulse(id); }
+  });
+  body.appendChild(f); name.focus();
+}
+function freeSpot(kind){
+  const c = kind === "source" ? {x:250, y:420} : kind === "capital" ? {x:600, y:400} : {x:950, y:420};
+  for (let r = 0; r < 600; r += 30){
+    for (let a = 0; a < 360; a += 24){
+      const x = Math.round(c.x + r * Math.cos(a * Math.PI / 180)), y = Math.round(c.y + r * .8 * Math.sin(a * Math.PI / 180));
+      if (x < 90 || x > MW - 90 || y < 130 || y > MH - 80) continue;
+      if ([...S.values()].every(s => Math.hypot(s.x - x, s.y - y) > 120)) return {x, y};
+    }
+  }
+  return {x:c.x, y:c.y};
+}
+function pulse(id){ setTimeout(() => { const e = svg.querySelector(`.tm-town[data-id="${id}"]`) || svg.querySelector(".tm-route.on"); if (e){ e.classList.remove("tm-pulse"); void e.getBoundingClientRect(); e.classList.add("tm-pulse"); } }, 60); }
+function settlementDoc(s){ return {t:"s", name:s.name, kind:s.kind, blurb:s.blurb || "", x:s.x, y:s.y}; }
+
+/* ---------- saving (shared db) ---------- */
+const note = (text, kind) => { const n = $("trade-note"); n.textContent = text; n.className = "tm-status" + (kind ? " " + kind : ""); };
+function fail(e, verb){
+  const code = e && e.code;
+  if (code === "invalid_argument"){ readOnly = true; note("Asana refused that change. Make sure you're a member of the Guild Hall Ledger project in Asana.", "err"); }
+  else if (code === "quota_exceeded") note("The ledger is full. Remove a few old routes before adding more.", "err");
+  else if (code === "revoked" || code === "not_granted" || code === "capability_disabled" || code === "capability_removed"){ db = null; note("Asana stopped accepting your token. Disconnect and connect again with a fresh token.", "err"); }
+  else note(`Couldn't ${verb}. Try again in a moment.`, "err");
+  renderPanel();
+}
+async function retry(fn){ try{ return await fn(); }catch(e){ if (e && e.code === "unavailable"){ await new Promise(r => setTimeout(r, 700)); return await fn(); } throw e; } }
+async function save(id, body){
+  if (!canEdit()) return false;
+  try{ await retry(() => db.collection("trade").doc(id).set(body)); docs.set(id, body); rebuild(); renderMap(); note("Saved. Everyone with the map sees the change.", ""); return true; }
+  catch(e){ fail(e, "save that"); return false; }
+}
+async function removeItems(ids){
+  if (!canEdit()) return false;
+  try{
+    for (const id of ids){
+      const isS = S.has(id), item = isS ? S.get(id) : R.get(id);
+      if (SEED_IDS.has(id)){ const body = {t: isS ? "s" : "r", removed:true}; await retry(() => db.collection("trade").doc(id).set(body)); docs.set(id, body); }
+      else { await retry(() => db.collection("trade").doc(id).delete()); docs.delete(id); }
+      if (!item) continue;
+    }
+    rebuild(); note("Removed from the map.", ""); return true;
+  }catch(e){ fail(e, "remove that"); return false; }
+}
+
+rebuild(); renderMap(); renderPanel();
+window.__tradeRender = renderMap;
+(async function(){
+  const use = window.claude && window.claude.use;
+  try{ db = use ? await window.claude.use("db") : null; }catch(e){ db = null; }
+  if (!db){ note("Showing the starting map. Connect to Asana to see the team's map and change it.", "err"); renderPanel(); return; }
+  note("Loading the trade ledger…", "");
+  renderPanel();
+  let first = true;
+  db.collection("trade").onSnapshot(snap => {
+    const next = new Map();
+    snap.docs.forEach(d => { if (d.exists) next.set(d.id, Object.assign({}, d.data() || {})); });
+    docs = next; rebuild();
+    if (!drag){ renderMap(); if (mode === "view") renderPanel(); }
+    if (first){ first = false; note(`${R.size} trade routes between ${S.size} settlements. Click anything to see or change it.`, ""); }
+  }, e => fail(e, "load the trade ledger"));
 })();
 })();
 </script>

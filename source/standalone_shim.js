@@ -11,7 +11,7 @@
 const CONFIG = {
   workspace: "71309345811105",
   ledgerProject: "1219951921516481",
-  ledgerSections: {duties: "1219952038707160", heroes: "1219951921525417", classes: "1219951921525417"},
+  ledgerSections: {duties: "1219952038707160", heroes: "1219951921525417", classes: "1219951921525417", trade: "1219951921525417"},
   api: "https://app.asana.com/api/1.0",
   pollMs: 30000
 };
@@ -63,7 +63,7 @@ const mcp = {
 const PREFIX = "guild:";
 let records = [];            /* {gid, coll, id, data} */
 let loaded = false, loading = null;
-const subs = {duties: new Set(), heroes: new Set(), classes: new Set()};
+const subs = {duties: new Set(), heroes: new Set(), classes: new Set(), trade: new Set()};
 function parseTask(t){
   const line = String(t.notes || "").split("\n").find(l => l.startsWith(PREFIX));
   if (!line) return null;
@@ -71,6 +71,7 @@ function parseTask(t){
   if (m.t === "duty") return {gid: t.gid, coll: "duties", id: t.gid, data: {person: m.person || "", text: t.name || "", note: m.note || "", createdAt: Date.parse(t.created_at) || 0}};
   if (m.t === "hero" && m.id) return {gid: t.gid, coll: "heroes", id: m.id, data: m.body || {}};
   if (m.t === "class" && m.id) return {gid: t.gid, coll: "classes", id: m.id, data: {cls: m.cls}};
+  if (m.t === "trade" && m.id) return {gid: t.gid, coll: "trade", id: m.id, data: m.body || {}};
   return null;
 }
 async function refresh(){
@@ -113,6 +114,15 @@ function docRef(coll, id){
             const json = await asana("POST", "/tasks", {body: {name: body.text, notes, projects: [CONFIG.ledgerProject], memberships: [{project: CONFIG.ledgerProject, section: CONFIG.ledgerSections.duties}]}});
             const gid = json.data.gid; ref.id = gid;
             records.push({gid, coll, id: gid, data: Object.assign({}, body)});
+          }
+        } else if (coll === "trade"){
+          const existing = records.find(r => r.coll === coll && r.id === id);
+          const notes = PREFIX + JSON.stringify({t: "trade", id, body});
+          const name = (body.removed ? "Trade (removed): " : body.t === "s" ? "Settlement: " : "Trade route: ") + (body.name || id);
+          if (existing){ await asana("PUT", `/tasks/${existing.gid}`, {body: {name, notes}}); existing.data = Object.assign({}, body); }
+          else {
+            const json = await asana("POST", "/tasks", {body: {name, notes, projects: [CONFIG.ledgerProject], memberships: [{project: CONFIG.ledgerProject, section: CONFIG.ledgerSections.trade}]}});
+            records.push({gid: json.data.gid, coll, id, data: Object.assign({}, body)});
           }
         } else {
           const kind = coll === "heroes" ? "hero" : "class";

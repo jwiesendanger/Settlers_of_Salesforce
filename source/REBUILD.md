@@ -6,6 +6,7 @@
 |---|---|
 | `ops-catan.html` | Master page (the Claude artifact version). Board, Treasure Hoard, Guild Hall and Village Square all live here. |
 | `village2.js` | Source of the Village Square script. It is already inside `ops-catan.html`; edit it here and splice it back between `/* ================= Village Square` and `$("tabbtn-village").addEventListener(...)`. |
+| `trade.js` | Source of the Trade Map script, the last `<script>` block in `ops-catan.html`. Edit it here and paste it back over that block. The starting settlements and routes are `SEED_S` and `SEED_R` at the top. |
 | `standalone_shim.js` | Asana bridge for the GitHub version (personal access token, ledger-project storage). |
 | `standalone_connect.html` | The "Connect to Asana" dialog for the GitHub version. |
 | `build_standalone.py` | Turns `ops-catan.html` into the GitHub version. |

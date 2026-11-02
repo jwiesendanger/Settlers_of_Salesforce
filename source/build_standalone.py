@@ -13,6 +13,10 @@ copy=[
  ("Open this page inside Claude to see and edit the shared guild.","Connect to Asana to see and edit the shared guild."),
  ("The ledger isn't available in this view anymore. Reload the page.","Asana stopped accepting your token. Disconnect and connect again with a fresh token."),
  ("Your access to this page is view-only, so the guild can't be changed here.","Asana refused that change. Make sure you're a member of the Guild Hall Ledger project in Asana."),
+ ("Your access to this page is view-only, so the map can't be changed here.","Asana refused that change. Make sure you're a member of the Guild Hall Ledger project in Asana."),
+ ("Showing the starting map. Changes can't be saved in this copy.","Showing the starting map. Connect to Asana to see the team's map and change it."),
+ ("This copy can't save changes. Open the shared page to edit the map.","Connect to Asana to change the map."),
+ ("Saving isn't available in this view anymore. Reload the page.","Asana stopped accepting your token. Disconnect and connect again with a fresh token."),
 ]
 for a,b in copy:
     n=s.count(a); assert n>=1,(a); s=s.replace(a,b)
