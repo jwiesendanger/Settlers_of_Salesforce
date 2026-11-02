@@ -147,12 +147,6 @@ function drawBackdrop(){
     if (i % 3 === 2){ sv("path", {d:`M${x-9} ${y+6} L${x} ${y-12} L${x+9} ${y+6} Z`, fill:"#6d8a4a"}, deco); sv("path", {d:`M${x+12} ${y+9} L${x+19} ${y-4} L${x+26} ${y+9} Z`, fill:"#5f7c40"}, deco); }
     else sv("path", {d:`M${x-20} ${y+8} Q ${x-6} ${y-14} ${x+8} ${y+8} M${x-2} ${y+8} Q ${x+10} ${y-6} ${x+22} ${y+8}`, fill:"none", stroke:"#8a7146", "stroke-width":"2"}, deco);
   });
-  /* compass rose */
-  const cr = sv("g", {transform:`translate(${OX + 1112} ${OY + 716})`, opacity:".8", "pointer-events":"none"}, svg);
-  sv("circle", {r:30, fill:"none", stroke:"#6b5733", "stroke-width":"1.2"}, cr);
-  sv("path", {d:"M0 -38 L6 -6 L0 0 L-6 -6 Z M0 38 L6 6 L0 0 L-6 6 Z", fill:"#6b5733"}, cr);
-  sv("path", {d:"M-38 0 L-6 -6 L0 0 L-6 6 Z M38 0 L6 -6 L0 0 L6 6 Z", fill:"#b49a64"}, cr);
-  const n = sv("text", {y:-42, "text-anchor":"middle", class:"tm-compass"}, cr); n.textContent = "N";
   layerRoutes = sv("g", {class:"tm-routes"}, svg);
   layerTowns = sv("g", {class:"tm-towns"}, svg);
   layerLabels = sv("g", {class:"tm-labels", "pointer-events":"none"}, svg);
