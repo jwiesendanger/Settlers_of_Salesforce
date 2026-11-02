@@ -440,6 +440,24 @@ svg#trade-svg{width:100%;height:auto;display:block}
 .tm-msg{color:var(--brick-hi);font-size:13px;min-height:1em}
 .tm-raze{background:rgba(224,72,47,.12);border:1px solid #a24a3a;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
 @media (prefers-reduced-motion:reduce){.tm-flag,.tm-pulse{animation:none}}
+.tm-scroll{pointer-events:none}
+.tm-badge{font-family:var(--f-body);font-weight:700;font-size:9px;fill:#fff}
+.tm-ticon{width:14px!important;height:16px!important;border-radius:2px!important;background:#f6ecd2;border:1px solid #b49a64;box-shadow:inset 0 -3px 0 #d9c597}
+.tm-paste{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;letter-spacing:0;padding:6px 8px;border-radius:6px;border:1px solid var(--frame);background:var(--parch);color:var(--parch-ink);width:100%;box-sizing:border-box;resize:vertical;white-space:pre;overflow:auto}
+.tm-preview{max-width:100%;overflow:auto;border-radius:6px}
+.tm-table{border-collapse:collapse;font-size:12.5px;color:var(--parch-ink);background:var(--parch);min-width:100%}
+.tm-table th,.tm-table td{border:1px solid #cdb98a;padding:3px 7px;text-align:left;vertical-align:top;white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+.tm-table th{background:#e6d5a8;font-family:var(--f-label);letter-spacing:.03em;position:sticky;top:0}
+.tm-table tbody tr:nth-child(even) td{background:#efe3c3}
+.tm-modal{position:fixed;inset:0;z-index:80;background:rgba(6,20,32,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+.tm-mcard{background:var(--panel);border:2px solid var(--frame);border-radius:14px;width:min(1200px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;gap:10px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.tm-mhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.tm-mhead h3{margin:2px 0 0;font-family:var(--f-display);font-size:22px;color:var(--frame)}
+.tm-mbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tm-filter{font-family:var(--f-body);font-size:14px;padding:6px 8px;border-radius:6px;border:1px solid var(--frame);background:var(--parch);color:var(--parch-ink);width:220px;max-width:100%}
+.tm-mbar .tm-msg{flex:1;min-height:0}
+.tm-twrap{overflow:auto;border-radius:8px;border:1px solid var(--panel-line);min-height:120px}
+.tm-twrap .tm-table td{white-space:normal}
 </style>
 
 <div class="wrap">
@@ -2645,10 +2663,10 @@ const SEED_IDS = new Set([...SEED_S, ...SEED_R].map(x => x.id));
 
 let docs = new Map();          /* id -> stored override or addition */
 let db = null, readOnly = false;
-let S = new Map(), R = new Map();
+let S = new Map(), R = new Map(), T = new Map();   /* T: tables kept at mines */
 let sel = null;                /* {type:"s"|"r", id} */
 let hover = null;
-let mode = "view";             /* view | newS | newR | editS | editR | razeS | razeR */
+let mode = "view";             /* view | newS | newR | editS | editR | razeS | razeR | newT | editT */
 let draft = null;
 const hidden = new Set();      /* tools toggled off */
 let showNames = true;
@@ -2663,10 +2681,13 @@ function rebuild(){
     if (v.removed){ tgt.delete(id); return; }
     tgt.set(id, Object.assign({}, tgt.get(id) || {}, v, {id}));
   });
+  T = new Map();
+  docs.forEach((v, id) => { if (v.t === "tbl" && !v.removed && S.has(v.mine) && Array.isArray(v.rows)) T.set(id, Object.assign({}, v, {id})); });
   R.forEach((r, id) => { if (!S.has(r.from) || !S.has(r.to) || r.from === r.to) R.delete(id); if (!TOOLS[r.tool]) r.tool = "tbd"; });
   if (sel && !(sel.type === "s" ? S : R).has(sel.id)) sel = null;
 }
 const canEdit = () => !!db && !readOnly;
+function tablesOf(sid){ return [...T.values()].filter(t => t.mine === sid).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); }
 function routesOf(sid){ return [...R.values()].filter(r => r.from === sid || r.to === sid); }
 
 /* ---------- drawing ---------- */
@@ -2830,6 +2851,15 @@ function drawTowns(){
     sv("circle", {r: s.kind === "capital" ? 62 : 38, cy:-6, fill:"transparent"}, g);
     const size = townSize(s);
     if (s.kind === "capital") drawCastle(g); else if (s.kind === "source") drawMine(g, size); else drawTown(g, size);
+    const nt = tablesOf(s.id).length;
+    if (nt){
+      /* a little scroll marks a mine that has tables on file */
+      const bx = s.kind === "capital" ? -58 : -38, by = -30, bg = sv("g", {class:"tm-scroll", transform:`translate(${bx} ${by})`}, g);
+      sv("rect", {x:-9, y:-7, width:18, height:14, rx:2, fill:"#f6ecd2", stroke:"#7d6a45", "stroke-width":"1.3"}, bg);
+      sv("path", {d:"M-5 -3 H5 M-5 0 H5 M-5 3 H2", stroke:"#8a6a3a", "stroke-width":"1"}, bg);
+      sv("circle", {cx:9, cy:-7, r:6.5, fill:"#a8323e", stroke:"#f6ecd2", "stroke-width":"1.2"}, bg);
+      const tx = sv("text", {x:9, y:-4.2, "text-anchor":"middle", class:"tm-badge"}, bg); tx.textContent = String(nt);
+    }
     /* name ribbon */
     const ly = s.kind === "capital" ? 34 : 28, w = Math.max(60, s.name.length * 7.6 + 22);
     const lg = sv("g", {class:"tm-ribbon", "data-id":s.id, transform:`translate(${s.x} ${s.y + ly})`}, layerLabels);
@@ -2887,7 +2917,7 @@ function startDrag(ev, s, g){
 /* ---------- tooltip ---------- */
 const tip = mk("div", "tm-tip"); tip.hidden = true; document.body.appendChild(tip);
 function routeTip(r){ const t = TOOLS[r.tool]; return [r.name, `${S.get(r.from).name} ${r.flow === "two" ? "⇄" : "→"} ${S.get(r.to).name}`, `${t.label} · ${STATUS[r.status] || r.status}`]; }
-function townTip(s){ const n = routesOf(s.id).length; return [s.name, s.blurb || KINDS[s.kind], `${n} trade route${n === 1 ? "" : "s"}${canEdit() ? " · drag to move" : ""}`]; }
+function townTip(s){ const n = routesOf(s.id).length, t = tablesOf(s.id).length; return [s.name, s.blurb || KINDS[s.kind], `${n} trade route${n === 1 ? "" : "s"}${t ? ` · ${t} table${t === 1 ? "" : "s"} on file` : ""}${canEdit() ? " · drag to move" : ""}`]; }
 function showTip(ev, lines){ tip.textContent = ""; lines.forEach((l, i) => { if (l) tip.appendChild(mk(i ? "div" : "b", null, l)); }); tip.hidden = false; moveTip(ev); }
 function moveTip(ev){ if (tip.hidden) return; const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 14; if (x + w > innerWidth - 8) x = ev.clientX - w - 14; if (y + h > innerHeight - 8) y = ev.clientY - h - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
 function hideTip(){ tip.hidden = true; }
@@ -2914,6 +2944,7 @@ function renderPanel(){
   panel.appendChild(acts);
   const body = mk("div", "tm-pbody"); panel.appendChild(body);
   if (mode === "newS" || mode === "editS") return settlementForm(body);
+  if (mode === "newT" || mode === "editT") return tableForm(body);
   if (mode === "newR" || mode === "editR") return routeForm(body);
   if (sel && sel.type === "s" && S.has(sel.id)) return settlementCard(body, S.get(sel.id));
   if (sel && sel.type === "r" && R.has(sel.id)) return routeCard(body, R.get(sel.id));
@@ -2954,6 +2985,9 @@ function settlementCard(body, s){
   body.appendChild(mk("h4", "tm-name", s.name));
   if (s.blurb) body.appendChild(mk("p", "tm-p", s.blurb));
   const rs = routesOf(s.id).sort((a, b) => a.name.localeCompare(b.name));
+  const ts = tablesOf(s.id);
+  if (s.kind === "source") tableSection(body, s, ts);
+  body.appendChild(mk("h4", null, "Trade routes"));
   body.appendChild(mk("div", "tm-sub", rs.length ? `${rs.length} trade route${rs.length === 1 ? "" : "s"}` : "No trade routes yet"));
   const ul = mk("ul", "tm-list");
   rs.forEach(r => {
@@ -2965,8 +2999,8 @@ function settlementCard(body, s){
     li.appendChild(b); ul.appendChild(li);
   });
   body.appendChild(ul);
-  if (mode === "razeS") return razeBox(body, `Raze ${s.name}?`, rs.length ? `Its ${rs.length} trade route${rs.length === 1 ? "" : "s"} will close too.` : "", async () => {
-    const ok = await removeItems([s.id, ...rs.map(r => r.id)]);
+  if (mode === "razeS") return razeBox(body, `Raze ${s.name}?`, [rs.length ? `Its ${rs.length} trade route${rs.length === 1 ? "" : "s"} will close too.` : "", ts.length ? `Its ${ts.length} table${ts.length === 1 ? "" : "s"} will be thrown out.` : ""].filter(Boolean).join(" "), async () => {
+    const ok = await removeItems([s.id, ...rs.map(r => r.id), ...ts.map(t => t.id)]);
     if (ok){ sfx("revoke"); sel = null; mode = "view"; renderMap(); renderPanel(); }
   });
   const acts = mk("div", "tm-acts");
@@ -3058,6 +3092,170 @@ function routeForm(body){
     if (ok){ sfx(isNew ? "grant" : "chime"); select({type:"r", id}); pulse(id); }
   });
   body.appendChild(f); name.focus();
+}
+
+/* ---------- tables kept at a mine: pasted from Excel, Sheets, a web page, SQL output, CSV or Markdown ---------- */
+const MAX_TABLE_CHARS = 60000;
+function parseTable(text){
+  const raw = String(text || "").replace(/\r\n?/g, "\n").replace(/\n+$/, "");
+  if (!raw.trim()) return [];
+  const lines = raw.split("\n");
+  let rows;
+  if (lines.some(l => l.includes("\t"))) rows = lines.map(l => l.split("\t"));
+  else if (lines.filter(l => l.trim()).every(l => /^\s*\|.*\|\s*$/.test(l))){
+    rows = lines.filter(l => l.trim() && !/^\s*\|[\s:|-]+\|\s*$/.test(l)).map(l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim()));
+  } else rows = csvRows(raw);
+  rows = rows.map(r => r.map(c => String(c).trim())).filter(r => r.some(c => c !== ""));
+  const w = Math.max(0, ...rows.map(r => r.length));
+  return rows.map(r => r.concat(Array(w - r.length).fill("")));
+}
+function csvRows(raw){
+  const sep = (raw.split("\n")[0].match(/;/g) || []).length > (raw.split("\n")[0].match(/,/g) || []).length ? ";" : ",";
+  const out = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < raw.length; i++){
+    const ch = raw[i];
+    if (q){ if (ch === '"'){ if (raw[i+1] === '"'){ cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"' && cell === "") q = true;
+    else if (ch === sep){ row.push(cell); cell = ""; }
+    else if (ch === "\n"){ row.push(cell); out.push(row); row = []; cell = ""; }
+    else cell += ch;
+  }
+  row.push(cell); out.push(row);
+  return out;
+}
+function htmlTableRows(html){
+  try{
+    const doc = new DOMParser().parseFromString(html, "text/html"), t = doc.querySelector("table"); if (!t) return null;
+    return [...t.querySelectorAll("tr")].map(tr => [...tr.children].flatMap(td => { const v = td.textContent.replace(/\s+/g, " ").trim(); const span = Math.min(20, Number(td.getAttribute("colspan")) || 1); return [v].concat(Array(span - 1).fill("")); }));
+  }catch(e){ return null; }
+}
+const toTSV = rows => rows.map(r => r.map(c => String(c).replace(/[\t\n]/g, " ")).join("\t")).join("\n");
+const toCSV = rows => rows.map(r => r.map(c => /[",\n]/.test(c) ? '"' + String(c).replace(/"/g, '""') + '"' : c).join(",")).join("\r\n");
+function shapeText(rows){ const w = rows[0] ? rows[0].length : 0; return `${rows.length} row${rows.length === 1 ? "" : "s"} × ${w} column${w === 1 ? "" : "s"}`; }
+
+function tableSection(body, s, ts){
+  body.appendChild(mk("h4", null, "Tables on file"));
+  if (!ts.length) body.appendChild(mk("p", "tm-note", canEdit() ? "Paste a table here to keep it with this mine for later reference: field lists, mappings, sample rows, codes." : "No tables kept at this mine yet."));
+  const ul = mk("ul", "tm-list tm-tables");
+  ts.forEach(t => {
+    const li = mk("li"); const b = mk("button", "tm-link"); b.type = "button";
+    const ic = mk("i", "tm-ticon");
+    const body0 = t.header === false ? t.rows : t.rows.slice(1);
+    b.append(ic, mk("span", null, t.title || "Untitled table"), mk("em", null, `${body0.length} × ${(t.rows[0] || []).length}`));
+    b.title = "Open " + (t.title || "this table");
+    b.addEventListener("click", () => openTable(t));
+    li.appendChild(b); ul.appendChild(li);
+  });
+  if (ts.length) body.appendChild(ul);
+  if (canEdit()) body.appendChild(btn("Paste a table", "tm-btn", () => { mode = "newT"; draft = {mine:s.id, title:"", rows:[], header:true}; renderPanel(); }));
+}
+function tableForm(body){
+  const isNew = mode === "newT", mine = S.get(draft.mine);
+  body.appendChild(mk("div", "tm-kicker", mine ? mine.name : ""));
+  body.appendChild(mk("h4", null, isNew ? "Paste a table" : "Edit " + (draft.title || "table")));
+  const f = mk("form", "tm-form");
+  const title = textEl(draft.title, "e.g. Employee fields from HANA", 80);
+  const area = mk("textarea", "tm-paste"); area.rows = 8; area.spellcheck = false;
+  area.placeholder = "Paste rows from Excel, Sheets, a web page or SQL results. CSV and Markdown tables work too.";
+  area.value = draft.rows.length ? toTSV(draft.rows) : "";
+  const hdr = mk("label", "tm-toggle"); const hcb = mk("input"); hcb.type = "checkbox"; hcb.checked = draft.header !== false; hdr.append(hcb, mk("span", null, "First row is the column headings"));
+  const shape = mk("div", "tm-sub");
+  const prev = mk("div", "tm-preview");
+  const msg = mk("div", "tm-msg");
+  let rows = draft.rows.slice();
+  const refresh = () => {
+    rows = parseTable(area.value);
+    shape.textContent = rows.length ? shapeText(hcb.checked ? rows.slice(1) : rows).replace(/^/, hcb.checked ? "Headings + " : "") : "Nothing pasted yet.";
+    prev.textContent = ""; if (rows.length) prev.appendChild(tableEl(rows.slice(0, 6), hcb.checked));
+    const size = JSON.stringify(rows).length;
+    msg.textContent = size > MAX_TABLE_CHARS ? `That's too big to keep (about ${Math.round(size/1000)}k characters, the limit is ${MAX_TABLE_CHARS/1000}k). Paste fewer rows or split it into two tables.` : "";
+  };
+  area.addEventListener("paste", ev => {
+    const html = ev.clipboardData && ev.clipboardData.getData("text/html");
+    const hr = html && /<table/i.test(html) ? htmlTableRows(html) : null;
+    if (hr && hr.length){ ev.preventDefault(); area.value = toTSV(hr); refresh(); }
+  });
+  area.addEventListener("input", refresh); hcb.addEventListener("change", refresh);
+  f.append(field("Title", title), field("Table", area), hdr, shape, prev, msg);
+  const acts = mk("div", "tm-acts");
+  const go = mk("button", "tm-btn", isNew ? "Keep it" : "Save"); go.type = "submit";
+  acts.append(go, btn("Cancel", "tm-btn ghost", () => { mode = "view"; renderPanel(); }));
+  f.appendChild(acts);
+  f.addEventListener("submit", async ev => {
+    ev.preventDefault(); refresh();
+    if (!rows.length){ msg.textContent = "Paste a table first."; area.focus(); return; }
+    if (JSON.stringify(rows).length > MAX_TABLE_CHARS){ area.focus(); return; }
+    const nm = title.value.trim() || "Table " + (tablesOf(draft.mine).length + 1);
+    go.disabled = true;
+    const id = isNew ? "t-" + Math.random().toString(36).slice(2, 10) : draft.id;
+    const ok = await save(id, {t:"tbl", mine:draft.mine, title:nm, rows, header:hcb.checked, createdAt: draft.createdAt || Date.now()});
+    go.disabled = false;
+    if (ok){ const m = draft.mine; sfx(isNew ? "grant" : "chime"); select({type:"s", id:m}); pulse(m); }
+  });
+  body.appendChild(f); (isNew ? area : title).focus();
+  refresh();
+}
+function tableEl(rows, header, filter){
+  const tb = mk("table", "tm-table");
+  let start = 0;
+  if (header && rows.length){ const th = mk("thead"), tr = mk("tr"); rows[0].forEach(c => tr.appendChild(mk("th", null, c))); th.appendChild(tr); tb.appendChild(th); start = 1; }
+  const bd = mk("tbody"); let shown = 0;
+  const f = (filter || "").toLowerCase();
+  for (let i = start; i < rows.length; i++){
+    if (f && !rows[i].some(c => c.toLowerCase().includes(f))) continue;
+    const tr = mk("tr"); rows[i].forEach(c => tr.appendChild(mk("td", null, c))); bd.appendChild(tr); shown++;
+  }
+  tb.appendChild(bd); tb.dataset.shown = shown;
+  return tb;
+}
+
+/* full-size reader for a kept table */
+let modal = null;
+function closeTable(){ if (modal){ modal.remove(); modal = null; document.removeEventListener("keydown", escClose); } }
+function escClose(ev){ if (ev.key === "Escape") closeTable(); }
+function openTable(t){
+  closeTable(); hideTip();
+  const mine = S.get(t.mine);
+  modal = mk("div", "tm-modal"); modal.setAttribute("role", "dialog"); modal.setAttribute("aria-modal", "true"); modal.setAttribute("aria-label", t.title || "Table");
+  const card = mk("div", "tm-mcard");
+  const head = mk("div", "tm-mhead");
+  const tt = mk("div"); tt.append(mk("div", "tm-kicker", (mine ? mine.name : "") + " · table on file"), mk("h3", null, t.title || "Untitled table"));
+  head.append(tt, btn("Close", "tm-btn ghost", closeTable));
+  const bar = mk("div", "tm-mbar");
+  const q = textEl("", "Filter rows…", 60); q.className = "tm-filter";
+  const count = mk("span", "tm-sub");
+  const st = mk("span", "tm-msg");
+  const copyB = btn("Copy", "tm-btn", async () => {
+    try{ await navigator.clipboard.writeText(toTSV(t.rows)); st.textContent = "Copied. Paste it into Excel or Sheets."; st.style.color = "var(--muted)"; }
+    catch(e){ st.textContent = "Your browser blocked copying. Use Download instead."; st.style.color = ""; }
+  });
+  const dlB = btn("Download CSV", "tm-btn", async () => {
+    const name = ((mine ? mine.name + " - " : "") + (t.title || "table")).replace(/[\\/:*?"<>|]+/g, "-").slice(0, 120) + ".csv";
+    const data = new Blob(["﻿" + toCSV(t.rows)], {type:"text/csv"});
+    try{
+      const dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
+      if (dl) await dl.save({filename:name, data});
+      else { const u = URL.createObjectURL(data), a = mk("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+    }catch(e){ if (!e || e.code !== "declined"){ st.textContent = "Couldn't save the file here."; st.style.color = ""; } }
+  });
+  bar.append(q, count, st, copyB, dlB);
+  if (canEdit()){
+    bar.append(btn("Edit", "tm-btn", () => { closeTable(); sel = {type:"s", id:t.mine}; mode = "editT"; draft = Object.assign({}, t, {rows:t.rows.slice()}); restyle(); renderPanel(); }));
+    const del = btn("Remove", "tm-btn danger", async () => {
+      if (del.dataset.armed !== "1"){ del.dataset.armed = "1"; del.textContent = "Click again to remove"; return; }
+      del.disabled = true;
+      const ok = await removeItems([t.id]);
+      if (ok){ sfx("revoke"); closeTable(); sel = {type:"s", id:t.mine}; mode = "view"; renderMap(); renderPanel(); } else del.disabled = false;
+    });
+    bar.append(del);
+  }
+  const wrap = mk("div", "tm-twrap");
+  const draw = () => { wrap.textContent = ""; const el = tableEl(t.rows, t.header !== false, q.value); wrap.appendChild(el); const total = t.rows.length - (t.header !== false ? 1 : 0); count.textContent = q.value ? `${el.dataset.shown} of ${total} rows` : `${total} rows`; };
+  q.addEventListener("input", draw);
+  card.append(head, bar, wrap); modal.appendChild(card);
+  modal.addEventListener("click", ev => { if (ev.target === modal) closeTable(); });
+  document.body.appendChild(modal); document.addEventListener("keydown", escClose);
+  draw(); q.focus();
 }
 function freeSpot(kind){
   const c = kind === "source" ? {x:250, y:420} : kind === "capital" ? {x:600, y:400} : {x:950, y:420};

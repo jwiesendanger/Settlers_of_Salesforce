@@ -118,7 +118,7 @@ function docRef(coll, id){
         } else if (coll === "trade"){
           const existing = records.find(r => r.coll === coll && r.id === id);
           const notes = PREFIX + JSON.stringify({t: "trade", id, body});
-          const name = (body.removed ? "Trade (removed): " : body.t === "s" ? "Settlement: " : "Trade route: ") + (body.name || id);
+          const name = (body.removed ? "Trade (removed): " : body.t === "s" ? "Settlement: " : body.t === "tbl" ? "Mine table: " : "Trade route: ") + (body.name || body.title || id);
           if (existing){ await asana("PUT", `/tasks/${existing.gid}`, {body: {name, notes}}); existing.data = Object.assign({}, body); }
           else {
             const json = await asana("POST", "/tasks", {body: {name, notes, projects: [CONFIG.ledgerProject], memberships: [{project: CONFIG.ledgerProject, section: CONFIG.ledgerSections.trade}]}});
