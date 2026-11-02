@@ -3334,6 +3334,12 @@ function renderPanel(){
     btn("Found a settlement", "tm-btn", () => { mode = "newS"; draft = {name:"", kind:"system", blurb:""}; renderPanel(); }, !canEdit()),
     btn("Open a trade route", "tm-btn", () => { mode = "newR"; draft = {name:"", from: sel && sel.type === "s" ? sel.id : "sf", to:"sf", tool:"mulesoft", flow:"one", status:"live", note:""}; if (draft.from === "sf") draft.to = [...S.keys()].find(k => k !== "sf") || "sf"; renderPanel(); }, !canEdit())
   );
+  const clip = readClip();
+  if (clip && canEdit()){
+    const pb = btn("Paste " + clip.s.name, "tm-btn tm-paste-btn", () => pasteSettlement());
+    pb.title = "Paste a copy of " + clip.s.name + (clip.tables.length ? ` with its ${clip.tables.length} table${clip.tables.length === 1 ? "" : "s"}` : "") + " (Ctrl+V)";
+    acts.appendChild(pb);
+  }
   col1.appendChild(acts);
   const body = mk("div", "tm-pbody");
   legend(col3);
@@ -3354,7 +3360,7 @@ function helpCard(body){
   body.appendChild(ul);
   body.appendChild(mk("h4", null, "Changing the map"));
   body.appendChild(mk("p", "tm-p", canEdit()
-    ? "Click a settlement or road to see its details, then Edit or remove it. Drag a settlement to move it. Use the buttons on the left to add new ones. Everyone sees your changes."
+    ? "Click a settlement or road to see its details, then Edit or remove it. Drag a settlement to move it. Copy one (Ctrl+C or its Copy button) and paste it (Ctrl+V) to make a duplicate, tables included. Use the buttons on the left to add new ones. Everyone sees your changes."
     : db ? "You have view-only access, so you can look but not change the map." : "Connect to Asana to change the map."));
   body.appendChild(mk("p", "tm-note", "The starting map was drawn from your Asana tasks. Tools and directions are best guesses, so correct any that are wrong."));
 }
@@ -3399,6 +3405,8 @@ function settlementCard(body, s){
     if (ok){ sfx("revoke"); sel = null; mode = "view"; renderMap(); renderPanel(); }
   });
   const acts = mk("div", "tm-acts");
+  const cp = btn("Copy", "tm-btn", () => copySettlement(s.id)); cp.title = "Copy this settlement" + (ts.length ? " and its tables" : "") + " (Ctrl+C), then paste it with Ctrl+V or the Paste button";
+  acts.append(cp);
   acts.append(btn("Edit", "tm-btn", () => { mode = "editS"; draft = Object.assign({}, s); renderPanel(); }, !canEdit()),
     btn("Open a route from here", "tm-btn", () => { mode = "newR"; draft = {name:"", from:s.id, to: s.id === "sf" ? ([...S.keys()].find(k => k !== "sf")) : "sf", tool:"mulesoft", flow:"one", status:"live", note:""}; renderPanel(); }, !canEdit()),
     btn("Raze", "tm-btn danger", () => { mode = "razeS"; renderPanel(); }, !canEdit()),
@@ -3752,6 +3760,58 @@ async function removeItems(ids){
 
 rebuild(); renderMap(); renderPanel();
 window.__tradeRender = renderMap;
+
+/* ---------- copy and paste settlements (with their tables; routes stay behind) ---------- */
+var CLIP_KEY = "settlers-trade-clip";
+var clipMem = null, lastPointer = null;   /* var: renderPanel reads these before this point runs */
+function readClip(){ if (clipMem) return clipMem; try{ const c = JSON.parse(localStorage.getItem(CLIP_KEY) || "null"); if (c && c.s && c.s.name) return (clipMem = Object.assign({tables:[]}, c)); }catch(e){} return null; }
+function copySettlement(id){
+  const s = S.get(id); if (!s) return;
+  clipMem = {s:{name:s.name, kind:s.kind, blurb:s.blurb || "", x:s.x, y:s.y}, tables:tablesOf(id).map(t => ({title:t.title, rows:t.rows, header:t.header !== false}))};
+  try{ localStorage.setItem(CLIP_KEY, JSON.stringify(clipMem)); }catch(e){ /* too big for this browser's storage: the copy still works on this page */ }
+  sfx("chime");
+  note(`Copied ${s.name}${clipMem.tables.length ? ` and its ${clipMem.tables.length} table${clipMem.tables.length === 1 ? "" : "s"}` : ""}. Press Ctrl+V, or use Paste, to place a copy.`, "");
+  renderPanel();
+}
+function copyName(base){
+  const names = new Set([...S.values()].map(s => s.name.toLowerCase()));
+  const root = base.replace(/ \(copy(?: \d+)?\)$/, "");
+  for (let i = 1; ; i++){ const n = root + (i === 1 ? " (copy)" : ` (copy ${i})`); if (!names.has(n.toLowerCase())) return n; }
+}
+let pasting = false;
+async function pasteSettlement(){
+  const clip = readClip(); if (!clip || !canEdit() || pasting) return;
+  pasting = true;
+  /* land under the pointer if it's over the map, otherwise just beside the original */
+  let x = clip.s.x + 70, y = clip.s.y + 70;
+  if (lastPointer && view && lastPointer.x > view.x && lastPointer.x < view.x + view.w && lastPointer.y > view.y && lastPointer.y < view.y + view.h){ x = lastPointer.x; y = lastPointer.y; }
+  x = Math.round(Math.min(MW - 60, Math.max(60, x))); y = Math.round(Math.min(MH - 50, Math.max(70, y)));
+  const id = "s-" + Math.random().toString(36).slice(2, 10);
+  const name = copyName(clip.s.name);
+  try{
+    const ok = await save(id, {t:"s", v:2, name, kind:clip.s.kind, blurb:clip.s.blurb, x, y});
+    if (!ok) return;
+    for (const t of clip.tables){ await save("t-" + Math.random().toString(36).slice(2, 10), {t:"tbl", mine:id, title:t.title, rows:t.rows, header:t.header, createdAt:Date.now()}); }
+    sfx("grant"); showPoint(x, y); select({type:"s", id}); pulse(id);
+    note(`Pasted ${name}${clip.tables.length ? ` with ${clip.tables.length} table${clip.tables.length === 1 ? "" : "s"}` : ""}. Drag it where you want it, and use Edit to rename it.`, "");
+  } finally { pasting = false; }
+}
+svg.addEventListener("pointermove", ev => { try{ lastPointer = toMap(ev); }catch(e){} });
+svg.addEventListener("pointerleave", () => { lastPointer = null; });
+document.addEventListener("keydown", ev => {
+  if (!(ev.ctrlKey || ev.metaKey) || ev.altKey || ev.shiftKey) return;
+  const k = ev.key.toLowerCase(); if (k !== "c" && k !== "v") return;
+  if ($("tab-trade").hidden || modal) return;
+  const t = ev.target; if (t && (t.closest("input, textarea, select, [contenteditable]"))) return;
+  if (k === "c"){
+    if (!sel || sel.type !== "s") return;
+    const txt = String(window.getSelection ? window.getSelection() : ""); if (txt.trim()) return;   /* let normal text copying work */
+    ev.preventDefault(); copySettlement(sel.id);
+  } else {
+    if (!readClip() || !canEdit()) return;
+    ev.preventDefault(); pasteSettlement();
+  }
+});
 (async function(){
   const use = window.claude && window.claude.use;
   try{ db = use ? await window.claude.use("db") : null; }catch(e){ db = null; }
