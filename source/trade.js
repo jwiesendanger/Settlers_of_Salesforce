@@ -446,6 +446,17 @@ function btn(label, cls, fn, disabled){ const b = mk("button", cls, label); b.ty
 function field(label, input){ const l = mk("label", "tm-field"); l.append(mk("span", null, label), input); return l; }
 function selectEl(opts, value){ const s = mk("select"); opts.forEach(([v, t]) => { const o = mk("option", null, t); o.value = v; s.appendChild(o); }); if (value != null) s.value = value; return s; }
 function textEl(value, ph, max){ const i = mk("input"); i.type = "text"; i.value = value || ""; i.placeholder = ph || ""; i.maxLength = max || 80; return i; }
+/* plain text with any web addresses turned into links that open in a new tab */
+function linkText(text){
+  const p = mk("p", "tm-p"); let last = 0; const re = /https?:\/\/[^\s<>"]+[^\s<>".,;:)]/g; let m;
+  while ((m = re.exec(text))){
+    if (m.index > last) p.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const a = mk("a", "tm-url", m[0].replace(/^https?:\/\//, "").replace(/\?.*$/, "")); a.href = m[0]; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = m[0];
+    p.appendChild(a); last = m.index + m[0].length;
+  }
+  if (last < text.length) p.appendChild(document.createTextNode(text.slice(last)));
+  return p;
+}
 function townOpts(){ return [...S.values()].sort((a, b) => a.name.localeCompare(b.name)).map(s => [s.id, s.name]); }
 
 function renderPanel(){
@@ -503,7 +514,7 @@ function legend(body){
 function settlementCard(body, s){
   body.appendChild(mk("div", "tm-kicker", KINDS[s.kind] || s.kind));
   body.appendChild(mk("h4", "tm-name", s.name));
-  if (s.blurb) body.appendChild(mk("p", "tm-p", s.blurb));
+  if (s.blurb) body.appendChild(linkText(s.blurb));
   const rs = routesOf(s.id).sort((a, b) => a.name.localeCompare(b.name));
   const ts = tablesOf(s.id);
   if (s.kind === "source") tableSection(body, s, ts);
@@ -543,7 +554,7 @@ function routeCard(body, r){
     path.append(a, mk("span", "tm-arrow", r.flow === "two" ? "⇄" : "→"), z);
     body.appendChild(path);
   }
-  if (r.note) body.appendChild(mk("p", "tm-p", r.note));
+  if (r.note) body.appendChild(linkText(r.note));
   if (mode === "razeR") return razeBox(body, `Close the ${r.name} route?`, "", async () => {
     const ok = await removeItems([r.id]);
     if (ok){ sfx("revoke"); sel = null; mode = "view"; renderMap(); renderPanel(); }

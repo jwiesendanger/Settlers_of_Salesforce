@@ -435,6 +435,7 @@ svg#trade-svg.panning{cursor:grabbing}
 .tm-kicker{display:flex;align-items:center;gap:6px;font-family:var(--f-label);font-size:12px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
 .tm-kicker i,.tm-link i,.tm-chip i{display:inline-block;width:16px;height:5px;border-radius:3px;flex:none}
 .tm-p{margin:0;font-size:14px;line-height:1.45;color:var(--ink)}
+.tm-url{color:var(--gold-hi);text-decoration:underline;text-underline-offset:2px;word-break:break-all}
 .tm-note{margin:0;font-size:13px;line-height:1.4;color:var(--muted);font-style:italic}
 .tm-sub{font-size:13px;color:var(--muted)}
 .tm-help{margin:0;padding-left:18px;font-size:13.5px;line-height:1.45;display:flex;flex-direction:column;gap:3px}
@@ -442,8 +443,8 @@ svg#trade-svg.panning{cursor:grabbing}
 .tm-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:3px 10px}
 .tm-link{display:flex;align-items:center;gap:7px;width:100%;text-align:left;background:transparent;border:1px solid transparent;color:var(--ink);font-family:var(--f-body);font-weight:500;font-size:13.5px;letter-spacing:0;padding:4px 6px;border-radius:6px}
 .tm-link:hover{background:rgba(255,255,255,.07);border-color:var(--panel-line)}
-.tm-link span{flex:1;min-width:0}
-.tm-link em{font-style:normal;color:var(--muted);font-size:12.5px;text-align:right}
+.tm-link span{flex:1;min-width:0;overflow-wrap:anywhere}
+.tm-link em{font-style:normal;color:var(--muted);font-size:12.5px;text-align:right;white-space:nowrap;flex:none}
 .tm-link.plain{display:inline-flex;width:auto;border-color:var(--panel-line);font-weight:700}
 .tm-path{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .tm-arrow{font-size:18px;color:var(--frame)}
@@ -489,6 +490,7 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .tm-mbar .tm-msg{flex:1;min-height:0}
 .tm-twrap{overflow:auto;border-radius:8px;border:1px solid var(--panel-line);min-height:120px}
 .tm-twrap .tm-table td{white-space:normal}
+.tm-pbody > .tm-btn{align-self:flex-start}
 
 /* ---------- standalone: Asana connection ---------- */
 body{margin:0}
@@ -3307,6 +3309,17 @@ function btn(label, cls, fn, disabled){ const b = mk("button", cls, label); b.ty
 function field(label, input){ const l = mk("label", "tm-field"); l.append(mk("span", null, label), input); return l; }
 function selectEl(opts, value){ const s = mk("select"); opts.forEach(([v, t]) => { const o = mk("option", null, t); o.value = v; s.appendChild(o); }); if (value != null) s.value = value; return s; }
 function textEl(value, ph, max){ const i = mk("input"); i.type = "text"; i.value = value || ""; i.placeholder = ph || ""; i.maxLength = max || 80; return i; }
+/* plain text with any web addresses turned into links that open in a new tab */
+function linkText(text){
+  const p = mk("p", "tm-p"); let last = 0; const re = /https?:\/\/[^\s<>"]+[^\s<>".,;:)]/g; let m;
+  while ((m = re.exec(text))){
+    if (m.index > last) p.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const a = mk("a", "tm-url", m[0].replace(/^https?:\/\//, "").replace(/\?.*$/, "")); a.href = m[0]; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = m[0];
+    p.appendChild(a); last = m.index + m[0].length;
+  }
+  if (last < text.length) p.appendChild(document.createTextNode(text.slice(last)));
+  return p;
+}
 function townOpts(){ return [...S.values()].sort((a, b) => a.name.localeCompare(b.name)).map(s => [s.id, s.name]); }
 
 function renderPanel(){
@@ -3364,7 +3377,7 @@ function legend(body){
 function settlementCard(body, s){
   body.appendChild(mk("div", "tm-kicker", KINDS[s.kind] || s.kind));
   body.appendChild(mk("h4", "tm-name", s.name));
-  if (s.blurb) body.appendChild(mk("p", "tm-p", s.blurb));
+  if (s.blurb) body.appendChild(linkText(s.blurb));
   const rs = routesOf(s.id).sort((a, b) => a.name.localeCompare(b.name));
   const ts = tablesOf(s.id);
   if (s.kind === "source") tableSection(body, s, ts);
@@ -3404,7 +3417,7 @@ function routeCard(body, r){
     path.append(a, mk("span", "tm-arrow", r.flow === "two" ? "⇄" : "→"), z);
     body.appendChild(path);
   }
-  if (r.note) body.appendChild(mk("p", "tm-p", r.note));
+  if (r.note) body.appendChild(linkText(r.note));
   if (mode === "razeR") return razeBox(body, `Close the ${r.name} route?`, "", async () => {
     const ok = await removeItems([r.id]);
     if (ok){ sfx("revoke"); sel = null; mode = "view"; renderMap(); renderPanel(); }
