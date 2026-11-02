@@ -1,0 +1,2480 @@
+<title>Settlers of Salesforce Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700;800&family=Alegreya+Sans:wght@400;500;700&family=Alegreya+Sans+SC:wght@700&family=Alegreya:ital@0;1&family=MedievalSharp&display=swap">
+<style>
+/* Layout: a Catan board at sea — teammates are terrain hexes, open Asana tasks are resource blocks; a ledger panel sits beside the board (below it on phones). Single deliberate look: night-table ocean. */
+:root{
+  color-scheme: dark;
+  --sea:#123f5c; --sea-deep:#0b2a40; --sea-line:#2a6d93;
+  --frame:#e8d6a4; --parch:#f3e6c2; --parch-ink:#3a2a17; --ink:#f4ead2; --muted:#a9bccb;
+  --brick:#e0482f; --brick-hi:#ff8a6a; --ore:#3c4352; --ore-hi:#9aa3b5; --wool:#f6f0dd; --wool-hi:#ffffff;
+  --hills:#8e4a2b; --mountains:#666d78; --pasture:#6f9d43; --desert:#d9c08a;
+  --gold:#e2a93b; --gold-hi:#ffdc85; --gold-dim:#a8792a; --wood:#b07d45; --crane:#cfd8e0; --dirt:#5a4128;
+  --panel:#0e3149; --panel-line:#25587a;
+  --f-display:"Alegreya SC", Georgia, "Times New Roman", serif;
+  --f-label:"Alegreya Sans SC", "Alegreya Sans", system-ui, sans-serif;
+  --f-body:"Alegreya Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html,body{height:100%}
+body{background:radial-gradient(120% 90% at 50% 30%, var(--sea) 0%, var(--sea-deep) 75%);background-color:var(--sea-deep);color:var(--ink);font-family:var(--f-body);font-size:15px;background-attachment:fixed}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:18px 28px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,4vw,40px);line-height:1;margin:0;letter-spacing:.01em;color:var(--frame);text-wrap:balance}
+.sub{margin:6px 0 0;color:var(--muted);font-size:14px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.status{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+button{font-family:var(--f-label);font-weight:700;font-size:14px;letter-spacing:.04em;background:var(--parch);color:var(--parch-ink);border:2px solid var(--frame);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{background:#fff4d6}
+button:focus-visible,a:focus-visible,.legend-item:focus-visible{outline:3px solid var(--brick-hi);outline-offset:2px}
+button[disabled]{opacity:.6;cursor:progress}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.legend-item{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border:1px solid var(--panel-line);border-radius:999px;padding:5px 12px 5px 6px;cursor:pointer;color:var(--ink);font:inherit;font-size:13.5px;letter-spacing:0}
+.legend-item[aria-pressed="false"]{opacity:.45}
+.legend-item b{font-family:var(--f-label);letter-spacing:.05em;font-size:14px}
+.legend-item .n{font-variant-numeric:tabular-nums;color:var(--frame);font-weight:700}
+.chip{width:18px;height:14px;border-radius:3px;border:1.5px solid #1b1209;box-shadow:inset 0 3px 0 rgba(255,255,255,.35)}
+.chip.gold{background:var(--gold);border-radius:50%;width:14px}
+.chip.brick{background:var(--brick)} .chip.ore{background:var(--ore)} .chip.wool{background:var(--wool)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,420px);gap:16px;align-items:start}
+.main > .board-box{grid-column:1;grid-row:1}
+.main > aside{grid-column:1;grid-row:2}
+.main > .site{grid-column:2;grid-row:1 / span 2;position:sticky;top:calc(env(safe-area-inset-top, 0px) + 12px)}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)} .main > .board-box,.main > aside,.main > .site{grid-column:1;grid-row:auto;position:static} .main > aside{order:1} .main > .site{order:2}}
+.site{background:var(--panel);border:1px solid var(--panel-line);border-radius:12px;padding:14px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.site h2{font-family:var(--f-display);font-size:22px;margin:0;color:var(--frame);line-height:1.1}
+.site-count{display:flex;align-items:baseline;gap:8px}
+.site-count b{font-family:var(--f-display);font-size:30px;color:var(--gold-hi);font-variant-numeric:tabular-nums;line-height:1}
+.site-count span{color:var(--muted);font-size:13px}
+svg#build{width:100%;height:auto;display:block}
+.site-note{color:var(--muted);font-size:13px;line-height:1.4}
+.crew{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.crew li{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.crew .bar{flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden}
+.crew .bar i{display:block;height:100%;background:var(--gold)}
+.crew .nm{width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crew .ct{width:22px;text-align:right;font-variant-numeric:tabular-nums;color:var(--gold-hi);font-weight:700}
+[hidden]{display:none!important}
+.cmt-back{position:fixed;inset:0;z-index:20;background:rgba(4,16,26,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.cmt{width:100%;max-width:460px;background:var(--parch);color:var(--parch-ink);border:3px solid var(--frame);border-radius:12px;padding:16px 18px;box-shadow:0 18px 40px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px}
+.cmt-eyebrow{font-family:var(--f-label);font-size:12px;letter-spacing:.08em;color:#7a5a2c}
+.cmt h3{margin:0;font-family:var(--f-body);font-weight:700;font-size:17px;line-height:1.3;overflow-wrap:anywhere}
+.cmt-meta{font-size:13px;color:#6b5330}
+.cmt-label{font-size:13px;font-weight:700;margin-top:6px}
+.cmt textarea{font:inherit;font-size:15px;color:var(--parch-ink);background:#fffaf0;border:1.5px solid #b89a63;border-radius:8px;padding:8px 10px;resize:vertical;min-height:90px}
+.cmt textarea:focus-visible{outline:3px solid var(--brick);outline-offset:1px}
+.cmt-status{font-size:13.5px;min-height:1.3em}
+.cmt-status.ok{color:#2f6b25;font-weight:700}
+.cmt-status.err{color:#a3271a}
+.cmt-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cmt-actions .sp{flex:1}
+.cmt-actions a{color:#7a3c12;font-size:14px;font-weight:700}
+.cmt button{border-color:#6b5330;background:var(--brick);color:#fff}
+.cmt button:hover{background:#c73a22}
+.cmt button.ghost{background:transparent;color:var(--parch-ink)}
+.cmt button.ghost:hover{background:rgba(0,0,0,.06)}
+.gold-blk{cursor:pointer}
+.blk:focus-visible,.gold-blk:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.chooser{position:fixed;z-index:15;width:250px;max-width:calc(100vw - 32px);background:var(--parch);color:var(--parch-ink);border:3px solid var(--frame);border-radius:10px;padding:10px;box-shadow:0 12px 30px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px}
+.ch-q{font-family:var(--f-display);font-weight:800;font-size:16px;line-height:1.15}
+.ch-name{font-size:12.5px;color:#6b5330;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.ch-opt{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;width:100%;font:inherit;letter-spacing:0;background:#fffaf0;color:var(--parch-ink);border:1.5px solid #b89a63;border-radius:8px;padding:7px 10px;cursor:pointer;text-decoration:none}
+.ch-opt b{font-family:var(--f-label);font-size:15px;letter-spacing:.03em}
+.ch-opt span{font-size:12.5px;color:#6b5330}
+.ch-opt:hover{background:#fff;border-color:var(--brick)}
+.ch-opt:focus-visible{outline:3px solid var(--brick);outline-offset:1px}
+.gold-blk:hover rect{stroke:#fff;stroke-width:1.2}
+@keyframes lay{from{transform:translateY(-60px);opacity:0}to{transform:none;opacity:1}}
+.lay-in{animation:lay .5s cubic-bezier(.3,1.3,.5,1) backwards}
+@keyframes sway{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(5px) rotate(2deg)}}
+.hook{animation:sway 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
+@keyframes trolley{0%,100%{transform:translateX(-3px)}50%{transform:translateX(3px)}}
+.trolley{animation:trolley 6.4s ease-in-out infinite}
+.sparkle{animation:twinkle 2.6s ease-in-out infinite;opacity:0;transform-box:fill-box;transform-origin:center}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.4)}45%{opacity:1;transform:scale(1)}}
+.coin-fall{animation:coinfall 3.4s cubic-bezier(.5,0,.9,.6) infinite}
+@keyframes coinfall{0%{transform:translateY(-18px);opacity:0}15%{opacity:1}80%{transform:translateY(var(--drop));opacity:1}100%{transform:translateY(var(--drop));opacity:0}}
+.coin-spin{animation:coinspin .9s linear infinite;transform-box:fill-box;transform-origin:center}
+@keyframes coinspin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.15)}}
+.gold-blk:hover .face{stroke:#fff;stroke-width:1.4}
+@media (prefers-reduced-motion:reduce){.lay-in,.hook,.trolley,.sparkle,.coin-fall,.coin-spin{animation:none}.sparkle{opacity:.7}}
+.board-box{position:relative;min-width:0}
+svg#board{width:100%;height:auto;display:block;max-height:82vh}
+.notice{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.notice > div{pointer-events:auto;background:var(--parch);color:var(--parch-ink);border:3px solid var(--frame);border-radius:12px;padding:14px 18px;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,.4);font-size:15px;line-height:1.45}
+.notice strong{font-family:var(--f-label);letter-spacing:.04em}
+aside{background:var(--panel);border:1px solid var(--panel-line);border-radius:12px;padding:14px;min-width:0;display:flex;flex-direction:column;gap:10px}
+aside h2{font-family:var(--f-display);font-size:22px;margin:0;color:var(--frame);line-height:1.1}
+aside .who-sub{color:var(--muted);font-size:13px;margin-top:2px}
+.cat{display:flex;flex-direction:column;gap:6px}
+.cat h3{margin:6px 0 0;font-family:var(--f-label);font-size:14px;letter-spacing:.06em;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.cat h3 .n{margin-left:auto;color:var(--frame);font-variant-numeric:tabular-nums}
+.tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:240px;overflow-y:auto}
+.tasks li a{display:block;color:var(--ink);text-decoration:none;padding:5px 8px;border-radius:6px;line-height:1.3}
+.tasks li a:hover{background:rgba(255,255,255,.07)}
+.tasks .t{display:block;overflow-wrap:anywhere}
+.tasks .m{display:block;color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-size:13px;padding:2px 8px}
+.hint{color:var(--muted);font-size:13px;line-height:1.45}
+.tip{position:fixed;z-index:10;pointer-events:none;background:var(--parch);color:var(--parch-ink);border:2px solid var(--frame);border-radius:8px;padding:7px 10px;font-size:13px;max-width:280px;line-height:1.35;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.tip b{display:block;margin-bottom:2px}
+/* board pieces */
+.hex{cursor:pointer}
+.hex:hover .tile{filter:brightness(1.12)}
+.hex.sel .rim{stroke:#fff6d8;stroke-width:6}
+.blk{cursor:pointer}
+.blk:hover rect.body{stroke:#fff;stroke-width:1.4}
+.hide-brick .p-brick,.hide-ore .p-ore,.hide-wool .p-wool,.hide-gold .p-gold{display:none}
+.coin-stack{cursor:pointer}
+.name-tag{cursor:help}
+.name-tag:hover rect{fill:#fff4d6}
+.name-tag:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.tip.wide{max-width:280px}
+.tip .brief{font-size:13.5px;line-height:1.45;margin-top:2px}
+.tip .brief-note{font-size:11.5px;color:#7a6342;font-style:italic;margin-top:4px}
+.export-box{display:flex;flex-direction:column;gap:6px;background:rgba(0,0,0,.18);border:1px solid var(--panel-line);border-radius:10px;padding:8px 10px;margin:2px 0 4px}
+.export-pick{border:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.export-pick legend{float:left;margin-right:6px;font-family:var(--f-label);font-weight:700;letter-spacing:.05em;color:var(--frame);font-size:13.5px}
+.export-opt{display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer}
+.export-opt input{accent-color:var(--gold);width:15px;height:15px;margin:0}
+.export-opt .chip{width:14px;height:11px}
+.export-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.export-row button{font-size:13px;padding:5px 12px}
+.export-row .ghost-btn{background:transparent;color:var(--ink);border-color:var(--panel-line)}
+.export-row .ghost-btn:hover{background:rgba(255,255,255,.06)}
+.export-status{font-size:12.5px;color:var(--muted)}
+.export-status.err{color:var(--brick-hi)}
+.coin-stack:hover ellipse{filter:brightness(1.12)}
+.coin-stack:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@keyframes drop{from{transform:translateY(-46px);opacity:0}to{transform:none;opacity:1}}
+.blk-in{animation:drop .55s cubic-bezier(.3,1.4,.5,1) backwards}
+@keyframes glow{0%,100%{opacity:0}50%{opacity:.55}}
+.hot-glow{animation:glow 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.robber{animation:bob 3s ease-in-out infinite;transform-box:fill-box}
+@media (prefers-reduced-motion:reduce){.blk-in,.hot-glow,.robber{animation:none}.waves animateTransform{display:none}}
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:6px;border-bottom:2px solid var(--panel-line);flex-wrap:wrap}
+.tab{font-family:var(--f-label);font-weight:700;font-size:15px;letter-spacing:.05em;background:transparent;color:var(--muted);border:2px solid transparent;border-bottom:none;border-radius:10px 10px 0 0;padding:8px 16px;margin-bottom:-2px;display:flex;align-items:center;gap:8px}
+.tab:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--panel);color:var(--frame);border-color:var(--panel-line);border-bottom:2px solid var(--panel)}
+.tab svg{width:18px;height:18px}
+.tabpanel{display:flex;flex-direction:column;gap:14px}
+
+/* ---------- guild hall ---------- */
+.guild-top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.lineage{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.lineage .liege{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.22);border:1px solid var(--panel-line);border-radius:999px;padding:3px 11px 3px 4px}
+.lineage .liege .token{width:24px;height:24px}
+.lineage .liege .token svg{width:14px;height:14px}
+.lineage .liege b{color:var(--ink);font-weight:700}
+.lineage .sep{color:var(--frame);opacity:.6}
+.sound-btn{display:flex;align-items:center;gap:6px;font-size:13px;letter-spacing:.03em;background:rgba(0,0,0,.25);color:var(--ink);border:1.5px solid var(--panel-line);border-radius:999px;padding:6px 12px;margin-left:auto}
+.sound-btn:hover{background:rgba(255,255,255,.08)}
+.sound-btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sound-btn[aria-pressed="false"]{color:var(--muted)}
+.finder{display:flex;align-items:center;gap:8px;flex:1 1 260px;max-width:380px}
+.finder input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--ink);background:rgba(0,0,0,.25);border:1.5px solid var(--panel-line);border-radius:999px;padding:7px 14px}
+.finder input::placeholder{color:var(--muted)}
+.finder input:focus-visible{outline:3px solid var(--frame);outline-offset:1px}
+
+.quick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--panel-line);border-radius:12px;padding:10px 12px}
+.quick .ql{font-family:var(--f-label);font-weight:700;letter-spacing:.05em;color:var(--frame);font-size:14px}
+.quick select,.quick input,.sheet select,.sheet input{font:inherit;font-size:14px;color:var(--parch-ink);background:var(--parch);border:1.5px solid #b89a63;border-radius:8px;padding:6px 9px}
+.quick select{flex:0 1 210px;min-width:0}
+.quick input{flex:1 1 220px;min-width:0}
+.quick select:focus-visible,.quick input:focus-visible,.sheet select:focus-visible,.sheet input:focus-visible{outline:3px solid var(--frame);outline-offset:1px}
+.ledger-note{font-size:13px;color:var(--muted);min-height:1.2em}
+.ledger-note.err{color:var(--brick-hi)}
+.ledger-note.ok{color:#9fd383}
+
+.keep{position:relative;border:2px solid var(--panel-line);border-radius:16px;padding:18px 16px 16px;background:linear-gradient(180deg,rgba(232,214,164,.06),rgba(0,0,0,.12));display:flex;flex-direction:column;align-items:center;gap:18px}
+.keep-label,.party-label{font-family:var(--f-label);font-weight:700;letter-spacing:.08em;font-size:12.5px;color:var(--frame);opacity:.85}
+.keep-label{position:absolute;top:-10px;left:18px;background:var(--sea-deep);padding:0 8px;white-space:nowrap;max-width:calc(100% - 36px);overflow:hidden;text-overflow:ellipsis}
+.lord{width:min(100%,380px)}
+.court{width:100%;display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,2.3fr);grid-template-areas:"e p b j";align-items:start}
+@media (max-width:1180px){.court{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"e p b" "j j j"}}
+@media (max-width:700px){.court{grid-template-columns:minmax(0,1fr);grid-template-areas:"e" "p" "b" "j"}}
+.col{display:flex;flex-direction:column;align-items:stretch;min-width:0}
+.party{position:relative;margin-top:14px;border:1.5px dashed rgba(232,214,164,.35);border-radius:12px;padding:16px 10px 10px;display:grid;gap:8px}
+.party::before{content:"";position:absolute;top:-15px;left:50%;height:14px;border-left:2px solid rgba(232,214,164,.45)}
+.party-label{position:absolute;top:-9px;left:12px;background:#0f324a;padding:0 6px;border-radius:4px}
+.party.wide{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+
+/* character card */
+.char{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start;background:var(--parch);color:var(--parch-ink);border:2px solid var(--frame);border-radius:12px;padding:10px 11px;cursor:pointer;text-align:left;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .12s ease, opacity .15s ease}
+.char:hover{transform:translateY(-2px)}
+.char:focus-visible{outline:3px solid var(--brick-hi);outline-offset:2px}
+.char.lead{border-width:3px}
+.char.dim{opacity:.32}
+.token{width:44px;height:44px;border-radius:50%;background:var(--c,#555);display:grid;place-items:center;border:2px solid #3a2a17;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.token svg{width:24px;height:24px;stroke:#fbf3dc;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.char.small .token{width:36px;height:36px}
+.char.small .token svg{width:20px;height:20px}
+.cls{font-family:var(--f-label);font-weight:700;font-size:11.5px;letter-spacing:.09em;color:#8a5a22;line-height:1.1}
+.char h4{margin:1px 0 0;font-family:var(--f-display);font-weight:800;font-size:17px;line-height:1.1;overflow-wrap:anywhere}
+.char.small h4{font-size:15px}
+.char .ttl{font-size:12.5px;color:#6b5330;line-height:1.25;margin-top:2px;overflow-wrap:anywhere}
+.duties{grid-column:1 / -1;list-style:none;margin:4px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px}
+.duties li{font-size:12px;line-height:1.2;background:#fffaf0;border:1px solid #c9ad74;border-radius:999px;padding:2px 8px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.duties li.hit{background:#ffe7a3;border-color:#b8261a;font-weight:700}
+.duties li.more{background:transparent;border-style:dashed;color:#6b5330}
+.duties li.none{background:transparent;border:none;padding:2px 0;color:#8a7350;font-style:italic}
+.lvl{position:absolute;top:8px;right:10px;font-family:var(--f-label);font-weight:700;font-size:11.5px;color:#8a5a22;letter-spacing:.05em}
+
+/* character sheet drawer */
+.sheet-back{position:fixed;inset:0;z-index:25;background:rgba(4,16,26,.55)}
+.sheet{position:fixed;z-index:26;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--parch);color:var(--parch-ink);border-left:4px solid var(--frame);box-shadow:-12px 0 30px rgba(0,0,0,.4);display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top, 0px) + 16px) 18px calc(env(safe-area-inset-bottom, 0px) + 16px);gap:12px;overflow-y:auto}
+.sheet-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:start}
+.sheet-head .token{width:60px;height:60px}
+.sheet-head .token svg{width:32px;height:32px}
+.sheet h3{margin:0;font-family:var(--f-display);font-weight:800;font-size:23px;line-height:1.1;overflow-wrap:anywhere}
+.sheet .ttl{font-size:13.5px;color:#6b5330;margin-top:3px}
+.sheet .flavor{font-size:13px;font-style:italic;color:#7a5a2c;margin-top:4px}
+.sheet .x{background:transparent;border:1.5px solid #b89a63;color:var(--parch-ink);padding:2px 9px;font-size:18px;line-height:1}
+.sheet h5{margin:6px 0 0;font-family:var(--f-label);font-weight:700;letter-spacing:.08em;font-size:13px;color:#8a5a22}
+.sheet .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sheet .row label{font-size:13px;font-weight:700}
+.sheet ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.sheet ol li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;background:#fffaf0;border:1px solid #c9ad74;border-radius:8px;padding:7px 9px}
+.sheet ol li .dt{font-weight:700;font-size:14.5px;overflow-wrap:anywhere}
+.sheet ol li .dn{font-size:12.5px;color:#6b5330;overflow-wrap:anywhere}
+.sheet ol li button{font-size:12.5px;padding:3px 8px;background:transparent;border:1.5px solid #b89a63;color:#7a3c12}
+.sheet ol li button.armed{background:var(--brick);color:#fff;border-color:#7a2a17}
+.sheet .empty{font-size:13.5px;color:#7a6342;font-style:italic}
+.sheet form{display:flex;flex-direction:column;gap:6px;border-top:1.5px dashed #c9ad74;padding-top:10px}
+.sheet form input{width:100%;box-sizing:border-box}
+.quick *,.sheet *{box-sizing:border-box}
+.sheet form button,.quick button{background:var(--brick);color:#fff;border-color:#7a2a17}
+.sheet form button:hover,.quick button:hover{background:#c73a22}
+.sheet form button{align-self:flex-start}
+
+/* ---------- guild hall: management + effects ---------- */
+.village-scene{border:2px solid #c9a24a;border-radius:14px;overflow:hidden;background:#d6d0b8;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.village-scene svg{display:block;width:100%;height:auto}
+.village-scene .villager{cursor:pointer}
+.village-scene .villager:focus-visible{outline:none}
+.village-scene .villager:focus-visible ellipse{fill:#e8c77a;opacity:.9}
+.village-scene .vname{font-family:"MedievalSharp","Alegreya SC",Georgia,serif;font-size:15px;fill:#2b1d08;paint-order:stroke;stroke:#efe3c8;stroke-width:4px}
+.village-scene .bob{animation:vbob 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.village-scene .villager:hover .bob{animation:vhop .5s ease-out}
+@keyframes vbob{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-2px) rotate(-1.5deg)}70%{transform:translateY(-1px) rotate(1.5deg)}}
+@keyframes vhop{0%{transform:translateY(0)}40%{transform:translateY(-10px)}100%{transform:translateY(0)}}
+.village-scene .bob.asleep{animation:vbreathe 3.6s ease-in-out infinite;transform-origin:50% 50%}
+@keyframes vbreathe{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.06)}}
+.village-scene .vsign{font-family:"MedievalSharp","Alegreya SC",Georgia,serif;font-size:14px;fill:#f6ecd2}
+.village-scene .vz{font-family:"MedievalSharp","Alegreya SC",Georgia,serif;fill:#3d4f7a;font-weight:700;paint-order:stroke;stroke:#efe3c8;stroke-width:3px;animation:vzz 2.4s ease-in-out infinite;transform-box:fill-box;opacity:0}
+@keyframes vzz{0%{opacity:0;transform:translate(0,6px)}30%{opacity:1}100%{opacity:0;transform:translate(8px,-14px)}}
+.village-scene .bubble{animation:vtalk 3s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes vtalk{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+.village-scene .smoke{animation:vsmoke 3.3s ease-out infinite;transform-box:fill-box;opacity:0}
+@keyframes vsmoke{0%{opacity:.75;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(16px,-64px) scale(1.7)}}
+.village-scene .flag{animation:vflag 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:0 50%}
+@keyframes vflag{0%,100%{transform:skewY(0)}50%{transform:skewY(8deg) scaleX(.9)}}
+.village-scene .cloud{animation:vcloud 70s linear infinite}
+@keyframes vcloud{from{transform:translateX(-60px)}to{transform:translateX(120px)}}
+.village-scene .bird{animation:vbird 7s ease-in-out infinite}
+@keyframes vbird{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,-12px)}}
+.village-scene .forge{animation:vforge 1.4s ease-in-out infinite}
+@keyframes vforge{0%,100%{opacity:.35}50%{opacity:.7}}
+.village-scene .flame{animation:vflame .9s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes vflame{from{transform:scale(1,1)}to{transform:scale(.85,1.12)}}
+@media (prefers-reduced-motion:reduce){.village-scene .vz{animation:none;opacity:.8}.village-scene .bob,.village-scene .bubble,.village-scene .smoke,.village-scene .flag,.village-scene .cloud,.village-scene .bird,.village-scene .forge,.village-scene .flame{animation:none}.village-scene .smoke{opacity:.5}}
+.v-scroll{box-sizing:border-box;width:100%;height:100%;overflow:hidden;background:#efe1bb;border:3px solid #5a4128;border-radius:4px;padding:6px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;color:#2b1d08;box-shadow:inset 0 0 12px rgba(90,65,40,.35)}
+.v-scroll-head{font-family:"MedievalSharp","Alegreya SC",Georgia,serif;font-size:12.5px;color:#8e2a17}
+.v-scroll-text{font-family:"Alegreya SC",Georgia,serif;font-weight:700;font-size:14px;line-height:1.22}
+.v-banner{box-sizing:border-box;width:100%;height:100%;padding:7px 12px 20px;color:#f6ecd2;display:flex;flex-direction:column;gap:4px;clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);overflow:hidden;box-shadow:inset 0 0 0 3px rgba(201,162,74,.75)}
+.v-dev{background:#3f5e57}
+.v-mc{background:#7a3348}
+.v-admin{background:#2f4170}
+.v-banner-head{font-family:"MedievalSharp","Alegreya SC",Georgia,serif;font-size:13.5px;color:#e8c77a}
+.v-banner-text{font-family:"Alegreya",Georgia,serif;font-size:13px;line-height:1.32}
+.v-bubble{box-sizing:border-box;width:100%;height:100%;overflow:hidden;background:#fbf3dc;border:1.6px solid #5a4128;border-radius:14px;padding:5px 9px;display:flex;align-items:center;justify-content:center;text-align:center;box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.v-bubble-text{font-family:"Alegreya",Georgia,serif;font-size:12.5px;line-height:1.22;color:#2b1d08;font-style:italic}
+.village-foot{font-size:13px;color:var(--muted);text-align:center}
+.village-notes{display:none;flex-direction:column;gap:8px}
+.village-notes > div{background:var(--panel);border:1px solid var(--panel-line);border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.45}
+.village-notes b{color:var(--frame)}
+@media (max-width:760px){.village-notes{display:flex}}
+.chron-quote{margin:2px 4px -4px;font-family:var(--f-display);font-size:17px;line-height:1.35;color:var(--frame);text-align:center;text-wrap:balance}
+.chron-quote em{font-style:italic}
+.chronicles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.chronicles{grid-template-columns:minmax(0,1fr)}}
+.chron{background:var(--panel);border:1px solid var(--panel-line);border-top:3px solid var(--frame);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.chron:focus-visible{outline:3px solid var(--frame);outline-offset:2px}
+.chron-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.chron-head h4{margin:0;font-family:var(--f-display);font-weight:800;font-size:19px;color:var(--frame)}
+.chron-flavor{font-size:12.5px;color:var(--muted);font-style:italic}
+.chron-crest{display:flex;flex-wrap:wrap;gap:3px}
+.chron-crest .token{width:22px;height:22px;border-width:1.5px}
+.chron-crest .token svg{width:13px;height:13px}
+.chron-story{margin:0;font-size:14px;line-height:1.5;color:var(--ink)}
+.chron-foot{font-size:11.5px;color:var(--muted);font-style:italic;min-height:1em}
+.rules{background:var(--panel);border:1px solid var(--panel-line);border-radius:12px;padding:8px 14px}
+.rules summary{cursor:pointer;font-family:var(--f-label);font-weight:700;letter-spacing:.05em;color:var(--frame);font-size:14.5px;padding:4px 0}
+.rules summary:focus-visible{outline:3px solid var(--frame);outline-offset:2px;border-radius:4px}
+.rules-list{margin:6px 0 4px;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 18px}
+.rules-list li{font-size:13.5px;line-height:1.4;color:var(--ink)}
+.rules-list b{display:block;font-family:var(--f-label);letter-spacing:.04em;font-size:14px}
+.rules-list b.pos{color:var(--gold-hi)}
+.rules-list b.neg{color:var(--brick-hi)}
+.rules-list i{font-style:normal;font-weight:700;color:var(--frame)}
+.actions-row{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.actions-row .quick{flex:1 1 520px}
+.recruit-btn{display:flex;align-items:center;gap:8px;font-size:15px;background:var(--gold);color:#2b1d08;border:2px solid var(--frame);border-radius:12px;padding:10px 16px}
+.recruit-btn:hover{background:var(--gold-hi)}
+.recruit-btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.6;fill:none;stroke-linecap:round}
+.court{grid-template-columns:repeat(auto-fit,minmax(220px,1fr)) !important;grid-template-areas:none !important}
+.col.big{grid-column:span 2}
+.member{display:flex;flex-direction:column;min-width:0}
+.party.squad{margin-top:12px;padding:15px 8px 8px;border-color:rgba(232,214,164,.25);background:rgba(0,0,0,.12)}
+.party.wide > .member.has-crew{grid-column:1 / -1;display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2fr);gap:10px;align-items:start}
+.party.wide > .member.has-crew > .party.squad{margin-top:0}
+.party.wide > .member.has-crew > .party.squad::before{top:22px;left:-11px;height:0;width:10px;border-left:none;border-top:2px solid rgba(232,214,164,.45)}
+@media (max-width:560px){.party.wide > .member.has-crew{display:flex}.party.wide > .member.has-crew > .party.squad{margin-top:12px}.party.wide > .member.has-crew > .party.squad::before{top:-13px;left:50%;height:12px;width:0;border-top:none;border-left:2px solid rgba(232,214,164,.45)}}
+@media (max-width:700px){.court{grid-template-columns:minmax(0,1fr) !important}.col.big{grid-column:auto}}
+.tavern{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:rgba(0,0,0,.2);border:1.5px dashed var(--panel-line);border-radius:12px;padding:10px 12px;font-size:13.5px;color:var(--muted)}
+.tavern .tl{font-family:var(--f-label);font-weight:700;letter-spacing:.05em;color:var(--frame)}
+.tavern .gone{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid var(--panel-line);border-radius:999px;padding:3px 4px 3px 10px;color:var(--ink)}
+.tavern .gone button{font-size:12.5px;padding:2px 9px;border-radius:999px}
+.sheet .danger{margin-top:auto;border-top:1.5px dashed #c9ad74;padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.sheet .danger button{align-self:flex-start;background:transparent;color:#8e2a17;border:1.5px solid #8e2a17}
+.sheet .danger button.armed{background:#8e2a17;color:#fff}
+.sheet .danger .why{font-size:12.5px;color:#7a6342}
+.sheet .field{display:flex;flex-direction:column;gap:3px}
+.sheet .field label{font-size:13px;font-weight:700}
+.sheet .field input,.sheet .field select{width:100%}
+.sheet .recruit-go{background:var(--gold);color:#2b1d08;border-color:#6b5330}
+.sheet .recruit-go:hover{background:var(--gold-hi)}
+
+/* effects */
+#fx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:60}
+.fx-float{position:fixed;z-index:61;pointer-events:none;transform:translate(-50%,-50%);font-family:var(--f-display);font-weight:800;font-size:19px;line-height:1.1;white-space:nowrap;background:rgba(8,28,42,.92);border:2px solid currentColor;border-radius:10px;padding:5px 12px 6px;box-shadow:0 8px 20px rgba(0,0,0,.4);animation:floatUp 1.8s ease-out forwards}
+.fx-float.pos{color:var(--gold-hi)}
+.fx-float.neg{color:#ff7a5c}
+.fx-float small{display:block;text-align:center;font-family:var(--f-label);font-size:12.5px;letter-spacing:.08em;color:var(--ink)}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-20%) scale(.7)}12%{opacity:1;transform:translate(-50%,-70%) scale(1.06)}70%{opacity:1;transform:translate(-50%,-120%) scale(1)}100%{opacity:0;transform:translate(-50%,-170%) scale(1)}}
+.char.fx-levelup{animation:levelup 1.1s ease-out}
+@keyframes levelup{0%{box-shadow:0 0 0 0 rgba(255,220,133,.95),0 4px 0 rgba(0,0,0,.25)}40%{box-shadow:0 0 0 10px rgba(255,220,133,.35),0 0 30px 8px rgba(255,200,90,.55)}100%{box-shadow:0 0 0 0 rgba(255,220,133,0),0 4px 0 rgba(0,0,0,.25)}}
+.char.fx-hit{animation:hit .6s ease-out}
+@keyframes hit{0%,100%{transform:none;filter:none}15%{transform:translateX(-6px) rotate(-1deg);filter:sepia(1) saturate(4) hue-rotate(-30deg) brightness(.85)}30%{transform:translateX(5px) rotate(1deg)}45%{transform:translateX(-4px)}60%{transform:translateX(3px);filter:none}}
+.sheet ol li.fx-new{animation:newItem 1s ease-out}
+@keyframes newItem{0%{background:#ffe7a3;transform:scale(.96)}100%{background:#fffaf0;transform:none}}
+@media (prefers-reduced-motion:reduce){.fx-float{animation:fadeOnly 1.4s ease-out forwards}.char.fx-levelup,.char.fx-hit,.sheet ol li.fx-new{animation:none}@keyframes fadeOnly{0%,70%{opacity:1}100%{opacity:0}}}
+
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Settlers of Salesforce Ops</h1>
+      <p class="sub">Enterprise Salesforce Ops Group · open Asana tasks by teammate</p>
+    </div>
+    <div class="controls">
+      <span class="status" id="status" aria-live="polite">Loading the board…</span>
+      <button id="refresh" type="button">Reroll from Asana</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" id="tabbtn-board" aria-controls="tab-board" aria-selected="true" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 20 7.5v9L12 21 4 16.5v-9z"/></svg>The Board</button>
+    <button class="tab" role="tab" id="tabbtn-guild" aria-controls="tab-guild" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 19 6v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M12 8v8M9 11h6"/></svg>Guild Hall</button>
+    <button class="tab" role="tab" id="tabbtn-village" aria-controls="tab-village" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21h18M5 21V11l7-6 7 6v10"/><path d="M10 21v-5h4v5"/></svg>Village Square</button>
+  </nav>
+
+  <div id="tab-board" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-board">
+
+  <div class="legend" role="group" aria-label="Show or hide resource types">
+    <button class="legend-item" id="lg-brick" data-cat="brick" aria-pressed="true" type="button"><span class="chip brick"></span><b>Brick</b> open, created or due within 3 business days <span class="n" id="n-brick">–</span></button>
+    <button class="legend-item" id="lg-ore" data-cat="ore" aria-pressed="true" type="button"><span class="chip ore"></span><b>Ore</b> created 30+ days ago, no due date nearby <span class="n" id="n-ore">–</span></button>
+    <button class="legend-item" id="lg-wool" data-cat="wool" aria-pressed="true" type="button"><span class="chip wool"></span><b>Wool</b> everything else <span class="n" id="n-wool">–</span></button>
+    <button class="legend-item" id="lg-gold" data-cat="gold" aria-pressed="true" type="button"><span class="chip gold"></span><b>Gold</b> completed in the last 5 business days <span class="n" id="n-gold">–</span></button>
+  </div>
+
+  <div class="main">
+    <div class="board-box">
+      <svg id="board" viewBox="-560 -500 1120 1000" role="img" aria-label="Catan-style board of teammates and their open tasks"></svg>
+      <div class="notice" id="notice" hidden><div id="notice-body"></div></div>
+    </div>
+    <section class="site" id="site" aria-labelledby="site-title">
+      <h2 id="site-title">The Treasure Hoard</h2>
+      <div class="site-count"><b id="site-n">–</b><span id="site-sub">tasks completed by the team</span></div>
+      <svg id="build" viewBox="0 0 300 470" role="img" aria-label="A pile of gold coins, one coin per completed task"></svg>
+      <div class="site-note" id="site-note">Every task the team finishes within 3 business days of today adds one gold coin to the hoard. Hover a coin to see whose it is; click it to comment in Asana.</div>
+      <ul class="crew" id="crew" aria-label="Blocks laid per teammate"></ul>
+    </section>
+    <aside id="panel">
+      <div>
+        <h2 id="p-name">Pick a tile</h2>
+        <div class="who-sub" id="p-sub">Tap a teammate's hex to see their tasks.</div>
+      </div>
+      <div id="p-body">
+        <p class="hint">Each hex is a teammate. Its terrain shows which resource dominates their queue: hills for Brick, mountains for Ore, pasture for Wool, desert for an empty queue. The number token counts their Brick plus Wool (active work, leaving out aging Ore), the pips under it count Brick, the stack of gold coins counts work they finished in the last 5 business days, and the robber sits on whoever holds the most Ore. Click any block to comment on that task in Asana.</p>
+      </div>
+    </aside>
+  </div>
+  </div>
+  <section id="tab-guild" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-guild" hidden>
+    <div class="guild-top">
+      <div class="lineage" id="lineage" aria-label="Chain of command above the keep"></div>
+      <button type="button" class="sound-btn" id="sound-btn" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="waves" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg><span class="lbl">Sound on</span></button>
+      <label class="finder" for="g-search"><input id="g-search" type="search" placeholder="Who owns…? Search responsibilities" autocomplete="off"></label>
+    </div>
+    <details class="rules" id="rules" open>
+      <summary>How the Guild Hall works</summary>
+      <ol class="rules-list">
+        <li><b class="pos">Grant a responsibility</b> Choose a hero in the bar below, type the responsibility and press <i>Grant</i>. You can also click any hero to open their character sheet.</li>
+        <li><b class="neg">Revoke a responsibility</b> Click the hero, then press <i>Revoke</i> next to the responsibility and confirm.</li>
+        <li><b class="pos">Recruit a hero</b> Press <i>Recruit a hero</i>, then enter their name, title, class and who they report to.</li>
+        <li><b class="neg">Dismiss a hero</b> Click the hero and use <i>Dismiss from the guild</i> at the bottom of their sheet. Dismissed heroes wait in the tavern and can be brought back.</li>
+      </ol>
+    </details>
+    <div class="actions-row">
+      <form class="quick" id="quick" autocomplete="off">
+        <span class="ql">Grant a responsibility</span>
+        <select id="qa-who" aria-label="Hero"></select>
+        <input id="qa-text" type="text" maxlength="120" placeholder="e.g. Marketing Cloud journeys" aria-label="Responsibility">
+        <button type="submit" id="qa-go">Grant</button>
+      </form>
+      <button type="button" class="recruit-btn" id="recruit-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Recruit a hero</button>
+    </div>
+    <div class="ledger-note" id="g-note" aria-live="polite">Opening the ledger…</div>
+    <div class="keep" id="keep">
+      <span class="keep-label">The Keep · Strategic Communications &amp; Marketing</span>
+    </div>
+    <div class="tavern" id="tavern" hidden></div>
+  </section>
+  <section id="tab-village" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-village" hidden>
+    <div class="village-scene" id="village-scene"></div>
+    <div class="village-foot" id="village-foot"></div>
+    <div class="village-notes" id="village-notes"></div>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+<div class="chooser" id="chooser" role="menu" aria-labelledby="ch-q" hidden>
+  <div class="ch-q" id="ch-q">What will you do with this resource?</div>
+  <div class="ch-name" id="ch-name"></div>
+  <button type="button" class="ch-opt" id="ch-comment" role="menuitem"><b>Parley with the settler</b><span>Leave a comment on the task</span></button>
+  <a class="ch-opt" id="ch-open" role="menuitem" target="_blank" rel="noopener"><b>Set sail for Asana</b><span>Open the task in a new tab</span></a>
+</div>
+<div class="cmt-back" id="cmt" hidden>
+  <form class="cmt" id="cmt-form" role="dialog" aria-modal="true" aria-labelledby="cmt-title">
+    <div class="cmt-eyebrow">Parley · comment on this task</div>
+    <h3 id="cmt-title">Task</h3>
+    <div class="cmt-meta" id="cmt-meta"></div>
+    <label for="cmt-text" class="cmt-label">Your comment</label>
+    <textarea id="cmt-text" rows="4" maxlength="5000" placeholder="Posts to the task's comments in Asana, as you"></textarea>
+    <div class="cmt-status" id="cmt-status" aria-live="polite"></div>
+    <div class="cmt-actions">
+      <a id="cmt-open" target="_blank" rel="noopener">Open in Asana ↗</a>
+      <span class="sp"></span>
+      <button type="button" class="ghost" id="cmt-cancel">Cancel</button>
+      <button type="submit" id="cmt-post">Post comment</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+const SERVER = "Asana";
+const TEAM_GID = "1209091985508243";
+/* Team members left off the board: Eric Hughes, John Dickens, Pamela Woods */
+const EXCLUDE = new Set(["1208325976884361", "1198982823414259", "1208541174889597"]);
+const CACHE_KEY = "settlers-sfops-v1";
+const NS = "http://www.w3.org/2000/svg";
+const R = 100, SQ3 = Math.sqrt(3);
+const CATS = {
+  brick:{label:"Brick", desc:"Open, created or due within 3 business days", fill:"var(--brick)", hi:"var(--brick-hi)"},
+  wool:{label:"Wool", desc:"Everything else", fill:"var(--wool)", hi:"var(--wool-hi)"},
+  ore:{label:"Ore", desc:"Created 30+ days ago, nothing due soon", fill:"var(--ore)", hi:"var(--ore-hi)"}
+};
+const TERRAIN = {brick:"var(--hills)", ore:"var(--mountains)", wool:"var(--pasture)", none:"var(--desert)"};
+const TERRAIN_NAME = {brick:"Hills", ore:"Mountains", wool:"Pasture", none:"Desert"};
+
+const $ = id => document.getElementById(id);
+const svg = $("board");
+let state = {people:[], fetchedAt:null};
+let selected = null;
+let hidden = {brick:false, ore:false, wool:false};
+let loading = false;
+
+/* ---------- dates & categories ---------- */
+const pad = n => String(n).padStart(2,"0");
+function localYMD(d){ return [d.getFullYear(), d.getMonth()+1, d.getDate()]; }
+function dayIndex(y,m,d){ return Date.UTC(y,m-1,d)/864e5; }
+function todayIdx(){ const [y,m,d] = localYMD(new Date()); return dayIndex(y,m,d); }
+function dueIdx(s){ if(!s) return null; const [y,m,d] = s.split("-").map(Number); return dayIndex(y,m,d); }
+function createdIdx(iso){ const [y,m,d] = localYMD(new Date(iso)); return dayIndex(y,m,d); }
+function categorize(t, T){
+  /* Brick: open work created or due within 3 business days either side of today */
+  const start = bizShift(T, -3), end = bizShift(T, 3);
+  const c = createdIdx(t.created_at), due = dueIdx(t.due_on);
+  if ((due != null && due >= start && due <= end) || (c >= start && c <= end)) return "brick";
+  if (c - T < -30) return "ore";
+  return "wool";
+}
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtDue(s){ if(!s) return "no due date"; const [y,m,d] = s.split("-").map(Number); return "due " + MON[m-1] + " " + d + (y !== new Date().getFullYear() ? ", " + y : ""); }
+function fmtCreated(iso){ const dt = new Date(iso); return "created " + MON[dt.getMonth()] + " " + dt.getDate() + (dt.getFullYear() !== new Date().getFullYear() ? ", " + dt.getFullYear() : ""); }
+
+/* ---------- build model ---------- */
+function buildPeople(users, tasks, done){
+  const T = todayIdx();
+  const byKey = new Map();
+  const gidToKey = new Map();
+  for (const u of users){
+    if (EXCLUDE.has(u.gid)) continue;
+    const key = (u.name || u.email || u.gid).trim().toLowerCase();
+    if (!byKey.has(key)) byKey.set(key, {key, name:u.name || u.email || "Unnamed", gids:[], brick:[], ore:[], wool:[], gold:[]});
+    byKey.get(key).gids.push(u.gid);
+    gidToKey.set(u.gid, key);
+  }
+  for (const t of tasks){
+    const g = t.assignee && t.assignee.gid; const key = gidToKey.get(g);
+    if (!key) continue;
+    byKey.get(key)[categorize(t, T)].push({gid:t.gid, name:t.name || "(untitled task)", due:t.due_on || null, created:t.created_at, url:t.permalink_url || null, projects:t.projects || []});
+  }
+  /* Gold: work completed in the last 5 business days, one coin per task */
+  const goldFrom = bizShift(T, -5);
+  for (const t of (done || [])){
+    const key = gidToKey.get(t.assignee && t.assignee.gid);
+    if (!key || !t.completed_at) continue;
+    const c = createdIdx(t.completed_at);
+    if (c >= goldFrom && c <= T) byKey.get(key).gold.push({gid:t.gid, name:t.name || "(untitled task)", completed:t.completed_at, url:t.permalink_url || null});
+  }
+  const people = [...byKey.values()];
+  for (const p of people){
+    p.gold.sort((a,b)=> b.completed.localeCompare(a.completed));
+    p.brick.sort((a,b)=> (a.due||"9999").localeCompare(b.due||"9999"));
+    p.wool.sort((a,b)=> (a.due||"9999").localeCompare(b.due||"9999"));
+    p.ore.sort((a,b)=> a.created.localeCompare(b.created));
+    p.total = p.brick.length + p.ore.length + p.wool.length;
+    const max = Math.max(p.brick.length, p.ore.length, p.wool.length);
+    p.terrain = p.total === 0 ? "none" : (p.brick.length === max ? "brick" : p.ore.length === max ? "ore" : "wool");
+  }
+  people.sort((a,b)=> b.total - a.total || a.name.localeCompare(b.name));
+  return people;
+}
+
+/* ---------- svg helpers ---------- */
+function el(tag, attrs, parent){
+  const e = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function hexPoints(r){ const pts=[]; for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); pts.push((r*Math.cos(a)).toFixed(2)+","+(r*Math.sin(a)).toFixed(2)); } return pts.join(" "); }
+function spiral(n){
+  const out=[[0,0]], dirs=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+  for (let k=1; out.length<n; k++){ let q=-k, r=k; for (let s=0;s<6;s++) for (let j=0;j<k;j++){ out.push([q,r]); q+=dirs[s][0]; r+=dirs[s][1]; } }
+  return out.slice(0,n);
+}
+/* Round board: concentric hex rings around a center tile (1, 7, 19, 37 tiles), the way Catan's island is built.
+   When the team doesn't fill the outer ring, the spare slots are spaced evenly around it (for 16 people: three
+   alternating corners) and become decorative forest tiles, so the island stays round. Busiest teammates sit in the middle. */
+function layout(n){
+  const dirs = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+  const px = ([q,r]) => [R*SQ3*(q + r/2), R*1.5*r];
+  const rings = [[[0,0]]];
+  let total = 1;
+  for (let k = 1; total < n; k++){
+    const ring = []; let q = -k, r = k;
+    for (let s = 0; s < 6; s++) for (let j = 0; j < k; j++){ ring.push([q,r]); q += dirs[s][0]; r += dirs[s][1]; }
+    rings.push(ring); total += ring.length;
+  }
+  const inner = rings.slice(0, -1).flat().map(px);
+  const outer = rings[rings.length - 1].map(px);
+  const ang = ([x,y]) => { let a = Math.atan2(y, x); if (a < -1e-6) a += 2*Math.PI; return a; };
+  outer.sort((A, B) => ang(A) - ang(B));
+  const spareCount = total - n, spareIdx = new Set();
+  for (let i = 0; i < spareCount; i++) spareIdx.add(Math.round(i * outer.length / spareCount) % outer.length);
+  const people = inner.concat(outer.filter((_, i) => !spareIdx.has(i)));
+  const spares = outer.filter((_, i) => spareIdx.has(i));
+  people.sort((A, B) => (A[0]*A[0] + A[1]*A[1]) - (B[0]*B[0] + B[1]*B[1]) || A[1] - B[1] || A[0] - B[0]);
+  return {people, spares};
+}
+function spareTile(g, seed){
+  el("polygon", {points:hexPoints(R-2), fill:"#3f6b3a"}, g);
+  el("polygon", {points:hexPoints(R-2), fill:"url(#tileShade)"}, g);
+  const rnd = mulberry(seed*131+7);
+  for (let k = 0; k < 9; k++){
+    const x = -58 + rnd()*116, y = -50 + rnd()*90;
+    el("path", {d:`M${x} ${y-14} L${x+8} ${y+3} L${x-8} ${y+3} Z`, fill:"#2c5129", opacity:".85"}, g);
+    el("rect", {x:x-1.2, y:y+3, width:2.4, height:4, fill:"#4a3220", opacity:".8"}, g);
+  }
+  el("polygon", {points:hexPoints(R-3), fill:"none", stroke:"var(--frame)", "stroke-width":"4", opacity:".9"}, g);
+}
+function shortName(name){ const parts = name.trim().split(/\s+/); if (parts.length < 2) return name; const s = parts[0] + " " + parts[parts.length-1][0].toUpperCase() + "."; return s.length > 16 ? parts[0].slice(0,14) : s; }
+
+function defs(){
+  const d = el("defs", null, svg);
+  const pat = el("pattern", {id:"waves", width:"80", height:"28", patternUnits:"userSpaceOnUse", class:"waves"}, d);
+  el("path", {d:"M0 14 Q 20 4 40 14 T 80 14", fill:"none", stroke:"var(--sea-line)", "stroke-width":"2", opacity:".55"}, pat);
+  const at = el("animateTransform", {attributeName:"patternTransform", type:"translate", from:"0 0", to:"80 0", dur:"9s", repeatCount:"indefinite"}, pat);
+  const g = el("radialGradient", {id:"tileShade", cx:"50%", cy:"35%", r:"65%"}, d);
+  el("stop", {offset:"0%", "stop-color":"#ffffff", "stop-opacity":".18"}, g);
+  el("stop", {offset:"100%", "stop-color":"#000000", "stop-opacity":".28"}, g);
+  return d;
+}
+
+/* ---------- render ---------- */
+function render(){
+  svg.textContent = "";
+  defs();
+  const people = state.people;
+  let minX=0,maxX=0,minY=0,maxY=0;
+  const L = layout(Math.max(people.length, 1));
+  L.people.concat(L.spares).forEach(([x,y]) => { minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y); });
+  const pos = L.people;
+  const padX = R*SQ3/2 + 60, padY = R + 60;
+  const vb = [minX-padX, minY-padY, (maxX-minX)+2*padX, (maxY-minY)+2*padY];
+  svg.setAttribute("viewBox", vb.map(v=>v.toFixed(1)).join(" "));
+  // ocean
+  el("rect", {x:vb[0], y:vb[1], width:vb[2], height:vb[3], fill:"url(#waves)"}, svg);
+  // frame (sand ring behind board)
+  const frame = el("g", null, svg);
+  pos.concat(L.spares).forEach(([x,y]) => el("polygon", {points:hexPoints(R+22), transform:`translate(${x} ${y})`, fill:"var(--frame)", stroke:"var(--frame)", "stroke-width":"14", "stroke-linejoin":"round"}, frame));
+  const layer = el("g", {id:"pieces"}, svg);
+  L.spares.forEach(([x,y], i) => spareTile(el("g", {transform:`translate(${x.toFixed(1)} ${y.toFixed(1)})`, "aria-hidden":"true"}, layer), i));
+  if (!people.length) return;
+
+  let robberIdx = -1, maxOre = 0;
+  people.forEach((p,i)=>{ if (p.ore.length > maxOre){ maxOre = p.ore.length; robberIdx = i; } });
+
+  let blockN = 0;
+  people.forEach((p, i) => {
+    const [x,y] = pos[i];
+    const g = el("g", {class:"hex" + (selected === p.key ? " sel" : ""), transform:`translate(${x.toFixed(1)} ${y.toFixed(1)})`, tabindex:"0", role:"button", "aria-label":`${p.name}: ${p.total} open tasks, ${p.brick.length} brick, ${p.wool.length} wool, ${p.ore.length} ore`}, layer);
+    g.addEventListener("click", () => select(p.key));
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); select(p.key); } });
+    el("polygon", {class:"tile", points:hexPoints(R-2), fill:TERRAIN[p.terrain]}, g);
+    el("polygon", {points:hexPoints(R-2), fill:"url(#tileShade)"}, g);
+    terrainMarks(g, p.terrain, i);
+    el("polygon", {class:"rim", points:hexPoints(R-3), fill:"none", stroke:"var(--frame)", "stroke-width":"4", opacity:".9"}, g);
+    // name banner
+    const tag = el("g", {class:"name-tag", tabindex:"0", role:"button", "aria-label":`${p.name}: summary of their Brick work`}, g);
+    el("rect", {x:-54, y:-64, width:108, height:20, rx:4, fill:"var(--parch)", stroke:"#6b5330", "stroke-width":"1.2"}, tag);
+    const nm = el("text", {x:0, y:-49.5, "text-anchor":"middle", "font-family":"Alegreya Sans SC, Alegreya Sans, sans-serif", "font-weight":"700", "font-size":"13.5", fill:"var(--parch-ink)"}, tag);
+    nm.textContent = shortName(p.name);
+    tag.addEventListener("mouseenter", ev => briefOpen(p, ev));
+    tag.addEventListener("mousemove", ev => { lastTipEv = ev; moveTip(ev); });
+    tag.addEventListener("mouseleave", briefClose);
+    tag.addEventListener("focus", () => { const r = tag.getBoundingClientRect(); briefOpen(p, {clientX:r.left + r.width/2, clientY:r.bottom}); });
+    tag.addEventListener("blur", briefClose);
+    tag.addEventListener("click", ev => { ev.stopPropagation(); select(p.key); });
+    // number token
+    el("circle", {cx:0, cy:-16, r:19, fill:"var(--parch)", stroke:"#6b5330", "stroke-width":"1.5"}, g);
+    const num = el("text", {x:0, y:-11, "text-anchor":"middle", "font-family":"Alegreya SC, Georgia, serif", "font-weight":"800", "font-size": (p.brick.length + p.wool.length) > 99 ? "15" : "19", fill: p.brick.length >= 5 ? "#b8261a" : "var(--parch-ink)"}, g);
+    num.textContent = String(p.brick.length + p.wool.length);
+    const pips = Math.min(5, p.brick.length);
+    for (let k=0;k<pips;k++) el("circle", {cx:(k-(pips-1)/2)*4.6, cy:-3.5, r:1.5, fill: p.brick.length >= 5 ? "#b8261a" : "var(--parch-ink)"}, g);
+    // piles
+    if (p.total === 0){
+      const t = el("text", {x:-16, y:30, "text-anchor":"middle", "font-family":"Alegreya Sans, sans-serif", "font-size":"11", fill:"#5b4523", "font-style":"italic"}, g);
+      t.textContent = "No open tasks";
+    }
+    ["brick","wool","ore"].forEach(cat => { blockN = pile(g, p, cat, PILE_X[cat], blockN); });
+    coins(g, p);
+    if (i === robberIdx && maxOre > 0) robber(g);
+  });
+}
+
+function terrainMarks(g, terrain, seed){
+  const rnd = mulberry(seed*97+13);
+  if (terrain === "ore"){
+    for (let k=0;k<3;k++){ const x=-60+rnd()*120, y=-40+rnd()*20; el("path",{d:`M${x-14} ${y+12} L${x} ${y-10} L${x+14} ${y+12} Z`, fill:"#565c66", opacity:".55"}, g); el("path",{d:`M${x-4} ${y-4} L${x} ${y-10} L${x+4} ${y-4} Z`, fill:"#e9ecf1", opacity:".6"}, g); }
+  } else if (terrain === "brick"){
+    for (let k=0;k<4;k++){ const x=-62+rnd()*124, y=-38+rnd()*24; el("path",{d:`M${x-16} ${y+6} Q ${x} ${y-8} ${x+16} ${y+6} Z`, fill:"#6f3820", opacity:".55"}, g); }
+  } else if (terrain === "wool"){
+    for (let k=0;k<6;k++){ const x=-66+rnd()*132, y=-40+rnd()*26; el("path",{d:`M${x} ${y} l3 -6 l3 6`, fill:"none", stroke:"#4f7b2c", "stroke-width":"1.6", opacity:".7"}, g); }
+  } else {
+    for (let k=0;k<5;k++){ const x=-60+rnd()*120, y=-30+rnd()*70; el("path",{d:`M${x-10} ${y} Q ${x} ${y-4} ${x+10} ${y}`, fill:"none", stroke:"#b39a62", "stroke-width":"1.5", opacity:".8"}, g); }
+  }
+}
+function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* one row of four resource piles along the bottom of each tile: Brick, Wool, Ore, then the Gold coins */
+const BW=9, BH=7, GAP=1, COLS=3, MAXSHOW=18, BASE=57;
+const PILE_X = {brick:-48, wool:-16, ore:16, gold:48};
+function pile(g, p, cat, px, n){
+  const list = p[cat];
+  const pg = el("g", {class:"p-"+cat}, g);
+  const show = Math.min(list.length, MAXSHOW);
+  const left = px - (COLS*(BW+GAP)-GAP)/2;
+  for (let k=0;k<show;k++){
+    const col = k % COLS, row = Math.floor(k / COLS);
+    const bx = left + col*(BW+GAP), by = BASE - (row+1)*(BH+GAP);
+    const task = list[k];
+    const a = el("g", {class:"blk", tabindex:"0", role:"button", "aria-label":`${task.name}: comment or open in Asana`}, pg);
+    const inner = el("g", {class:"blk-in", style:`animation-delay:${Math.min(n*12, 2200)}ms`}, a);
+    el("rect", {class:"body", x:bx, y:by, width:BW, height:BH, rx:1.2, fill:CATS[cat].fill, stroke:"#1b1209", "stroke-width":".9"}, inner);
+    el("rect", {x:bx+1, y:by+.8, width:BW-2, height:1.4, rx:.6, fill:CATS[cat].hi, opacity:".75"}, inner);
+    if (cat === "brick") el("rect", {class:"hot-glow", x:bx-1, y:by-1, width:BW+2, height:BH+2, rx:2, fill:"none", stroke:"var(--brick-hi)", "stroke-width":"1.4", style:`animation-delay:${(k%7)*.3}s`}, inner);
+    a.addEventListener("mouseenter", ev => showTip(ev, task, cat, p));
+    a.addEventListener("mousemove", moveTip);
+    a.addEventListener("mouseleave", hideTip);
+    const pick = ev => { ev.preventDefault(); ev.stopPropagation(); hideTip(); openChooser({gid:task.gid, name:task.name, url:task.url, meta:`${CATS[cat].label} · ${p.name} · ${fmtDue(task.due)}`, kind:cat}, ev, a); };
+    a.addEventListener("click", pick);
+    a.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") pick(ev); });
+    n++;
+  }
+  if (list.length > MAXSHOW){
+    const rows = Math.ceil(MAXSHOW/COLS);
+    const t = el("text", {x:px, y:BASE - rows*(BH+GAP) - 4, "text-anchor":"middle", "font-family":"Alegreya Sans, sans-serif", "font-weight":"700", "font-size":"10", fill:"var(--parch)", stroke:"#1b1209", "stroke-width":"2.4", "paint-order":"stroke"}, pg);
+    t.textContent = "+" + (list.length - MAXSHOW);
+  }
+  return n;
+}
+function robber(g){
+  const r = el("g", {class:"robber"}, el("g", {transform:"translate(-116 0)"}, g));   /* left side; the coins sit on the right */
+  const t = el("title", null, r); t.textContent = "The robber: most Ore on the board";
+  el("ellipse", {cx:58, cy:-6, rx:10, ry:3.5, fill:"#000", opacity:".35"}, r);
+  el("path", {d:"M50 -6 Q 49 -20 54 -26 Q 50 -31 53 -36 Q 58 -42 63 -36 Q 66 -31 62 -26 Q 67 -20 66 -6 Z", fill:"#26201c", stroke:"#0d0a08", "stroke-width":"1"}, r);
+  el("circle", {cx:58, cy:-37, r:5.5, fill:"#26201c", stroke:"#0d0a08", "stroke-width":"1"}, r);
+}
+
+/* gold coins: completed in the last 5 business days, stacked on the right of the tile */
+const COIN_MAX = 12;
+function coins(g, p){
+  const n = p.gold.length;
+  const cg = el("g", {class:"p-gold coin-stack", tabindex:"0", role:"button", "aria-label":`${p.name}: ${n} task${n === 1 ? "" : "s"} completed in the last 5 business days`}, g);
+  const cx = PILE_X.gold, base = BASE - 6, step = 3.3, show = Math.min(n, COIN_MAX);
+  el("ellipse", {cx, cy:base + 5, rx:11, ry:3.2, fill:"#000", opacity: n ? ".28" : ".12"}, cg);
+  if (!n){
+    el("ellipse", {cx, cy:base, rx:9, ry:3.4, fill:"none", stroke:"#6b5330", "stroke-width":"1", "stroke-dasharray":"2 2", opacity:".6"}, cg);
+  }
+  for (let k = 0; k < show; k++){
+    const y = base - k*step, wob = (k % 3 === 1 ? .6 : k % 3 === 2 ? -.5 : 0);
+    const c = el("g", {class:"blk-in", style:`animation-delay:${600 + k*55}ms`}, cg);
+    el("path", {d:`M${cx-8.5+wob} ${y} v2.4 a8.5 3.2 0 0 0 17 0 v-2.4`, fill:"#a8792a", stroke:"#3d2a0c", "stroke-width":".7"}, c);
+    el("ellipse", {cx:cx+wob, cy:y, rx:8.5, ry:3.2, fill: k === show - 1 ? "#ffdc85" : "#e2a93b", stroke:"#3d2a0c", "stroke-width":".7"}, c);
+    if (k === show - 1) el("ellipse", {cx:cx+wob, cy:y, rx:5.2, ry:1.8, fill:"none", stroke:"#a8792a", "stroke-width":".8"}, c);
+  }
+  const top = base - Math.max(show - 1, 0)*step;
+  const lbl = el("text", {x:cx, y:top - 7, "text-anchor":"middle", "font-family":"Alegreya Sans, sans-serif", "font-weight":"800", "font-size":"10.5", fill: n ? "#ffdc85" : "#8a7350", stroke:"#2b1d08", "stroke-width": n ? "2.6" : "0", "paint-order":"stroke"}, cg);
+  lbl.textContent = n > COIN_MAX ? n + "" : n ? String(n) : "0";
+  cg.addEventListener("mouseenter", ev => coinTip(ev, p));
+  cg.addEventListener("mousemove", moveTip);
+  cg.addEventListener("mouseleave", hideTip);
+  const open = ev => { ev.preventDefault(); ev.stopPropagation(); hideTip(); select(p.key); };
+  cg.addEventListener("click", open);
+  cg.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") open(ev); });
+}
+function coinTip(ev, p){
+  tip.textContent = "";
+  const b = document.createElement("b"); b.textContent = `${p.gold.length} gold · completed in the last 5 business days`; tip.appendChild(b);
+  p.gold.slice(0, 6).forEach(t => { const d = document.createElement("div"); d.textContent = "• " + t.name; tip.appendChild(d); });
+  if (p.gold.length > 6){ const d = document.createElement("div"); d.textContent = `…and ${p.gold.length - 6} more. Click to see them all.`; tip.appendChild(d); }
+  tip.hidden = false; moveTip(ev);
+}
+
+/* ---------- brick briefing: a few sentences about someone's Brick work, on hover over their name ---------- */
+let lastTipEv = null, briefFor = null, briefTimer = null;
+const briefCache = new Map();          /* person + task list -> sentences, kept while the page is open */
+let sampleState = "unknown";            /* unknown | ok | off */
+function briefKey(p){ return p.key + "|" + p.brick.map(t => t.gid + (t.due || "")).join(","); }
+function topProjects(list){
+  const m = new Map(); list.forEach(t => (t.projects || []).forEach(n => m.set(n, (m.get(n) || 0) + 1)));
+  return [...m.entries()].sort((a, b) => b[1] - a[1]);
+}
+function localBrief(p){
+  const b = p.brick, T = todayIdx();
+  if (!b.length) return "No Brick right now.";
+  const cut = t => t.length > 42 ? t.slice(0, 40).trimEnd() + "…" : t;
+  const dated = b.filter(t => t.due).sort((x, y) => x.due.localeCompare(y.due));
+  const overdue = dated.filter(t => dueIdx(t.due) < T).length;
+  const out = [`${b.length} Brick${overdue ? `, ${overdue} overdue` : ""}.`];
+  if (dated.length) out.push(`Next: “${cut(dated[0].name)}” (${fmtDue(dated[0].due).replace("due ", "")}).`);
+  const tp = topProjects(b);
+  if (tp.length) out.push(`Mostly ${tp[0][0]}.`);
+  return out.join(" ");
+}
+function briefPrompt(p){
+  const lines = p.brick.slice(0, 40).map(t => `- ${t.name} | ${t.due ? "due " + t.due : "no due date"} | created ${isoDay(t.created)}${t.projects && t.projects.length ? " | project: " + t.projects.join(", ") : ""}`);
+  const today = new Date(); const d = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  return `You write short briefings for a team dashboard. Today is ${d}.\n` +
+    `Below are the open Asana tasks of ${p.name} that were created or are due within 3 business days of today.\n` +
+    `Write one or two very short sentences, 25 words at most in total: the main theme of their work and the most urgent item. ` +
+    `Use their first name. No lists, no headings, no preamble, no advice.\n\nTasks:\n${lines.join("\n")}`;
+}
+function renderBrief(p, text, note){
+  tip.textContent = "";
+  const b = document.createElement("b"); b.textContent = p.name + " · Brick briefing"; tip.appendChild(b);
+  const d = document.createElement("div"); d.className = "brief"; d.textContent = text; tip.appendChild(d);
+  if (note){ const n = document.createElement("div"); n.className = "brief-note"; n.textContent = note; tip.appendChild(n); }
+  tip.hidden = false; tip.classList.add("wide"); if (lastTipEv) moveTip(lastTipEv);
+}
+function briefOpen(p, ev){
+  lastTipEv = ev; briefFor = p.key; clearTimeout(briefTimer);
+  const key = briefKey(p);
+  if (!p.brick.length || briefCache.has(key) || sampleState === "off"){ renderBrief(p, briefCache.get(key) || localBrief(p), briefCache.has(key) || !p.brick.length ? "" : "Quick summary"); return; }
+  renderBrief(p, localBrief(p), "Asking Claude…");
+  /* wait for the pointer to settle so skimming across the board doesn't send a request for every name */
+  briefTimer = setTimeout(() => briefAsk(p, key), 650);
+}
+function briefClose(){ clearTimeout(briefTimer); briefFor = null; tip.hidden = true; tip.classList.remove("wide"); }
+/* shared with the Guild Hall: the board's people (from Asana) and the same hover briefing */
+window.__board = {
+  people: () => state.people,
+  personByGids: gids => state.people.find(p => p.gids.some(g => gids.includes(g))) || null,
+  briefOpen, briefClose, localBrief, isoDay, todayIdx, dueIdx,
+  move: ev => { lastTipEv = ev; moveTip(ev); },
+  listeners: []
+};
+async function briefAsk(p, key){
+  try{
+    const sample = (window.claude && window.claude.use) ? await window.claude.use("sample") : null;
+    if (!sample){ sampleState = "off"; if (briefFor === p.key) renderBrief(p, localBrief(p), ""); return; }
+    const res = await sample(briefPrompt(p), {modelTier:"quick"});
+    const text = String(res && res.text || "").trim();
+    if (text){ briefCache.set(key, text); sampleState = "ok"; }
+    if (briefFor === p.key) renderBrief(p, text || localBrief(p), "");
+  }catch(e){
+    const code = e && e.code;
+    if (code === "not_granted") sampleState = "off";
+    if (briefFor === p.key) renderBrief(p, localBrief(p), code === "rate_limited" ? "Busy right now; showing a quick summary." : "");
+  }
+}
+
+/* ---------- tooltip ---------- */
+const tip = $("tip");
+function showTip(ev, task, cat, p){
+  tip.textContent = "";
+  const b = document.createElement("b"); b.textContent = task.name; tip.appendChild(b);
+  const m = document.createElement("div"); m.textContent = `${CATS[cat].label} · ${p.name} · ${fmtDue(task.due)} · ${fmtCreated(task.created)}`; tip.appendChild(m);
+  tip.hidden = false; moveTip(ev);
+}
+function moveTip(ev){ const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 14; if (x + w > innerWidth - 8) x = ev.clientX - w - 14; if (y + h > innerHeight - 8) y = ev.clientY - h - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function hideTip(){ tip.hidden = true; }
+
+/* ---------- panel ---------- */
+function select(key){
+  selected = key;
+  document.querySelectorAll(".hex.sel").forEach(h => h.classList.remove("sel"));
+  const idx = state.people.findIndex(p => p.key === key);
+  const nodes = svg.querySelectorAll(".hex"); if (nodes[idx]) nodes[idx].classList.add("sel");
+  renderPanel();
+  if (matchMedia("(max-width:900px)").matches) $("panel").scrollIntoView({behavior:"smooth", block:"start"});
+}
+function renderPanel(){
+  const p = state.people.find(x => x.key === selected);
+  if (!p) return;
+  $("p-name").textContent = p.name;
+  $("p-sub").textContent = `${p.total} open task${p.total === 1 ? "" : "s"} · ${TERRAIN_NAME[p.terrain]} tile`;
+  const body = $("p-body"); body.textContent = "";
+  const ex = document.createElement("div"); ex.className = "export-box";
+  const pick = document.createElement("fieldset"); pick.className = "export-pick";
+  const lg = document.createElement("legend"); lg.textContent = "Export"; pick.appendChild(lg);
+  const b1 = document.createElement("button"); b1.type = "button"; b1.textContent = "Export CSV"; b1.title = "Download this teammate's selected tasks as a spreadsheet file";
+  const b2 = document.createElement("button"); b2.type = "button"; b2.className = "ghost-btn"; b2.textContent = "Export whole team";
+  const sync = () => { const none = !EXPORT_CATS.some(c => exportSel[c]); b1.disabled = b2.disabled = none; if (none) $("export-status").textContent = "Pick at least one resource to export."; else $("export-status").textContent = ""; };
+  EXPORT_CATS.forEach(cat => {
+    const lab = document.createElement("label"); lab.className = "export-opt";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "exp-" + cat; cb.checked = exportSel[cat];
+    cb.addEventListener("change", () => { exportSel[cat] = cb.checked; sync(); });
+    const chip = document.createElement("span"); chip.className = "chip " + cat;
+    const n = cat === "gold" ? p.gold.length : p[cat].length;
+    lab.append(cb, chip, document.createTextNode((cat === "gold" ? "Gold" : CATS[cat].label) + " (" + n + ")"));
+    pick.appendChild(lab);
+  });
+  const row = document.createElement("div"); row.className = "export-row";
+  const st = document.createElement("span"); st.className = "export-status"; st.id = "export-status"; st.setAttribute("aria-live", "polite");
+  b1.addEventListener("click", () => exportCsv([p], b1));
+  b2.addEventListener("click", () => exportCsv(state.people, b2));
+  row.append(b1, b2, st);
+  ex.append(pick, row); body.appendChild(ex);
+  sync();
+  ["brick","wool","ore"].forEach(cat => {
+    const sec = document.createElement("section"); sec.className = "cat";
+    const h = document.createElement("h3");
+    const chip = document.createElement("span"); chip.className = "chip " + cat; h.appendChild(chip);
+    h.appendChild(document.createTextNode(CATS[cat].label + " · " + CATS[cat].desc));
+    const n = document.createElement("span"); n.className = "n"; n.textContent = p[cat].length; h.appendChild(n);
+    sec.appendChild(h);
+    if (!p[cat].length){ const e = document.createElement("div"); e.className = "empty"; e.textContent = "None"; sec.appendChild(e); }
+    else {
+      const ul = document.createElement("ul"); ul.className = "tasks";
+      p[cat].forEach(t => {
+        const li = document.createElement("li"); const a = document.createElement("a");
+        if (t.url){ a.href = t.url; a.target = "_blank"; a.rel = "noopener"; }
+        const s1 = document.createElement("span"); s1.className = "t"; s1.textContent = t.name;
+        const s2 = document.createElement("span"); s2.className = "m"; s2.textContent = fmtDue(t.due) + " · " + fmtCreated(t.created);
+        a.appendChild(s1); a.appendChild(s2); li.appendChild(a); ul.appendChild(li);
+      });
+      sec.appendChild(ul);
+    }
+    body.appendChild(sec);
+  });
+  const sec = document.createElement("section"); sec.className = "cat";
+  const h = document.createElement("h3");
+  const chip = document.createElement("span"); chip.className = "chip gold"; h.appendChild(chip);
+  h.appendChild(document.createTextNode("Gold · completed in the last 5 business days"));
+  const n = document.createElement("span"); n.className = "n"; n.textContent = p.gold.length; h.appendChild(n);
+  sec.appendChild(h);
+  if (!p.gold.length){ const e = document.createElement("div"); e.className = "empty"; e.textContent = "None yet"; sec.appendChild(e); }
+  else {
+    const ul = document.createElement("ul"); ul.className = "tasks";
+    p.gold.forEach(t => {
+      const li = document.createElement("li"); const a = document.createElement("a");
+      if (t.url){ a.href = t.url; a.target = "_blank"; a.rel = "noopener"; }
+      const s1 = document.createElement("span"); s1.className = "t"; s1.textContent = t.name;
+      const s2 = document.createElement("span"); s2.className = "m"; s2.textContent = fmtDone(t.completed);
+      a.append(s1, s2); li.appendChild(a); ul.appendChild(li);
+    });
+    sec.appendChild(ul);
+  }
+  body.appendChild(sec);
+}
+
+/* ---------- CSV export ---------- */
+function csvCell(v){ const t = v == null ? "" : String(v); return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }
+function isoDay(iso){ if (!iso) return ""; const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+const EXPORT_CATS = ["brick", "wool", "ore", "gold"];
+const exportSel = {brick:true, wool:true, ore:true, gold:true};   /* remembered while the page is open */
+function buildCsv(people){
+  const rows = [["Person", "Category", "Category meaning", "Task", "Due date", "Created", "Completed", "Asana link"]];
+  people.forEach(p => {
+    ["brick","wool","ore"].filter(cat => exportSel[cat]).forEach(cat => p[cat].forEach(t => rows.push([p.name, CATS[cat].label, CATS[cat].desc, t.name, t.due || "", isoDay(t.created), "", t.url || ""])));
+    if (exportSel.gold) p.gold.forEach(t => rows.push([p.name, "Gold", "Completed in the last 5 business days", t.name, "", "", isoDay(t.completed), t.url || ""]));
+  });
+  return rows.map(r => r.map(csvCell).join(",")).join("\r\n");
+}
+async function exportCsv(people, btn){
+  const st = $("export-status");
+  const say = (t, err) => { if (st){ st.textContent = t; st.className = "export-status" + (err ? " err" : ""); } };
+  const today = new Date(), stampDay = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  const who = people.length === 1 ? people[0].name.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") : "Team";
+  const picked = EXPORT_CATS.filter(c => exportSel[c]);
+  if (!picked.length){ say("Pick at least one resource to export.", true); return; }
+  const what = picked.length === EXPORT_CATS.length ? "" : "-" + picked.map(c => c === "gold" ? "Gold" : CATS[c].label).join("-");
+  const filename = `Settlers-${who}${what}-${stampDay}.csv`;
+  const data = "\ufeff" + buildCsv(people);   /* the byte-order mark makes Excel read names with accents correctly */
+  btn.disabled = true; say("Preparing…");
+  try{
+    const dl = (window.claude && window.claude.use) ? await window.claude.use("downloads") : null;
+    if (!dl){ say("Downloads aren't available in this view.", true); return; }
+    await dl.save({filename, data});
+    say("Saved " + filename);
+  }catch(e){
+    const code = e && e.code;
+    if (code === "declined") say("Download cancelled.");
+    else if (code === "rate_limited") say("A download prompt is already open. Try again in a moment.", true);
+    else say("Couldn't save the file: " + ((e && e.message) || "unknown error"), true);
+  }finally{ btn.disabled = false; }
+}
+
+/* ---------- totals, status ---------- */
+function renderTotals(){
+  const sum = {brick:0, ore:0, wool:0, gold:0};
+  state.people.forEach(p => { sum.brick += p.brick.length; sum.ore += p.ore.length; sum.wool += p.wool.length; sum.gold += p.gold.length; });
+  for (const k in sum) $("n-"+k).textContent = sum[k];
+}
+function setStatus(t){ $("status").textContent = t; }
+function stamp(){
+  if (!state.fetchedAt) return "";
+  const d = new Date(state.fetchedAt);
+  return `Updated ${MON[d.getMonth()]} ${d.getDate()}, ${d.getHours()%12||12}:${pad(d.getMinutes())} ${d.getHours()<12?"AM":"PM"}`;
+}
+function notice(nodes){
+  const nb = $("notice-body"); nb.textContent = "";
+  if (!nodes){ $("notice").hidden = true; return; }
+  nodes.forEach(n => nb.appendChild(typeof n === "string" ? document.createTextNode(n) : n));
+  $("notice").hidden = false;
+}
+function strong(t){ const s = document.createElement("strong"); s.textContent = t; return s; }
+
+/* legend toggles */
+document.querySelectorAll(".legend-item").forEach(b => b.addEventListener("click", () => {
+  const c = b.dataset.cat; hidden[c] = !hidden[c];
+  b.setAttribute("aria-pressed", String(!hidden[c]));
+  svg.classList.toggle("hide-"+c, hidden[c]);
+}));
+
+/* ---------- chooser: Parley (comment) or Set sail (open in Asana) ---------- */
+let chTask = null, chFrom = null;
+const QUESTIONS = {
+  brick:"Fresh Brick! What will you do with it?",
+  ore:"This Ore has been sitting a while. What now?",
+  wool:"A bundle of Wool. What will you do?",
+  gold:"A gleaming coin from the hoard! What now?"
+};
+function openChooser(task, ev, from){
+  if (!task || !task.gid) return;
+  chTask = task; chFrom = from || null;
+  $("ch-q").textContent = QUESTIONS[task.kind] || "What will you do with this resource?";
+  $("ch-name").textContent = task.name || "(untitled task)";
+  const open = $("ch-open");
+  if (task.url){ open.href = task.url; open.hidden = false; } else open.hidden = true;
+  const box = $("chooser"); box.hidden = false;
+  let x, y;
+  if (ev && ev.clientX != null && (ev.clientX || ev.clientY)){ x = ev.clientX + 10; y = ev.clientY + 10; }
+  else { const r = from.getBoundingClientRect(); x = r.right + 8; y = r.top; }
+  const w = box.offsetWidth, h = box.offsetHeight;
+  if (x + w > innerWidth - 12) x = Math.max(12, x - w - 20);
+  if (y + h > innerHeight - 12) y = Math.max(12, innerHeight - h - 12);
+  box.style.left = x + "px"; box.style.top = y + "px";
+  setTimeout(() => $("ch-comment").focus(), 0);
+}
+function closeChooser(refocus){
+  if ($("chooser").hidden) return;
+  $("chooser").hidden = true;
+  if (refocus && chFrom && chFrom.focus) try{ chFrom.focus(); }catch(e){}
+}
+$("ch-comment").addEventListener("click", () => { const t = chTask, f = chFrom; closeChooser(false); openComposer(t, f); });
+$("ch-open").addEventListener("click", () => closeChooser(false));
+document.addEventListener("click", ev => { const box = $("chooser"); if (!box.hidden && !box.contains(ev.target)) closeChooser(false); });
+document.addEventListener("keydown", ev => { if (ev.key === "Escape") closeChooser(true); });
+window.addEventListener("scroll", () => closeChooser(false), {passive:true});
+
+/* ---------- comment composer: click any block to post a comment to its Asana task ---------- */
+let cmtTask = null, cmtReturn = null, cmtBusy = false;
+function openComposer(task, from){
+  if (!task || !task.gid) return;
+  cmtTask = task; cmtReturn = from || null;
+  $("cmt-title").textContent = task.name || "(untitled task)";
+  $("cmt-meta").textContent = task.meta || "";
+  const open = $("cmt-open");
+  if (task.url){ open.href = task.url; open.hidden = false; } else open.hidden = true;
+  const st = $("cmt-status"); st.textContent = ""; st.className = "cmt-status";
+  $("cmt-text").value = "";
+  $("cmt-post").disabled = false; $("cmt-post").textContent = "Post comment";
+  $("cmt").hidden = false;
+  setTimeout(() => $("cmt-text").focus(), 0);
+}
+function closeComposer(){
+  if (cmtBusy) return;
+  $("cmt").hidden = true; cmtTask = null;
+  if (cmtReturn && cmtReturn.focus) try{ cmtReturn.focus(); }catch(e){}
+}
+$("cmt-cancel").addEventListener("click", closeComposer);
+$("cmt").addEventListener("click", ev => { if (ev.target === $("cmt")) closeComposer(); });
+document.addEventListener("keydown", ev => { if (ev.key === "Escape" && !$("cmt").hidden) closeComposer(); });
+$("cmt-text").addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.metaKey || ev.ctrlKey)){ ev.preventDefault(); $("cmt-form").requestSubmit(); } });
+$("cmt-form").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  if (cmtBusy || !cmtTask) return;
+  const text = $("cmt-text").value.trim();
+  const st = $("cmt-status"), btn = $("cmt-post");
+  if (!text){ st.className = "cmt-status err"; st.textContent = "Write a comment first."; $("cmt-text").focus(); return; }
+  cmtBusy = true; btn.disabled = true; btn.textContent = "Posting…"; st.className = "cmt-status"; st.textContent = "";
+  const task = cmtTask;
+  try{
+    const mcp = (window.claude && window.claude.use) ? await window.claude.use("mcp") : null;
+    if (!mcp) throw {code:"not_granted"};
+    await mcp.callTool(SERVER, "add_comment", {task_id: task.gid, text}, {cache:false});
+    st.className = "cmt-status ok"; st.textContent = "Posted to Asana.";
+    $("cmt-text").value = ""; btn.textContent = "Post another";
+  } catch(err){
+    const code = err && err.code;
+    let msg;
+    if (code === "needs_reauth") msg = "Asana needs reconnecting. Reconnect it in claude.ai Settings → Connectors, then post again.";
+    else if (code === "server_not_connected" || code === "selection_required") msg = "Asana isn't connected. Add it in claude.ai Settings → Connectors.";
+    else if (code === "not_in_manifest" || code === "consent_required" || code === "approval_required") msg = "Commenting wasn't allowed for this page. Allow Asana from the page's Permissions menu, then post again.";
+    else if (code === "blocked_by_policy") msg = "Your organization blocks posting comments through connectors.";
+    else if (code === "not_granted" || code === "capability_disabled" || code === "capability_removed") msg = "Posting only works when the page is open inside Claude.";
+    else if (code === "tool_error") msg = "Asana refused the comment: " + (err.message || "unknown reason") + ".";
+    else if (code === "server_unavailable" || code === "upstream_error" || code === "rate_limited") msg = "Asana didn't confirm the comment. Open the task to check whether it posted before trying again.";
+    else msg = "The comment didn't post: " + ((err && err.message) || "unknown error") + ".";
+    st.className = "cmt-status err"; st.textContent = msg;
+    btn.textContent = "Post comment";
+  } finally { cmtBusy = false; btn.disabled = false; }
+});
+
+/* ---------- cache ---------- */
+const cached = (function(){ try{ const s = localStorage.getItem(CACHE_KEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } })();
+function saveCache(raw){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(raw)); }catch(e){} }
+function loadCache(){ try{ const s = localStorage.getItem(CACHE_KEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
+function applyRaw(raw){
+  state.people = buildPeople(raw.users, raw.tasks, raw.done || []);
+  state.fetchedAt = raw.fetchedAt;
+  render(); renderTotals();
+  if (selected && state.people.some(p => p.key === selected)) { select(selected); }
+  renderSite(raw);
+  (window.__board.listeners || []).forEach(f => { try{ f(); }catch(e){ console.error(e); } });
+}
+
+/* ---------- construction site: tasks completed within ±3 business days ---------- */
+function bizShift(idx, k){
+  let d = idx, left = Math.abs(k); const step = k > 0 ? 1 : -1;
+  while (left > 0){ d += step; const wd = new Date(d*864e5).getUTCDay(); if (wd !== 0 && wd !== 6) left--; }
+  return d;
+}
+function doneWindow(){ const T = todayIdx(); return {start: bizShift(T, -3), end: bizShift(T, 3)}; }
+function fmtIdx(i){ const d = new Date(i*864e5); return MON[d.getUTCMonth()] + " " + d.getUTCDate(); }
+function fmtDone(iso){ const d = new Date(iso); const wd = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]; return `finished ${wd} ${MON[d.getMonth()]} ${d.getDate()}, ${d.getHours()%12||12}:${pad(d.getMinutes())} ${d.getHours()<12?"AM":"PM"}`; }
+
+/* the hoard: a mound of coins, widest course at the bottom, each course one coin narrower */
+function pileRows(n){
+  let k = 1; while (k*(k+1)/2 < n) k++;
+  const rows = []; let left = n;
+  for (let r = 0; left > 0; r++){ const cap = k - r; const c = Math.min(cap, left); rows.push({cap, n:c}); left -= c; }
+  return {k, rows};
+}
+function renderSite(raw){
+  const b = $("build"); b.textContent = "";
+  const W = 300, groundY = 400;
+  const win = doneWindow();
+  $("site-sub").textContent = `tasks completed ${fmtIdx(win.start)} – ${fmtIdx(win.end)}`;
+  const nameOf = new Map((raw.users || []).map(u => [u.gid, u.name || u.email || "Unnamed"]));
+  const done = (raw.done || []).filter(t => t.assignee && nameOf.has(t.assignee.gid) && t.completed_at)
+    .filter(t => { const c = createdIdx(t.completed_at); return c >= win.start && c <= win.end; })
+    .sort((a, c) => a.completed_at.localeCompare(c.completed_at));
+  /* group coins by owner: biggest contributor at the base of the pile, each person's coins together and in finish order */
+  const per = new Map();
+  done.forEach(t => per.set(t.assignee.gid, (per.get(t.assignee.gid) || 0) + 1));
+  const firstAt = new Map();
+  done.forEach(t => { if (!firstAt.has(t.assignee.gid)) firstAt.set(t.assignee.gid, t.completed_at); });
+  done.sort((a, c) => (per.get(c.assignee.gid) - per.get(a.assignee.gid)) || firstAt.get(a.assignee.gid).localeCompare(firstAt.get(c.assignee.gid)) || a.completed_at.localeCompare(c.completed_at));
+  $("site-n").textContent = raw.done ? String(done.length) : "–";
+  const n = done.length;
+
+  const {k, rows} = pileRows(Math.max(n, 1));
+  const sp = Math.min(19, 262 / Math.max(k, 1));           /* coin spacing along a course */
+  const rx = sp * .62, ry = rx * .42, edge = Math.max(2, rx * .3);
+  const step = sp * .56;                                   /* how much each course rises */
+  const cx0 = W / 2, baseY = groundY - 6 - ry - edge;
+  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+
+  /* floor: flagstones under the hoard */
+  el("rect", {x:0, y:groundY, width:W, height:70, fill:"#3a2b1d"}, b);
+  el("path", {d:`M0 ${groundY} H${W}`, stroke:"#6b4f30", "stroke-width":"2"}, b);
+  for (let x = 6, i = 0; x < W; x += 36, i++) el("rect", {x, y:groundY + 5 + (i % 2) * 4, width:30, height:12, rx:2, fill:"#4a3826", opacity:".8"}, b);
+  /* warm glow behind the pile */
+  const gr = el("radialGradient", {id:"hoard-glow", cx:"50%", cy:"70%", r:"60%"}, el("defs", null, b));
+  el("stop", {offset:"0%", "stop-color":"#f0c25a", "stop-opacity":".35"}, gr);
+  el("stop", {offset:"100%", "stop-color":"#f0c25a", "stop-opacity":"0"}, gr);
+  const pileH = rows.length * step + 30;
+  el("ellipse", {cx:cx0, cy:groundY - pileH * .35, rx:Math.min(150, k*sp*.75 + 30), ry:pileH * .75 + 20, fill:"url(#hoard-glow)"}, b);
+  el("ellipse", {cx:cx0, cy:groundY + 2, rx:k*sp/2 + 14, ry:7, fill:"#000", opacity:".35"}, b);
+
+  /* place each coin: course r is centred and rises; a little jitter so it reads as a heap */
+  const spots = [];
+  rows.forEach((row, r) => {
+    const startX = cx0 - (row.cap - 1) * sp / 2;
+    const off = (row.cap - row.n) * sp / 2;   /* a partial top course sits in the middle */
+    for (let c = 0; c < row.n; c++) spots.push({r, x:startX + off + c*sp + (rnd() - .5) * sp * .18, y:baseY - r*step + (rnd() - .5) * step * .3, tilt:(rnd() - .5) * 14});
+  });
+
+  const pile = el("g", null, b);
+  const SHADES = ["#e2a93b", "#c98f2c", "#f0c25a", "#d69c3a"];
+  const ownerOrder = [...new Set(done.map(t => t.assignee.gid))];
+  const shadeOf = g => SHADES[ownerOrder.indexOf(g) % SHADES.length];
+  const coinShape = (g, x, y, fill, tilt) => {
+    const c = el("g", {transform:`rotate(${tilt.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})`}, g);
+    el("ellipse", {cx:x, cy:y + edge, rx, ry, fill:"#7a4f12", stroke:"#3d2a0c", "stroke-width":".8"}, c);
+    el("rect", {x:x - rx, y, width:rx*2, height:edge, fill:"#8f5f17"}, c);
+    el("ellipse", {class:"face", cx:x, cy:y, rx, ry, fill, stroke:"#3d2a0c", "stroke-width":".8"}, c);
+    el("ellipse", {cx:x, cy:y, rx:rx*.66, ry:ry*.62, fill:"none", stroke:"#a8741d", "stroke-width":".8"}, c);
+    el("path", {d:`M${x - rx*.55} ${y - ry*.2} Q ${x - rx*.1} ${y - ry*.85} ${x + rx*.4} ${y - ry*.55}`, fill:"none", stroke:"var(--gold-hi)", "stroke-width":"1", opacity:".85"}, c);
+    return c;
+  };
+  /* draw from the top course down, so nearer (lower) coins overlap the ones behind them */
+  const order = spots.map((p, i) => i).filter(i => i < n).sort((a, c) => spots[c].r - spots[a].r || a - c);
+  order.forEach(i => {
+    const p = spots[i], t = done[i];
+    const a = el("g", {class:"gold-blk", tabindex:"0", role:"button", "aria-label":`${t.name}: comment or open in Asana`, "data-owner":t.assignee.gid}, pile);
+    const gi = el("g", {class:"lay-in", style:`animation-delay:${Math.min(i*24, 2600)}ms`}, a);
+    coinShape(gi, p.x, p.y, shadeOf(t.assignee.gid), p.tilt);
+    const who = nameOf.get(t.assignee.gid);
+    a.addEventListener("mouseenter", ev => { doneTip(ev, t, who); focus(t.assignee.gid); });
+    a.addEventListener("mouseleave", () => focus(null));
+    a.addEventListener("mousemove", moveTip);
+    a.addEventListener("mouseleave", hideTip);
+    const pick = ev => { ev.preventDefault(); ev.stopPropagation(); hideTip(); openChooser({gid:t.gid, name:t.name, url:t.permalink_url, meta:`Completed · ${who} · ${fmtDone(t.completed_at)}`, kind:"gold"}, ev, a); };
+    a.addEventListener("click", pick);
+    a.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") pick(ev); });
+  });
+
+  /* sparkles over the pile, and the next coin tumbling down onto the top */
+  const topY = n ? Math.min(...spots.slice(0, n).map(p => p.y)) : baseY;
+  const sparks = el("g", {"pointer-events":"none"}, b);
+  for (let i = 0; i < Math.min(9, 2 + Math.ceil(n / 15)); i++){
+    const x = cx0 + (rnd() - .5) * k * sp * .8, y = topY + rnd() * (baseY - topY + 6) - 4;
+    el("path", {class:"sparkle", style:`animation-delay:${(i * .37).toFixed(2)}s`, d:`M${x} ${y-5} L${x+1.2} ${y-1.2} L${x+5} ${y} L${x+1.2} ${y+1.2} L${x} ${y+5} L${x-1.2} ${y+1.2} L${x-5} ${y} L${x-1.2} ${y-1.2} Z`, fill:"#fff7d6"}, sparks);
+  }
+  const fall = el("g", {class:"coin-fall", "pointer-events":"none"}, b);
+  el("title", null, fall).textContent = "The next coin lands when the next task is finished";
+  coinShape(el("g", {class:"coin-spin"}, fall), cx0, topY - 40, "var(--gold)", 0);
+  fall.style.setProperty("--drop", "36px");
+
+  /* status text */
+  const ty = groundY + 26;
+  if (!raw.done){
+    const t = el("text", {x:W/2, y:ty, "text-anchor":"middle", "font-size":"12", fill:"var(--muted)", "font-family":"Alegreya Sans, sans-serif"}, b);
+    t.textContent = "Waiting on completed tasks from Asana";
+  } else if (!n){
+    const t = el("text", {x:W/2, y:ty, "text-anchor":"middle", "font-size":"12", fill:"var(--muted)", "font-family":"Alegreya Sans, sans-serif"}, b);
+    t.textContent = "The vault is empty. No tasks finished yet in this window.";
+  } else {
+    const t = el("text", {x:W/2, y:ty, "text-anchor":"middle", "font-size":"12.5", fill:"var(--gold-hi)", "font-family":"Alegreya Sans SC, Alegreya Sans, sans-serif", "font-weight":"700", "letter-spacing":".05em"}, b);
+    t.textContent = `${n} gold coin${n === 1 ? "" : "s"} in the hoard · ${ownerOrder.length} contributor${ownerOrder.length === 1 ? "" : "s"}`;
+  }
+
+  const vTop = Math.max(0, Math.floor(topY - 70));
+  b.setAttribute("viewBox", `0 ${vTop} ${W} ${groundY + 40 - vTop}`);
+  const wall = pile;
+
+  /* crew tally */
+  const crew = $("crew"); crew.textContent = "";
+  const tally = new Map();
+  done.forEach(t => { const g = t.assignee.gid; tally.set(g, (tally.get(g) || 0) + 1); });
+  const crewRows = [...tally.entries()].map(([g, c]) => [nameOf.get(g), c, g]);  /* already in pile order: base to top */
+  const max = crewRows.length ? Math.max(...crewRows.map(r => r[1])) : 1;
+  const focus = g => wall.querySelectorAll("[data-owner]").forEach(e => { e.style.opacity = !g || e.getAttribute("data-owner") === g ? "" : ".22"; });
+  crewRows.forEach(([nm, c, g]) => {
+    const li = document.createElement("li");
+    li.tabIndex = 0; li.style.cursor = "default";
+    li.addEventListener("mouseenter", () => focus(g)); li.addEventListener("focus", () => focus(g));
+    li.addEventListener("mouseleave", () => focus(null)); li.addEventListener("blur", () => focus(null));
+    const s1 = document.createElement("span"); s1.className = "nm"; s1.textContent = shortName(nm); s1.title = nm;
+    const bar = document.createElement("span"); bar.className = "bar"; const fill = document.createElement("i"); fill.style.width = (100*c/max) + "%"; bar.appendChild(fill);
+    const s2 = document.createElement("span"); s2.className = "ct"; s2.textContent = c;
+    li.append(s1, bar, s2); crew.appendChild(li);
+  });
+}
+function doneTip(ev, t, who){
+  tip.textContent = "";
+  const bb = document.createElement("b"); bb.textContent = t.name || "(untitled task)"; tip.appendChild(bb);
+  const m = document.createElement("div"); m.textContent = `${who} · ${fmtDone(t.completed_at)}`; tip.appendChild(m);
+  tip.hidden = false; moveTip(ev);
+}
+async function fetchDone(mcp, ids, fresh){
+  const win = doneWindow();
+  /* reach back far enough for both the wall (3 business days) and the coins (5 business days) */
+  const s = new Date(Math.min(win.start, bizShift(todayIdx(), -5))*864e5);
+  const after = new Date(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate()).toISOString();
+  const seen = new Map(); let before = null;
+  for (let page = 0; page < 10; page++){
+    const input = {assignee_any: ids, completed: true, completed_at_after: after, limit: 100, sort_by: "completed_at", sort_ascending: false, opt_fields: "name,assignee.name,completed_at,permalink_url"};
+    if (before) input.completed_at_before = before;
+    const res = await call(mcp, "search_tasks", input, fresh);
+    const rows = (res && res.data) || [];
+    let added = 0;
+    for (const t of rows){ if (!seen.has(t.gid)){ seen.set(t.gid, t); added++; } }
+    if (rows.length < 100 || !added) break;
+    before = rows[rows.length-1].completed_at;
+  }
+  return [...seen.values()].map(t => ({gid:t.gid, name:t.name, completed_at:t.completed_at, permalink_url:t.permalink_url, assignee: t.assignee ? {gid:t.assignee.gid} : null}));
+}
+
+/* ---------- Asana via connector ---------- */
+function payloadOf(res){
+  let p = res && res.payload !== undefined ? res.payload : res;
+  if (typeof p === "string"){ try{ p = JSON.parse(p); }catch(e){} }
+  return p;
+}
+async function call(mcp, tool, input, fresh){
+  const opts = {cache: fresh ? {refresh:true, staleTime:0, gcTime:600000} : {staleTime:120000, gcTime:600000}};
+  try { return payloadOf(await mcp.callTool(SERVER, tool, input, opts)); }
+  catch(err){
+    if (err && err.retryable){
+      await new Promise(r => setTimeout(r, Math.min(err.retryAfterMs || 0, 60000) || (800 + Math.random()*1200)));
+      return payloadOf(await mcp.callTool(SERVER, tool, input, opts));
+    }
+    throw err;
+  }
+}
+async function load(fresh){
+  if (loading) return; loading = true;
+  const btn = $("refresh"); btn.disabled = true;
+  try{
+    setStatus("Connecting to Asana…");
+    const mcp = (window.claude && window.claude.use) ? await window.claude.use("mcp") : null;
+    if (!mcp){
+      notice([strong("This board reads live from Asana. "), state.people.length ? "Showing the last board you loaded in this browser. Open it inside Claude to refresh." : "Open it inside Claude, with the Asana connector added, to deal the tiles."]);
+      setStatus(stamp() || "Not connected"); return;
+    }
+    const uRes = await call(mcp, "get_users", {team: TEAM_GID}, fresh);
+    const users = ((uRes && uRes.data) || []).filter(u => !EXCLUDE.has(u.gid));
+    if (!users.length) throw {code:"tool_error", message:"Asana returned no members for the Enterprise Salesforce Ops Group team."};
+    const ids = users.map(u => u.gid).join(",");
+    const seen = new Map(); let before = null;
+    for (let page = 0; page < 30; page++){
+      const input = {assignee_any: ids, completed: false, limit: 100, sort_by: "created_at", sort_ascending: false, opt_fields: "name,assignee.name,created_at,due_on,permalink_url,projects.name"};
+      if (before) input.created_at_before = before;
+      const res = await call(mcp, "search_tasks", input, fresh);
+      const rows = (res && res.data) || [];
+      let added = 0;
+      for (const t of rows){ if (!seen.has(t.gid)){ seen.set(t.gid, t); added++; } }
+      setStatus(`Gathering resources… ${seen.size} tasks`);
+      if (rows.length < 100) break;
+      const oldest = rows[rows.length-1].created_at;
+      before = added ? new Date(Date.parse(oldest) + 1).toISOString() : oldest;
+    }
+    setStatus(`Surveying the construction site…`);
+    let done = null;
+    try { done = await fetchDone(mcp, ids, fresh); $("site-note").textContent = "Every task the team finishes within 3 business days of today adds one gold coin to the hoard. Hover a coin to see whose it is; click it to comment in Asana."; }
+    catch(e){ const c = cached && cached.done; done = c || null; $("site-note").textContent = "Completed tasks didn't load from Asana" + (c ? ", so the hoard shows the last count. " : ". ") + "Press Reroll to try again."; }
+    const raw = {users: users.map(u => ({gid:u.gid, name:u.name, email:u.email})), tasks: [...seen.values()].map(t => ({gid:t.gid, name:t.name, created_at:t.created_at, due_on:t.due_on, permalink_url:t.permalink_url, projects:(t.projects || []).map(x => x.name).filter(Boolean), assignee: t.assignee ? {gid:t.assignee.gid} : null})), done, fetchedAt: Date.now()};
+    applyRaw(raw); saveCache(raw); notice(null);
+    setStatus(`${raw.tasks.length} open tasks · ${stamp()}`);
+  } catch(err){
+    const code = err && err.code;
+    if (code === "needs_reauth") notice([strong("Asana needs reconnecting. "), "Reconnect Asana in claude.ai Settings → Connectors, then press Reroll."]);
+    else if (code === "server_not_connected" || code === "selection_required") notice([strong("Asana isn't connected. "), "Add the Asana connector in claude.ai Settings → Connectors, then press Reroll."]);
+    else if (code === "not_in_manifest" || code === "consent_required" || code === "approval_required") notice([strong("Asana access is off for this page. "), "Allow Asana from this page's Permissions menu, then press Reroll."]);
+    else if (code === "blocked_by_policy") notice([strong("Your organization blocks this Asana tool. "), "An admin can allow task search for connectors."]);
+    else if (code === "not_granted" || code === "capability_disabled" || code === "capability_removed") notice([strong("Live data isn't available in this view. "), "Open the board in Claude to refresh it."]);
+    else if (code === "tool_error") notice([strong("Asana reported a problem. "), (err.message || "The search didn't complete.") + " Press Reroll to try again."]);
+    else if (code === "server_unavailable" || code === "rate_limited") notice([strong("Asana didn't answer in time. "), "Wait a moment and press Reroll."]);
+    else notice([strong("The board couldn't load. "), ((err && err.message) || "Unknown error") + ". Press Reroll to try again."]);
+    setStatus(stamp() ? "Showing last board · " + stamp() : "Not loaded");
+  } finally { loading = false; btn.disabled = false; }
+}
+$("refresh").addEventListener("click", () => load(true));
+
+/* boot: paint last board instantly, then fetch */
+if (cached && cached.users && cached.tasks) { applyRaw(cached); setStatus("Showing last board · " + stamp()); }
+else { render(); renderSite({users:[], done:null}); }
+load(false);
+setInterval(() => { if (document.visibilityState === "visible") load(true); }, 15*60*1000);
+})();
+</script>
+<script>
+/* ================= Guild Hall: areas of ownership, D&D style ================= */
+(function(){
+const $ = id => document.getElementById(id);
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- tabs ---------- */
+const TAB_KEY = "settlers-tab";
+const TABS = ["board", "guild", "village"];
+function showTab(name){
+  if (!TABS.includes(name)) name = "board";
+  TABS.forEach(t => {
+    const on = t === name;
+    $("tab-" + t).hidden = !on;
+    $("tabbtn-" + t).setAttribute("aria-selected", String(on));
+    $("tabbtn-" + t).tabIndex = on ? 0 : -1;
+  });
+  document.querySelector("header .controls").style.visibility = name === "board" ? "" : "hidden";
+  try{ localStorage.setItem(TAB_KEY, name); }catch(e){}
+}
+TABS.forEach(t => $("tabbtn-" + t).addEventListener("click", () => showTab(t)));
+document.querySelector(".tabs").addEventListener("keydown", ev => {
+  if (ev.key !== "ArrowRight" && ev.key !== "ArrowLeft") return;
+  const cur = TABS.findIndex(t => !$("tab-" + t).hidden);
+  const next = TABS[(cur + (ev.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+  showTab(next); $("tabbtn-" + next).focus();
+  if (next === "village") villageOpen(true);
+});
+let startTab = "board";
+try{ startTab = localStorage.getItem(TAB_KEY) || "board"; }catch(e){}
+if (TABS.includes(location.hash.slice(1))) startTab = location.hash.slice(1);
+showTab(startTab);
+
+/* remember whether the how-to panel is open */
+const RULES_KEY = "settlers-rules-open";
+try{ if (localStorage.getItem(RULES_KEY) === "0") $("rules").open = false; }catch(e){}
+$("rules").addEventListener("toggle", () => { try{ localStorage.setItem(RULES_KEY, $("rules").open ? "1" : "0"); }catch(e){} });
+
+/* ---------- classes and sigils ---------- */
+const CLASSES = {
+  crown:{label:"Crown", color:"#7d5ba6", flavor:"Rules the realm from on high.", icon:'<path d="M3 18 5 7l4 5 3-7 3 7 4-5 2 11z"/><path d="M3 21h18"/>'},
+  paladin:{label:"Paladin", color:"#b8862b", flavor:"Holds the line and carries the banner.", icon:'<path d="M12 3 19 6v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M12 8v8M9 11h6"/>'},
+  wizard:{label:"Wizard", color:"#3e5fa8", flavor:"Bends the CRM to their will with arcane configuration.", icon:'<path d="M3 20h18"/><path d="M6 20 11 4l3 7 4 2-2 7"/><path d="M17 4l.6 1.4L19 6l-1.4.6L17 8l-.6-1.4L15 6l1.4-.6z"/>'},
+  bard:{label:"Bard", color:"#a8476b", flavor:"Composes the journeys that reach every constituent.", icon:'<path d="M9 18V5l10-2v13"/><circle cx="7" cy="18" r="2.2"/><circle cx="17" cy="16" r="2.2"/>'},
+  artificer:{label:"Artificer", color:"#2f7f7a", flavor:"Forges integrations and automations that hum on their own.", icon:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M5.5 18.5l2.1-2.1M16.4 7.6l2.1-2.1"/>'},
+  fighter:{label:"Fighter", color:"#8c3b2e", flavor:"First into every technical battle.", icon:'<path d="M19 4 9 14"/><path d="M19 4h-3M19 4v3"/><path d="M7 12l5 5"/><path d="M8.5 15.5 4 20"/>'},
+  ranger:{label:"Ranger", color:"#4f7a34", flavor:"Tracks every data load across the wilds.", icon:'<path d="M7 3c9 3 9 15 0 18"/><path d="M7 3v18"/><path d="M3 12h15"/><path d="M15 9l3 3-3 3"/>'},
+  barbarian:{label:"Barbarian", color:"#9a4a1f", flavor:"Smashes through migrations others fear.", icon:'<path d="M6 21 16 7"/><path d="M13.5 4.5c4-1.5 7 1 6.5 5.5L16 7z"/>'},
+  monk:{label:"Monk", color:"#7a6a3a", flavor:"Calm, disciplined, unshakeable.", icon:'<circle cx="12" cy="12" r="8"/><path d="M12 4a4 4 0 0 1 0 8 4 4 0 0 0 0 8"/><circle cx="12" cy="8" r=".8"/><circle cx="12" cy="16" r=".8"/>'},
+  cleric:{label:"Cleric", color:"#c49a2c", flavor:"Answers every call for aid.", icon:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'},
+  rogue:{label:"Rogue", color:"#45505e", flavor:"Gets into places nobody else can.", icon:'<path d="M18 3 9.5 11.5l3 3L21 6z"/><path d="M8 10l6 6"/><path d="M9 15l-5 5"/>'},
+  sorcerer:{label:"Sorcerer", color:"#c0442e", flavor:"Sends spells to thousands at once.", icon:'<path d="M12 3c3 5 6 7 6 11a6 6 0 0 1-12 0c0-3 2-5 3-7 1 3 2 4 3 4 0-3-1-5 0-8z"/>'},
+  warlock:{label:"Warlock", color:"#5d3f8a", flavor:"Bound by pact to platforms beyond the realm.", icon:'<path d="M2 12c4-6 16-6 20 0-4 6-16 6-20 0z"/><circle cx="12" cy="12" r="3"/>'},
+  druid:{label:"Druid", color:"#3c7d55", flavor:"Keeps the data ecosystem in balance.", icon:'<path d="M5 19c0-10 6-15 15-15 0 9-5 15-15 15z"/><path d="M5 19l9-9"/>'},
+  squire:{label:"Squire", color:"#6d7b8a", flavor:"Learning the craft, one quest at a time.", icon:'<path d="M19 3c-8 1-13 7-14 17"/><path d="M8 14h5M10 10h5M13 6h4"/>'}
+};
+const PICKABLE = Object.keys(CLASSES).filter(k => k !== "crown");
+
+const LIEGES = [
+  {name:"Eric N. Monday", title:"EVPFA / Co-EVPHA", rank:"High King"},
+  {name:"Jay Blanton", title:"Vice President for University Relations", rank:"Archduke"},
+  {name:"Julie Balog", title:"AVP / Chief Marketing Officer", rank:"Grand Marshal"}
+];
+const ROOT = "jordan-adler";
+/* the founding roster; recruits, dismissals and moves are layered on top from the shared ledger */
+const BASE = [
+  {id:"jordan-adler", name:"Jordan Adler", title:"Strategic Comm Marketing Director / Academic Excellence", cls:"paladin"},
+  {id:"emily-brenzel", name:"Emily Brenzel", title:"Constituent Relationship Mgmt Admin Principal", cls:"bard", parent:ROOT},
+  {id:"prathyusha-karanam", name:"Prathyusha Karanam", title:"Programmer Systems", cls:"artificer", parent:"john-wiesendanger"},
+  {id:"ben-richards", name:"Ben W. Richards", title:"Student / Non-Work Study", cls:"squire", parent:"charlotte-sandifer"},
+  {id:"john-wiesendanger", name:"John A. Wiesendanger", title:"Constituent Relationship Mgmt Admin", cls:"wizard", parent:ROOT},
+  {id:"zack-adams", name:"Zack Adams", title:"Constituent Relationship Mgmt Admin Sr", cls:"rogue", parent:"emily-brenzel"},
+  {id:"kamryn-elswick", name:"Kamryn E. Elswick", title:"IS Technical Support Specialist III", cls:"ranger", parent:"zack-adams"},
+  {id:"dru-moon", name:"Dru R. Moon", title:"Data Management Specialist Sr", cls:"druid", parent:"emily-brenzel"},
+  {id:"john-agouridis", name:"John D. Agouridis", title:"Technical Administrator III", cls:"fighter", parent:"john-wiesendanger"},
+  {id:"jim-breckel", name:"James P. Breckel", title:"Salesforce Workflow Developer", cls:"ranger", parent:"john-wiesendanger"},
+  {id:"dustin-brondyke", name:"Dustin L. Brondyke", title:"Constituent Relationship Mgmt Admin", cls:"barbarian", parent:"john-wiesendanger"},
+  {id:"rene-leaver", name:"Rene Leaver", title:"Constituent Relationship Mgmt Admin", cls:"monk", parent:"john-wiesendanger"},
+  {id:"brian-mayo", name:"Brian O. Mayo", title:"Technical Administrator III", cls:"cleric", parent:"john-wiesendanger"},
+  {id:"steven-reynolds", name:"Steven A. Reynolds", title:"Computer Support Specialist I", cls:"cleric", parent:"john-wiesendanger"},
+  {id:"charlotte-sandifer", name:"Charlotte K. Sandifer", title:"Constituent Relationship Mgmt Admin", cls:"sorcerer", parent:"john-wiesendanger"},
+  {id:"jason-schubert", name:"Jason T. Schubert", title:"", cls:"warlock", parent:"john-wiesendanger"},
+  {id:"christopher-whitley", name:"Christopher V. Whitley", title:"Temporary STEPS Technical Scientific", cls:"squire", parent:"john-wiesendanger"}
+];
+const BASE_IDS = new Set(BASE.map(p => p.id));
+/* Asana user ids, so the Guild Hall can find each hero's work on the board */
+const ASANA_IDS = {"jordan-adler": ["1111624863262553"], "emily-brenzel": ["1184303939678480"], "prathyusha-karanam": ["1208325977966066", "1209117173352038"], "ben-richards": ["1206432268406747"], "john-wiesendanger": ["1137131980870597"], "zack-adams": ["1149008703360974"], "kamryn-elswick": ["1201375049480047"], "dru-moon": ["1209856933004681"], "john-agouridis": ["1208817691699568"], "jim-breckel": ["1163751824908713"], "dustin-brondyke": ["1204660759642041"], "brian-mayo": ["1209092177494887"], "steven-reynolds": ["1207767862513024"], "charlotte-sandifer": ["1201079584746356"], "jason-schubert": ["1208800826262878"], "christopher-whitley": ["1211696707402580"]};
+/* teams for the team stories; anyone not listed (recruits included) is an Admin */
+const TEAMS = [
+  {key:"dev", name:"Developers", flavor:"The artificers' workshop", members:["prathyusha-karanam", "john-agouridis", "jim-breckel", "dustin-brondyke"]},
+  {key:"mc", name:"MC", flavor:"Emily's company of bards", members:"emily-brenzel+"},
+  {key:"admin", name:"Admin", flavor:"Keepers of the realm", members:"rest"}
+];
+
+/* ---------- state ---------- */
+let duties = [];            /* {id, person, text, note, createdAt} */
+let classOverride = {};     /* personId -> cls */
+let heroDocs = {};          /* personId -> override doc (parent, removed) or full recruit doc */
+let roster = [], byId = new Map(), departed = [];
+let db = null, readOnly = false, query = "";
+
+function buildRoster(){
+  const all = BASE.map(p => Object.assign({}, p, heroDocs[p.id] && heroDocs[p.id].parent ? {parent:heroDocs[p.id].parent} : {}, {removed: !!(heroDocs[p.id] && heroDocs[p.id].removed)}));
+  Object.entries(heroDocs).forEach(([id, d]) => {
+    if (BASE_IDS.has(id) || !d.recruit || !d.name) return;
+    all.push({id, name:String(d.name), title:String(d.title || ""), cls: CLASSES[d.cls] ? d.cls : "squire", parent:String(d.parent || ROOT), removed:!!d.removed, recruit:true, createdAt:Number(d.createdAt) || 0});
+  });
+  departed = all.filter(p => p.removed && p.id !== ROOT);
+  roster = all.filter(p => !p.removed || p.id === ROOT);
+  byId = new Map(roster.map(p => [p.id, p]));
+  /* anyone whose leader is gone, or who sits deeper than a company, reports to the Keep's lord */
+  roster.forEach(p => { if (p.id === ROOT) p.parent = null; else if (!byId.has(p.parent) || p.parent === p.id) p.parent = ROOT; });
+  /* break any loop (A reports to B reports to A) by sending that hero to the lord */
+  roster.forEach(p => { const seen = new Set([p.id]); let cur = p; while (cur.parent){ if (seen.has(cur.parent)){ p.parent = ROOT; break; } seen.add(cur.parent); cur = byId.get(cur.parent); } });
+}
+const leads = () => roster.filter(p => p.parent === ROOT);
+const crewOf = id => roster.filter(p => p.parent === id);
+const descendantsOf = id => { const out = new Set(), stack = [id]; while (stack.length){ const c = stack.pop(); crewOf(c).forEach(k => { if (!out.has(k.id)){ out.add(k.id); stack.push(k.id); } }); } return out; };
+function clsOf(p){ return CLASSES[classOverride[p.id]] ? classOverride[p.id] : p.cls; }
+function dutiesOf(id){ return duties.filter(d => d.person === id).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); }
+function token(cls){
+  const c = CLASSES[cls] || CLASSES.squire;
+  const t = document.createElement("div"); t.className = "token"; t.style.setProperty("--c", c.color);
+  t.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${c.icon}</svg>`;   /* static, trusted icon markup */
+  return t;
+}
+function note(text, kind){ const n = $("g-note"); n.textContent = text; n.className = "ledger-note" + (kind ? " " + kind : ""); }
+function mk(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+const cardEl = id => document.querySelector(`.char[data-id="${id}"]`);
+
+/* ---------- effects: gold sparks for gains, smoke and embers for losses ---------- */
+const fx = document.createElement("canvas"); fx.id = "fx"; document.body.appendChild(fx);
+const ctx = fx.getContext("2d");
+let parts = [], fxRunning = false;
+function sizeFx(){ const r = devicePixelRatio || 1; fx.width = innerWidth * r; fx.height = innerHeight * r; ctx.setTransform(r, 0, 0, r, 0, 0); }
+sizeFx(); addEventListener("resize", sizeFx);
+function burst(x, y, kind){
+  if (REDUCED) return;
+  const n = kind === "pos" ? 46 : 30;
+  for (let i = 0; i < n; i++){
+    const a = Math.random() * Math.PI * 2, sp = (kind === "pos" ? 2.2 : 1.2) + Math.random() * (kind === "pos" ? 4.2 : 2.4);
+    if (kind === "pos"){
+      parts.push({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 2.6, g:.09, life:1, decay:.012 + Math.random()*.012, size:2 + Math.random()*3.5, rot:Math.random()*6, vr:(Math.random()-.5)*.3,
+        shape: Math.random() < .55 ? "star" : "coin", color: ["#ffdc85","#f6c34a","#fff3c4","#e2a93b"][i % 4]});
+    } else {
+      if (i < 14) parts.push({x:x + (Math.random()-.5)*30, y:y + (Math.random()-.5)*14, vx:(Math.random()-.5)*.9, vy:-.5 - Math.random()*.9, g:-.004, life:1, decay:.011 + Math.random()*.008, size:10 + Math.random()*14, grow:.45, shape:"smoke", color:"120,110,104"});
+      else parts.push({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - .8, g:.14, life:1, decay:.02 + Math.random()*.015, size:1.6 + Math.random()*2.4, rot:Math.random()*6, vr:(Math.random()-.5)*.4, shape:"shard", color: ["#ff7a5c","#c0442e","#8e2a17","#ffb08f"][i % 4]});
+    }
+  }
+  if (!fxRunning){ fxRunning = true; requestAnimationFrame(tick); }
+}
+function star(x, y, r, rot){ ctx.beginPath(); for (let i = 0; i < 10; i++){ const rr = i % 2 ? r*.45 : r, a = rot + i*Math.PI/5; ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr); } ctx.closePath(); ctx.fill(); }
+function tick(){
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  parts = parts.filter(p => p.life > 0);
+  for (const p of parts){
+    p.vy += p.g; p.x += p.vx; p.y += p.vy; p.life -= p.decay; if (p.rot != null) p.rot += p.vr || 0;
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+    if (p.shape === "smoke"){ p.size += p.grow; const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size); g.addColorStop(0, `rgba(${p.color},.55)`); g.addColorStop(1, `rgba(${p.color},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); }
+    else if (p.shape === "star"){ ctx.fillStyle = p.color; star(p.x, p.y, p.size*1.4, p.rot); }
+    else if (p.shape === "coin"){ ctx.fillStyle = p.color; ctx.beginPath(); ctx.ellipse(p.x, p.y, p.size, p.size*Math.abs(Math.cos(p.rot)) + .4, 0, 0, Math.PI*2); ctx.fill(); }
+    else { ctx.fillStyle = p.color; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillRect(-p.size, -p.size*.4, p.size*2, p.size*.8); ctx.restore(); }
+  }
+  ctx.globalAlpha = 1;
+  if (parts.length) requestAnimationFrame(tick); else { fxRunning = false; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+function floatText(x, y, big, small, kind){
+  const f = mk("div", "fx-float " + kind, big);
+  if (small) f.appendChild(mk("small", null, small));
+  f.style.left = x + "px"; f.style.top = y + "px";
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 1900);
+}
+function centerOf(el){ const r = el.getBoundingClientRect(); return [r.left + r.width/2, r.top + r.height/2]; }
+function celebrate(el, big, small){
+  if (!el) return;
+  const [x, y] = centerOf(el);
+  burst(x, y, "pos"); floatText(x, Math.max(30, el.getBoundingClientRect().top - 4), big, small, "pos");
+  if (el.classList.contains("char")){ el.classList.remove("fx-levelup"); void el.offsetWidth; el.classList.add("fx-levelup"); }
+}
+function lament(rectOrEl, big, small, shakeEl){
+  const r = rectOrEl.getBoundingClientRect ? rectOrEl.getBoundingClientRect() : rectOrEl;
+  const x = r.left + r.width/2, y = r.top + r.height/2;
+  burst(x, y, "neg"); floatText(x, Math.max(30, r.top - 4), big, small, "neg");
+  if (shakeEl){ shakeEl.classList.remove("fx-hit"); void shakeEl.offsetWidth; shakeEl.classList.add("fx-hit"); }
+}
+/* ---------- sound: synthesized in the browser, no files ---------- */
+const SOUND_KEY = "settlers-sound";
+let soundOn = true;
+try{ soundOn = localStorage.getItem(SOUND_KEY) !== "0"; }catch(e){}
+let ac = null;
+function audio(){
+  if (!ac){ const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; try{ ac = new A(); }catch(e){ return null; } }
+  if (ac.state === "suspended") ac.resume().catch(() => {});
+  return ac;
+}
+/* browsers only allow sound after a click or key press, so wake the engine on the first one */
+["pointerdown", "keydown"].forEach(t => addEventListener(t, () => { if (soundOn) audio(); }, {capture:true, passive:true}));
+function tone(a, {f, f2, t = 0, d = .2, type = "triangle", vol = .18, attack = .008, filter}){
+  const now = a.currentTime + t;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, now);
+  if (f2) o.frequency.exponentialRampToValueAtTime(f2, now + d);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(vol, now + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + d);
+  let node = o;
+  if (filter){ const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = filter; o.connect(lp); node = lp; }
+  node.connect(g); g.connect(master(a));
+  o.start(now); o.stop(now + d + .05);
+}
+function noise(a, {t = 0, d = .4, vol = .12, from = 1800, to = 300, type = "lowpass"}){
+  const now = a.currentTime + t, len = Math.ceil(a.sampleRate * d);
+  const buf = a.createBuffer(1, len, a.sampleRate), ch = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = a.createBufferSource(); src.buffer = buf;
+  const bq = a.createBiquadFilter(); bq.type = type; bq.frequency.setValueAtTime(from, now); bq.frequency.exponentialRampToValueAtTime(to, now + d);
+  const g = a.createGain(); g.gain.setValueAtTime(vol, now); g.gain.exponentialRampToValueAtTime(0.0001, now + d);
+  src.connect(bq); bq.connect(g); g.connect(master(a)); src.start(now);
+}
+let masterGain = null;
+function master(a){ if (!masterGain){ masterGain = a.createGain(); masterGain.gain.value = .7; masterGain.connect(a.destination); } return masterGain; }
+const SOUNDS = {
+  /* +1 responsibility: a bright coin-and-chime arpeggio */
+  grant(a){ [1046.5, 1318.5, 1568, 2093].forEach((f, i) => tone(a, {f, t:i*.07, d:.35, vol:.16})); tone(a, {f:3136, t:.28, d:.5, type:"sine", vol:.07}); },
+  /* a hero joins: a short brass fanfare */
+  recruit(a){ [[392, 0, .16], [523.25, .15, .16], [659.25, .3, .16], [784, .45, .7]].forEach(([f, t, d]) => { tone(a, {f, t, d, type:"sawtooth", vol:.09, filter:1900, attack:.02}); tone(a, {f:f*2, t, d, type:"triangle", vol:.05}); }); [1568, 2093].forEach((f, i) => tone(a, {f, t:.55 + i*.08, d:.5, type:"sine", vol:.06})); },
+  /* class change: a small magic chime */
+  chime(a){ [1318.5, 1760, 2637].forEach((f, i) => tone(a, {f, t:i*.05, d:.45, type:"sine", vol:.1})); },
+  /* -1 responsibility: a sad downward "womp" with a puff of smoke */
+  revoke(a){ tone(a, {f:330, f2:150, d:.45, type:"sawtooth", vol:.12, filter:900, attack:.02}); tone(a, {f:165, f2:80, d:.5, type:"square", vol:.05, filter:500}); noise(a, {d:.45, vol:.08, from:1200, to:200}); },
+  /* a hero leaves: a low minor fall and a distant gong */
+  dismiss(a){ [[293.66, 0], [261.63, .2], [207.65, .4]].forEach(([f, t]) => tone(a, {f, t, d:.45, type:"sawtooth", vol:.1, filter:1000, attack:.03})); tone(a, {f:98, t:.55, d:1.4, type:"sine", vol:.16}); tone(a, {f:147, t:.55, d:1.1, type:"sine", vol:.06}); noise(a, {t:.55, d:.9, vol:.05, from:600, to:120}); }
+};
+function sfx(name){
+  if (!soundOn) return;
+  const a = audio(); if (!a || !SOUNDS[name]) return;
+  try{ SOUNDS[name](a); }catch(e){}
+}
+function renderSoundBtn(){
+  const b = $("sound-btn");
+  b.setAttribute("aria-pressed", String(soundOn));
+  b.title = soundOn ? "Turn sound effects off" : "Turn sound effects on";
+  b.querySelector(".lbl").textContent = soundOn ? "Sound on" : "Sound off";
+  b.querySelector(".waves").style.display = soundOn ? "" : "none";
+  b.querySelector(".mute").style.display = soundOn ? "none" : "";
+}
+$("sound-btn").addEventListener("click", () => {
+  soundOn = !soundOn;
+  try{ localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0"); }catch(e){}
+  renderSoundBtn(); if (soundOn) sfx("chime");
+});
+renderSoundBtn();
+
+/* run an effect once the change has re-rendered */
+const after = fn => setTimeout(() => requestAnimationFrame(fn), 80);
+
+/* ---------- team stories: a few lines per team, built from the board's Brick and Gold ---------- */
+function boardPerson(id){ const ids = ASANA_IDS[id]; return ids && window.__board ? window.__board.personByGids(ids) : null; }
+function teamMembers(team){
+  if (Array.isArray(team.members)) return team.members.filter(id => byId.has(id)).map(id => byId.get(id));
+  const taken = new Set();
+  TEAMS.forEach(t => { if (Array.isArray(t.members)) t.members.forEach(id => taken.add(id)); });
+  if (team.members === "emily-brenzel+"){ const ids = [...descendantsOf("emily-brenzel")].filter(id => !taken.has(id)); return ["emily-brenzel"].concat(ids).filter(id => byId.has(id)).map(id => byId.get(id)); }
+  const mc = new Set(["emily-brenzel", ...descendantsOf("emily-brenzel")]);
+  return roster.filter(p => !taken.has(p.id) && !mc.has(p.id));
+}
+function teamWork(team){
+  return teamMembers(team).map(h => ({hero:h, bp:boardPerson(h.id)}));
+}
+function localStory(team){
+  const rows = teamWork(team), B = window.__board;
+  const withData = rows.filter(r => r.bp);
+  if (!B || !withData.length) return "The scribes are still gathering word from Asana.";
+  const T = B.todayIdx();
+  const first = h => h.name.split(" ")[0];
+  const plain = t => { const n = t.name.replace(/^[\d_:apm\s.-]{6,}\s*-?\s*/i, "").replace(/\s+/g, " ").trim(); return n.length > 48 ? n.slice(0, 46).trimEnd() + "…" : n; };
+  const mainProj = bp => { const m = new Map(); bp.brick.forEach(t => (t.projects || []).forEach(n => m.set(n, (m.get(n) || 0) + 1))); const top = [...m.entries()].sort((x, y) => y[1] - x[1])[0]; return top ? top[0] : null; };
+  const busy = withData.filter(r => r.bp.brick.length).sort((x, y) => y.bp.brick.length - x.bp.brick.length);
+  const lines = [];
+  if (!busy.length) lines.push(`All is quiet in the ${team.name} camp; no urgent quests are on the road this week.`);
+  else {
+    const a = busy[0], pa = mainProj(a.bp), b = busy[1], pb = b && mainProj(b.bp);
+    lines.push(b
+      ? `${first(a.hero)} is deep in ${pa || "the week's quests"}, while ${first(b.hero)} works the ${pb && pb !== pa ? pb + " front" : "same road"}.`
+      : `${first(a.hero)} is out on the road this week${pa ? ", deep in " + pa : ""}.`);
+    const due = withData.flatMap(r => r.bp.brick.filter(t => t.due).map(t => ({t, h:r.hero}))).sort((x, y) => x.t.due.localeCompare(y.t.due))[0];
+    if (due) lines.push(B.dueIdx(due.t.due) < T
+      ? `The quest “${plain(due.t)}” has slipped past its day, and ${first(due.h)} is racing to bring it home.`
+      : `Next on the horizon is “${plain(due.t)}”, which ${first(due.h)} means to finish soon.`);
+  }
+  const won = withData.flatMap(r => r.bp.gold.map(t => ({t, h:r.hero}))).sort((x, y) => y.t.completed.localeCompare(x.t.completed))[0];
+  if (won) lines.push(`Fresh from the field, ${first(won.h)} returned victorious with “${plain(won.t)}”.`);
+  return lines.join(" ");
+}
+function storyKey(team){ return team.key + "|" + teamWork(team).map(r => r.hero.id + ":" + (r.bp ? r.bp.brick.map(t => t.gid).join(".") + "/" + r.bp.gold.length : "-")).join(","); }
+function storyPrompt(team){
+  const B = window.__board, today = new Date();
+  const d = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  const parts = teamWork(team).filter(r => r.bp).map(({hero, bp}) => {
+    const bricks = bp.brick.slice(0, 15).map(t => `  - ${t.name}${t.due ? " (due " + t.due + ")" : ""}${t.projects && t.projects.length ? " [" + t.projects[0] + "]" : ""}`).join("\n") || "  (no Brick)";
+    const golds = bp.gold.slice(0, 8).map(t => t.name).join("; ");
+    return `${hero.name}:\n  Brick, open and created or due within 3 business days:\n${bricks}\n  Finished in the last 5 business days (${bp.gold.length}): ${golds || "none"}`;
+  });
+  return `You write a tiny team story for a fantasy-themed team dashboard. Today is ${d}.\n` +
+    `Team: ${team.name}. Below is each member's current urgent work and recent completions from Asana.\n` +
+    `Tell it as a tiny story of three sentences, 55 words at most: what the team is setting out to do, who is carrying the hardest or most urgent quest, and a recent victory. ` +
+    `Describe the actual work in plain words (name a notable task or project), use first names, and give it a light Catan or fantasy flavor. ` +
+    `Never mention counts, numbers of tasks or statistics, and never mention reporting lines, managers, job titles or who leads whom. No lists, headings or preamble.\n\n${parts.join("\n\n")}`;
+}
+const storyCache = new Map();
+let storySample = "unknown", storyTimer = null, storyHover = null;
+if (window.asanaBridge) storySample = "off";   /* the standalone copy has no Claude to tell the story */
+function renderChronicles(){
+  const box = $("chronicles"); if (!box) return;
+  box.textContent = "";
+  TEAMS.forEach(team => {
+    const members = teamMembers(team);
+    const card = mk("article", "chron"); card.tabIndex = 0; card.dataset.team = team.key;
+    const head = mk("div", "chron-head");
+    head.append(mk("h4", null, team.name), mk("span", "chron-flavor", team.flavor));
+    const crest = mk("div", "chron-crest");
+    members.forEach(m => { const t = token(clsOf(m)); t.title = m.name; crest.appendChild(t); });
+    const key = storyKey(team), cached = storyCache.get(key);
+    const story = mk("p", "chron-story", cached || localStory(team));
+    const foot = mk("div", "chron-foot", cached ? "Told by Claude" : storySample === "off" ? "" : "Hover to have Claude tell it");
+    card.append(head, crest, story, foot);
+    const start = () => {
+      storyHover = team.key; clearTimeout(storyTimer);
+      if (storyCache.has(storyKey(team)) || storySample === "off" || !window.__board || !window.__board.people().length) return;
+      storyTimer = setTimeout(() => tellStory(team, card), 650);
+    };
+    card.addEventListener("mouseenter", start); card.addEventListener("focus", start);
+    const stop = () => { if (storyHover === team.key) storyHover = null; clearTimeout(storyTimer); };
+    card.addEventListener("mouseleave", stop); card.addEventListener("blur", stop);
+    box.appendChild(card);
+  });
+  renderQuote();
+  renderVillage();
+}
+async function tellStory(team, card){
+  const key = storyKey(team), foot = card.querySelector(".chron-foot"), story = card.querySelector(".chron-story");
+  try{
+    const sample = (window.claude && window.claude.use) ? await window.claude.use("sample") : null;
+    if (!sample){ storySample = "off"; foot.textContent = ""; return; }
+    foot.textContent = "Asking Claude…";
+    const res = await sample(storyPrompt(team), {modelTier:"quick"});
+    const text = String(res && res.text || "").trim();
+    if (text){ storyCache.set(key, text); storySample = "ok"; if (document.contains(story)){ story.textContent = text; foot.textContent = "Told by Claude"; } }
+  }catch(e){
+    if (e && e.code === "not_granted") storySample = "off";
+    if (document.contains(foot)) foot.textContent = e && e.code === "rate_limited" ? "Busy right now. Hover again in a moment." : "";
+  }
+}
+/* one Breaking Bad flavored line above the stories, for Jordan. Original lines in the show's spirit, not quotes from it. */
+const quoteCache = new Map();
+function teamTotals(){
+  const B = window.__board; let brick = 0, overdue = 0, gold = 0;
+  if (!B) return {brick, overdue, gold, ready:false};
+  const T = B.todayIdx();
+  roster.forEach(h => { const bp = boardPerson(h.id); if (!bp) return; brick += bp.brick.length; gold += bp.gold.length; bp.brick.forEach(t => { if (t.due && B.dueIdx(t.due) < T) overdue++; }); });
+  return {brick, overdue, gold, ready: B.people().length > 0};
+}
+function localQuote(){
+  const B = window.__board;
+  if (!B || !B.people().length) return "“Yeah, science!” Jesse Pinkman. Hang tight while the lab pulls this week's work from Asana.";
+  const T = B.todayIdx(), first = h => h.name.split(" ")[0];
+  const plain = t => { const n = t.name.replace(/^[\d_:apm\s.-]{6,}\s*-?\s*/i, "").replace(/\s+/g, " ").trim(); return n.length > 44 ? n.slice(0, 42).trimEnd() + "…" : n; };
+  const rows = roster.map(h => ({h, bp: boardPerson(h.id)})).filter(r => r.bp);
+  const busiest = rows.slice().sort((x, y) => y.bp.brick.length - x.bp.brick.length)[0];
+  const goldLead = rows.slice().sort((x, y) => y.bp.gold.length - x.bp.gold.length)[0];
+  const overdue = rows.flatMap(r => r.bp.brick.filter(t => t.due && B.dueIdx(t.due) < T).map(t => ({t, h:r.h}))).sort((x, y) => x.t.due.localeCompare(y.t.due))[0];
+  const proj = bp => { const m = new Map(); bp.brick.forEach(t => (t.projects || []).forEach(n => m.set(n, (m.get(n) || 0) + 1))); const top = [...m.entries()].sort((x, y) => y[1] - x[1])[0]; return top ? top[0] : null; };
+  if (busiest && busiest.bp.brick.length >= 5){ const pj = proj(busiest.bp); return `“I am the one who knocks.” Walter White. This week that's ${first(busiest.h)}, knocking down ${pj ? pj + "'s" : "every"} door.`; }
+  if (overdue) return `“Tread lightly.” Walter White. Fair warning for “${plain(overdue.t)}”, now past its day on ${first(overdue.h)}'s desk.`;
+  if (goldLead && goldLead.bp.gold.length){ const g = goldLead.bp.gold[0]; return `“Say my name.” Walter White. This week the answer is ${first(goldLead.h)}, with “${plain(g)}” already in the books.`; }
+  return "“We're done when I say we're done.” Walter White. For once, the lab says done.";
+}
+function quoteKey(){ return TEAMS.map(storyKey).join("||"); }
+function renderQuote(){
+  const el = document.querySelector("#chron-quote em"); if (!el) return;
+  el.textContent = quoteCache.get(quoteKey()) || localQuote();
+}
+async function askQuote(){
+  if (storySample === "off" || !window.__board || !window.__board.people().length) return;
+  const key = quoteKey(); if (quoteCache.has(key)) return renderQuote();
+  try{
+    const sample = (window.claude && window.claude.use) ? await window.claude.use("sample") : null;
+    if (!sample){ storySample = "off"; return; }
+    const stories = TEAMS.map(t => `${t.name}: ${storyCache.get(storyKey(t)) || localStory(t)}`).join("\n");
+    const prompt = `Our team dashboard tells these short stories about each team's week:\n${stories}\n\n` +
+      `Our director loves Breaking Bad. Pick ONE short, iconic line from the show (10 words or fewer, the kind fans instantly recognize, such as a famous Walter White, Jesse Pinkman, Saul Goodman or Gus Fring line), ` +
+      `or a specific well-known scene (the pizza on the roof, the RV in the desert, the fly in the lab, the 99.1% purity), that fits this week's stories. ` +
+      `Format exactly: “<line>” <Character>. <one short sentence tying it to a specific person, task or project from the stories>. 30 words at most in total. ` +
+      `Use first names only. No reporting lines, no counts, no preamble.`;
+    const res = await sample(prompt, {modelTier:"quick"});
+    const text = String(res && res.text || "").trim();
+    if (text){ quoteCache.set(key, text); renderQuote(); }
+  }catch(e){ if (e && e.code === "not_granted") storySample = "off"; }
+}
+if (window.__board) window.__board.listeners.push(() => renderChronicles());
+
+/* ================= Village Square: a medieval market square. Villagers mingle and say what they're working on; team stories hang on the buildings; Julie's headline is pinned to the castle. ================= */
+const SVGNS = "http://www.w3.org/2000/svg", XHTML = "http://www.w3.org/1999/xhtml";
+function sv(tag, attrs, parent){ const e = document.createElementNS(SVGNS, tag); if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+let villageDirty = true;
+const julieCache = new Map();
+const VW = 1200, VH = 1240;
+
+/* buildings around the square; banners hang from their upper floors */
+const SITES = {
+  /* banners fit the upper floor and stop above each doorway; buildings sit well inside the frame */
+  dev:   {label:"The Smithy",          x:62,  y:300, w:330, h:260, banner:{x:86,  y:334, w:282, h:124}},
+  admin: {label:"The Guildhall",       x:435, y:276, w:330, h:284, banner:{x:459, y:322, w:282, h:128}},
+  mc:    {label:"The Messenger's Post", x:808, y:300, w:330, h:260, banner:{x:832, y:334, w:282, h:128}}
+};
+/* where people gather on the square: little knots of villagers chatting, each team near its own building */
+const CLUSTERS = {
+  dev:   [{x:178, y:990, rx:92, ry:66}],
+  mc:    [{x:1022, y:990, rx:92, ry:66}],
+  admin: [{x:515, y:935, rx:72, ry:36}, {x:690, y:935, rx:72, ry:36}, {x:602, y:1082, rx:100, ry:38}]
+};
+/* a soft patch of ground and a signpost for each team, so the groups read as teams without walls between them */
+const PATCHES = {
+  dev:   {x:178, y:985, rx:150, ry:150, color:"#3f5e57"},
+  mc:    {x:1022, y:985, rx:150, ry:150, color:"#7a3348"},
+  admin: {x:602, y:1000, rx:240, ry:175, color:"#2f4170"}
+};
+/* ---------- the most important thing for Julie ---------- */
+function julieKey(){ return TEAMS.map(storyKey).join("||"); }
+function localJulie(){
+  const B = window.__board;
+  if (!B || !B.people().length) return "Word from the village is still on its way from Asana.";
+  const T = B.todayIdx(), proj = new Map(), late = new Map();
+  roster.forEach(h => { const bp = boardPerson(h.id); if (!bp) return; bp.brick.forEach(t => (t.projects || []).forEach(n => { proj.set(n, (proj.get(n) || 0) + 1); if (t.due && B.dueIdx(t.due) < T) late.set(n, (late.get(n) || 0) + 1); })); });
+  const top = [...proj.entries()].sort((a, b) => b[1] - a[1])[0];
+  const lateTop = [...late.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (!top) return "A calm week: no urgent work is stacking up anywhere in the village.";
+  if (lateTop && lateTop[0] !== top[0]) return `${top[0]} is drawing the most urgent work this week, and ${lateTop[0]} has items slipping past due.`;
+  if (lateTop) return `${top[0]} is drawing the most urgent work this week, and some of it has already slipped past due.`;
+  return `${top[0]} is drawing the most urgent work this week, and it's all on schedule so far.`;
+}
+function juliePrompt(){
+  const B = window.__board, T = B.todayIdx();
+  const stories = TEAMS.map(t => `${t.name}: ${storyCache.get(storyKey(t)) || localStory(t)}`).join("\n");
+  const late = [];
+  roster.forEach(h => { const bp = boardPerson(h.id); if (!bp) return; bp.brick.forEach(t => { if (t.due && B.dueIdx(t.due) < T) late.push(`${t.name}${t.projects && t.projects[0] ? " [" + t.projects[0] + "]" : ""} (due ${t.due}, ${h.name.split(" ")[0]})`); }); });
+  return `Julie is the senior marketing leader this Salesforce operations team ultimately serves. Here is this week's picture:\n${stories}\n\n` +
+    `Overdue urgent items: ${late.slice(0, 15).join("; ") || "none"}\n\n` +
+    `In ONE plain sentence of 22 words or fewer, state the single most important thing Julie should know this week: the biggest risk, milestone or win. ` +
+    `Be specific (name the project or effort). No fantasy language, no counts, no reporting lines, no preamble.`;
+}
+
+/* ---------- Claude, asked only when someone opens the Village Square ---------- */
+async function askClaude(prompt){
+  if (storySample === "off") return null;
+  const sample = (window.claude && window.claude.use) ? await window.claude.use("sample") : null;
+  if (!sample){ storySample = "off"; return null; }
+  try{ const res = await sample(prompt, {modelTier:"quick"}); return String(res && res.text || "").trim() || null; }
+  catch(e){ if (e && e.code === "not_granted") storySample = "off"; return null; }
+}
+let villageAsking = false;
+async function villageAsk(){
+  if (villageAsking || storySample === "off" || !window.__board || !window.__board.people().length) return;
+  villageAsking = true; renderVillage(true);
+  try{
+    for (const team of TEAMS){
+      const k = storyKey(team);
+      if (storyCache.has(k)) continue;
+      const text = await askClaude(storyPrompt(team));
+      if (!text) break;
+      storyCache.set(k, text); renderChronicles();
+    }
+    const jk = julieKey();
+    if (!julieCache.has(jk)){ const text = await askClaude(juliePrompt()); if (text) julieCache.set(jk, text.replace(/^["“]|["”]$/g, "")); }
+  } finally { villageAsking = false; renderVillage(true); }
+}
+function villageOpen(ask){ renderVillage(true); if (ask) villageAsk(); }
+
+/* ---------- what each villager says: a short first-person line from their Asana work ---------- */
+function isAsleep(hero){
+  if (hero.id === ROOT) return false;
+  const bp = boardPerson(hero.id);
+  return !bp || !bp.brick.length;
+}
+function speech(hero){
+  const B = window.__board, bp = boardPerson(hero.id);
+  if (!B || !bp) return hero.id === ROOT ? "Steady hands, everyone. Onward!" : "Just passing through the square.";
+  const T = B.todayIdx();
+  const cut = n => { const t = String(n).replace(/^[\d_:apm\s.-]{6,}\s*-?\s*/i, "").replace(/\s+/g, " ").trim(); return t.length > 40 ? t.slice(0, 38).trimEnd() + "…" : t; };
+  const when = d => { const [y, m, dd] = d.split("-").map(Number); return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m-1] + " " + dd; };
+  const dated = bp.brick.filter(t => t.due).sort((a, b) => a.due.localeCompare(b.due));
+  const late = dated.find(t => B.dueIdx(t.due) < T);
+  if (late) return `“${cut(late.name)}” is overdue. I'm on it!`;
+  if (dated.length){ const d = dated[0], di = B.dueIdx(d.due); return di === T ? `“${cut(d.name)}” is due today!` : `“${cut(d.name)}”, due ${when(d.due)}.`; }
+  if (bp.brick.length) return `Busy with “${cut(bp.brick[0].name)}”.`;
+  if (bp.gold.length) return `Just wrapped “${cut(bp.gold[0].name)}”!`;
+  return "A quiet day. Fetch me a quest!";
+}
+
+/* ---------- drawing helpers ---------- */
+function htmlBox(parent, b, cls, build){
+  const fo = sv("foreignObject", {x:b.x, y:b.y, width:b.w, height:b.h}, parent);
+  const div = document.createElementNS(XHTML, "div"); div.className = cls; fo.appendChild(div); build(div);
+  return fo;
+}
+function fitText(root){
+  [[".v-banner", ".v-banner-text", 9.5], [".v-scroll", ".v-scroll-text", 10.5], [".v-bubble", ".v-bubble-text", 9.5]].forEach(([box, txt, min]) => {
+    root.querySelectorAll(box).forEach(b => {
+      const t = b.querySelector(txt); if (!t || !b.clientHeight) return;
+      let size = parseFloat(getComputedStyle(t).fontSize) || 13;
+      while (b.scrollHeight > b.clientHeight + 1 && size > min){ size -= 0.5; t.style.fontSize = size + "px"; }
+    });
+  });
+}
+function hdiv(parent, cls, text){ const d = document.createElementNS(XHTML, "div"); d.className = cls; if (text != null) d.textContent = text; parent.appendChild(d); return d; }
+const HAT = {
+  wizard:   c => `<path d="M-12 -40 L1 -68 L11 -40 Z" fill="${c}" stroke="#2b1d08" stroke-width="1.4"/><path d="M-16 -40 h30" stroke="#2b1d08" stroke-width="3.2" stroke-linecap="round"/><circle cx="3" cy="-56" r="2" fill="#e8c77a"/>`,
+  sorcerer: c => `<path d="M-11 -40 L4 -66 L11 -40 Z" fill="${c}" stroke="#2b1d08" stroke-width="1.4"/><path d="M-15 -40 h28" stroke="#2b1d08" stroke-width="3" stroke-linecap="round"/>`,
+  warlock:  c => `<path d="M-14 -34 Q-15 -60 0 -62 Q15 -60 14 -34 Q8 -44 0 -44 Q-8 -44 -14 -34 Z" fill="${c}" stroke="#2b1d08" stroke-width="1.4"/>`,
+  rogue:    c => `<path d="M-14 -32 Q-16 -60 0 -60 Q16 -60 14 -32 Q8 -42 0 -42 Q-8 -42 -14 -32 Z" fill="#3b3a36" stroke="#1b1209" stroke-width="1.4"/>`,
+  bard:     c => `<path d="M-13 -42 Q0 -53 13 -42 Z" fill="${c}" stroke="#2b1d08" stroke-width="1.2"/><path d="M8 -47 Q19 -62 24 -53" stroke="#e8c77a" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
+  squire:   c => `<path d="M-12 -42 Q0 -51 12 -42 Z" fill="#6b5330" stroke="#2b1d08" stroke-width="1.2"/>`,
+  ranger:   c => `<path d="M-13 -36 Q-13 -58 0 -58 Q13 -58 13 -36 L6 -44 L0 -42 L-6 -44 Z" fill="#4f6a34" stroke="#2b1d08" stroke-width="1.3"/>`,
+  paladin:  c => `<path d="M-12 -35 Q-13 -56 0 -56 Q13 -56 12 -35 Z" fill="#b9bcc0" stroke="#5a5d62" stroke-width="1.4"/><path d="M-8 -42 h16" stroke="#3b3a36" stroke-width="2.6"/><path d="M0 -56 v-9" stroke="#8e2a17" stroke-width="4.5" stroke-linecap="round"/>`,
+  fighter:  c => `<path d="M-12 -36 Q-13 -56 0 -56 Q13 -56 12 -36 Z" fill="#9a9c9f" stroke="#5a5d62" stroke-width="1.4"/><path d="M0 -56 v18" stroke="#5a5d62" stroke-width="2"/>`,
+  barbarian:c => `<path d="M-12 -40 Q0 -51 12 -40 Z" fill="#6b4a2b"/><path d="M-10 -44 Q-21 -51 -19 -62" stroke="#efe3c8" stroke-width="3.6" fill="none" stroke-linecap="round"/><path d="M10 -44 Q21 -51 19 -62" stroke="#efe3c8" stroke-width="3.6" fill="none" stroke-linecap="round"/>`,
+  monk:     c => `<path d="M-14 -30 Q-16 -54 0 -55 Q16 -54 14 -30 Q8 -40 0 -40 Q-8 -40 -14 -30 Z" fill="${c}" stroke="#2b1d08" stroke-width="1.3"/>`,
+  cleric:   c => `<path d="M-9 -42 L-6 -62 L0 -56 L6 -62 L9 -42 Z" fill="#efe3c8" stroke="#8a6a2c" stroke-width="1.4"/><path d="M0 -58 v12 M-4 -52 h8" stroke="#8e2a17" stroke-width="1.8"/>`,
+  druid:    c => `<path d="M-12 -42 q4 -9 8 0 q4 -9 8 0 q4 -9 8 0" stroke="#3c6d45" stroke-width="3.2" fill="none" stroke-linecap="round"/>`,
+  artificer:c => `<path d="M-12 -40 Q0 -50 12 -40 Z" fill="#6b4a2b"/><path d="M-12 -36 h24" stroke="#4a3420" stroke-width="2.4"/><circle cx="-5" cy="-37" r="4" fill="#c9d8c8" stroke="#4a3420" stroke-width="1.6"/><circle cx="5" cy="-37" r="4" fill="#c9d8c8" stroke="#4a3420" stroke-width="1.6"/>`
+};
+/* tunic colours are earthy dyes keyed to each class */
+const DYE = {paladin:"#8a6a2c", wizard:"#3d4f7a", bard:"#8a3a55", artificer:"#3f6e64", fighter:"#7a3328", ranger:"#4f6a34", barbarian:"#7d4423", monk:"#7a6a3a", cleric:"#a8862e", rogue:"#45474c", sorcerer:"#9a3a26", warlock:"#553a72", druid:"#3c6d45", squire:"#6d6a5e", crown:"#5d3f7a"};
+function villager(parent, hero, x, y, scale, face, gesture, i, name, asleep){
+  const cls = clsOf(hero), c = DYE[cls] || "#6d6a5e";
+  const g = sv("g", {class:"villager", transform:`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${scale})`, tabindex:"0", role:"img", "aria-label":`${hero.name}, ${CLASSES[cls].label}`}, parent);
+  let holder = g;
+  if (asleep){
+    gesture = false; g.setAttribute("aria-label", `${hero.name}, ${CLASSES[cls].label}, asleep: nothing urgent right now`);
+    /* lying flat on a bedroll with the head on a straw pillow */
+    const dir = face;
+    sv("ellipse", {cx:0, cy:16, rx:44, ry:7, fill:"#2b1d08", opacity:".25"}, g);
+    sv("rect", {x:-42, y:2, width:84, height:16, rx:7, fill:"#7d4423", stroke:"#3b2a17", "stroke-width":"1.6"}, g);
+    sv("path", {d:"M-34 6 h68 M-34 13 h68", stroke:"#c9a24a", "stroke-width":"1.4", "stroke-dasharray":"5 4"}, g);
+    sv("ellipse", {cx:dir*30, cy:6, rx:13, ry:7, fill:"#d9c08a", stroke:"#6b5330", "stroke-width":"1.4"}, g);
+    holder = sv("g", {transform:`translate(0 6) rotate(${90*dir} 0 -13)`}, g);
+  }
+  const bob = sv("g", {class: asleep ? "bob asleep" : "bob", style:`animation-delay:${(i * 0.41) % 2.6}s`}, holder);
+  if (!asleep) sv("ellipse", {cx:0, cy:17, rx:19, ry:5, fill:"#2b1d08", opacity:".28"}, bob);
+  /* tunic: a game-piece body with a belt and a hem, plus a cloak in the class colour */
+  sv("path", {d:"M-8 -24 Q-19 -21 -22 -11 Q-23 -6 -17 -7 L-11 -9 L-13 7 L-15 14 Q-15 17 -11 17 L-3 17 L0 7 L3 17 L11 17 Q15 17 15 14 L13 7 L11 -9 L17 -7 Q23 -6 22 -11 Q19 -21 8 -24 Z", fill:c, stroke:"#1f150a", "stroke-width":"1.7", "stroke-linejoin":"round"}, bob);
+  sv("path", {d:"M-12 -2 h24", stroke:"#3b2a17", "stroke-width":"3"}, bob);
+  sv("rect", {x:-2.5, y:-4.5, width:5, height:5, fill:"#c9a24a", stroke:"#3b2a17", "stroke-width":".8"}, bob);
+  sv("path", {d:"M-13 6 h26", stroke:"rgba(255,255,255,.18)", "stroke-width":"2"}, bob);
+  /* a hand raised mid-conversation */
+  if (gesture) sv("path", {d:`M${14*face} -12 q${10*face} -6 ${12*face} -16`, stroke:c, "stroke-width":"6", "stroke-linecap":"round", fill:"none"}, bob);
+  if (gesture) sv("circle", {cx:26*face, cy:-28, r:3.6, fill:"#f0dcbc", stroke:"#1f150a", "stroke-width":"1.2"}, bob);
+  sv("circle", {cx:0, cy:-33, r:11, fill:"#f0dcbc", stroke:"#1f150a", "stroke-width":"1.7"}, bob);
+  if (asleep){
+    /* closed eyes and a little open mouth, snoozing */
+    sv("path", {d:"M-6 -34 q2 2 4 0 M2 -34 q2 2 4 0", stroke:"#1f150a", "stroke-width":"1.5", fill:"none", "stroke-linecap":"round"}, bob);
+    sv("ellipse", {cx:0, cy:-27.5, rx:1.8, ry:2.2, fill:"#1f150a"}, bob);
+  } else {
+    /* eyes glance toward whoever they're talking to */
+    const ex = 1.6 * face;
+    sv("circle", {cx:-4 + ex, cy:-34, r:1.7, fill:"#1f150a"}, bob);
+    sv("circle", {cx:4 + ex, cy:-34, r:1.7, fill:"#1f150a"}, bob);
+    sv("path", {d:`M${-3.5 + ex} -28.5 Q${ex} -25.5 ${3.5 + ex} -28.5`, stroke:"#1f150a", "stroke-width":"1.5", fill:"none", "stroke-linecap":"round"}, bob);
+  }
+  sv("circle", {cx:-7, cy:-30, r:1.8, fill:"#d98b74", opacity:".6"}, bob);
+  sv("circle", {cx:7, cy:-30, r:1.8, fill:"#d98b74", opacity:".6"}, bob);
+  const hat = sv("g", null, bob); hat.innerHTML = (HAT[cls] || HAT.squire)(c);   /* static, trusted drawing markup */
+  const nm = sv("text", {x:0, y:33, "text-anchor":"middle", class:"vname"}, g); nm.textContent = name || hero.name.split(" ")[0];
+  g.addEventListener("click", () => openSheet(hero.id));
+  g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); openSheet(hero.id); } });
+  return g;
+}
+function bubble(tails, boxes, x, headY, text, r, k){
+  /* tails sit on their own layer underneath every bubble, so a long tail never crosses someone else's words */
+  const tx = Math.max(r.x + 18, Math.min(r.x + r.w - 18, x)), by = r.y + r.h - 4;
+  const midY = (by + headY - 6) / 2;
+  sv("path", {d:`M${tx - 8} ${by} Q${tx - 4} ${midY} ${x} ${headY - 6} Q${tx + 6} ${midY} ${tx + 8} ${by} Z`, fill:"#fbf3dc", stroke:"#5a4128", "stroke-width":"1.6", "stroke-linejoin":"round"}, tails);
+  const g = sv("g", {class:"bubble", style:`animation-delay:${(k*0.23) % 3}s`}, boxes);
+  htmlBox(g, r, "v-bubble", d => hdiv(d, "v-bubble-text", text));
+}
+/* ---------- the scene ---------- */
+function renderVillage(force){
+  const host = $("village-scene"); if (!host) return;
+  if ($("tab-village").hidden && !force){ villageDirty = true; return; }
+  villageDirty = false;
+  host.textContent = "";
+  const s = sv("svg", {viewBox:`0 0 ${VW} ${VH}`, role:"img", "aria-label":"A medieval market square: the team's villagers mingle and talk about their work, team stories hang from the buildings, and a note for Julie is pinned to the castle"}, host);
+  const defs = sv("defs", null, s);
+  const sky = sv("linearGradient", {id:"vsky", x1:0, y1:0, x2:0, y2:1}, defs);
+  sv("stop", {offset:"0%", "stop-color":"#93a6ad"}, sky); sv("stop", {offset:"65%", "stop-color":"#d6d0b8"}, sky); sv("stop", {offset:"100%", "stop-color":"#ead8b0"}, sky);
+  const stone = sv("pattern", {id:"vstone", width:40, height:20, patternUnits:"userSpaceOnUse"}, defs);
+  sv("rect", {width:40, height:20, fill:"#a59d8e"}, stone);
+  sv("path", {d:"M0 10h40M20 0v10M0 20v-10M40 20v-10", stroke:"#7f786b", "stroke-width":"1.3"}, stone);
+  const cob = sv("pattern", {id:"vcob", width:44, height:30, patternUnits:"userSpaceOnUse"}, defs);
+  sv("rect", {width:44, height:30, fill:"#a8947a"}, cob);
+  [[8,7,9,6],[27,6,10,5.5],[40,15,6,5],[16,20,10,6],[34,24,8,5],[2,24,5,4.5]].forEach(([cx, cy, rx, ry]) => sv("ellipse", {cx, cy, rx, ry, fill:"#b9a689", stroke:"#7d6c55", "stroke-width":"1.2"}, cob));
+  const thatch = sv("pattern", {id:"vthatch", width:14, height:12, patternUnits:"userSpaceOnUse"}, defs);
+  sv("rect", {width:14, height:12, fill:"#b4904f"}, thatch);
+  sv("path", {d:"M0 12 L4 0 M7 12 L11 0 M3.5 12 L7.5 2", stroke:"#8a6a33", "stroke-width":"1.2"}, thatch);
+  const slate = sv("pattern", {id:"vslate", width:18, height:12, patternUnits:"userSpaceOnUse"}, defs);
+  sv("rect", {width:18, height:12, fill:"#4f5560"}, slate);
+  sv("path", {d:"M0 6h18M9 0v6M0 12v-6M18 12v-6", stroke:"#363b44", "stroke-width":"1.2"}, slate);
+  const tile = sv("pattern", {id:"vtile", width:16, height:10, patternUnits:"userSpaceOnUse"}, defs);
+  sv("rect", {width:16, height:10, fill:"#9a4a2f"}, tile);
+  sv("path", {d:"M0 10 Q4 4 8 10 Q12 4 16 10", stroke:"#6e2f1c", "stroke-width":"1.3", fill:"none"}, tile);
+
+  sv("rect", {x:0, y:0, width:VW, height:VH, fill:"url(#vsky)"}, s);
+  /* low clouds and crows */
+  [[150, 92, 1], [430, 58, .8], [930, 108, .9]].forEach(([x, y, k], i) => { const c = sv("g", {class:"cloud", style:`animation-delay:${-i*12}s`}, s); [[0, 0, 30], [30, -8, 24], [58, 2, 26], [28, 8, 26]].forEach(([dx, dy, r]) => sv("circle", {cx:x + dx*k, cy:y + dy*k, r:r*k, fill:"#eee8da", opacity:".7"}, c)); });
+  [[260, 150], [300, 132], [980, 160]].forEach(([x, y], i) => sv("path", {class:"bird", d:`M${x} ${y} q7 -7 14 0 q7 -7 14 0`, stroke:"#2b2a28", "stroke-width":"2.4", fill:"none", "stroke-linecap":"round", style:`animation-delay:${i*1.3}s`}, s));
+  /* hills and the castle */
+  sv("path", {d:"M0 300 Q200 200 420 246 Q600 150 790 236 Q1000 190 1200 276 V440 H0 Z", fill:"#7a8550"}, s);
+  sv("path", {d:"M0 344 Q300 286 600 326 Q900 278 1200 338 V460 H0 Z", fill:"#65703f"}, s);
+  sv("path", {d:"M560 262 Q600 300 640 262", stroke:"#a8947a", "stroke-width":"10", fill:"none"}, s);   /* road up to the gate */
+  const castle = sv("g", {class:"castle", transform:"translate(0 -28)"}, s);
+  sv("rect", {x:470, y:150, width:260, height:120, fill:"url(#vstone)", stroke:"#5f594f", "stroke-width":"2.5"}, castle);
+  for (let i = 0; i < 13; i++) sv("rect", {x:470 + i*20, y:138, width:13, height:13, fill:"url(#vstone)", stroke:"#5f594f", "stroke-width":"1.5"}, castle);
+  [[436, 116, 54, 154], [710, 116, 54, 154], [568, 92, 64, 178]].forEach(([x, y, w, h], ti) => {
+    sv("rect", {x, y, width:w, height:h, fill:"url(#vstone)", stroke:"#5f594f", "stroke-width":"2.5"}, castle);
+    sv("path", {d:`M${x - 7} ${y} L${x + w/2} ${y - 40} L${x + w + 7} ${y} Z`, fill:"url(#vslate)", stroke:"#2d3138", "stroke-width":"2"}, castle);
+    const pole = x + w/2;
+    sv("path", {d:`M${pole} ${y - 40} v-20`, stroke:"#2d3138", "stroke-width":"2"}, castle);
+    sv("path", {class:"flag", d:`M${pole} ${y - 60} l26 5 l-8 4 l8 4 l-26 0 Z`, fill: ti === 2 ? "#8e2a17" : "#c9a24a", stroke:"#3b2a17", "stroke-width":"1"}, castle);
+    sv("path", {d:`M${x + w/2 - 4} ${y + 34} h8 v18 h-8 Z`, fill:"#2b2620"}, castle);
+  });
+  sv("path", {d:"M578 270 v-38 a22 22 0 0 1 44 0 v38 Z", fill:"#2b2620", stroke:"#5f594f", "stroke-width":"2"}, castle);
+  for (let i = 0; i < 5; i++) sv("path", {d:`M${584 + i*8} 236 v34`, stroke:"#6b6457", "stroke-width":"2"}, castle);   /* portcullis */
+  /* Julie's proclamation nailed to the castle wall */
+  const jk = julieKey(), jtext = julieCache.get(jk) || localJulie();
+  sv("rect", {x:456, y:174, width:296, height:72, fill:"#000", opacity:".2"}, castle);
+  htmlBox(castle, {x:450, y:166, w:300, h:76}, "v-scroll", d => {
+    hdiv(d, "v-scroll-head", "By order of the Keep · for Julie");
+    hdiv(d, "v-scroll-text", jtext);
+  });
+  sv("circle", {cx:600, cy:244, r:7, fill:"#8e2a17", stroke:"#5a1a0e", "stroke-width":"1.5"}, castle);   /* wax seal */
+  /* the square */
+  sv("path", {d:`M0 540 Q600 500 ${VW} 540 V${VH} H0 Z`, fill:"url(#vcob)"}, s);
+  sv("path", {d:`M0 540 Q600 500 ${VW} 540`, stroke:"#6b5a45", "stroke-width":"4", fill:"none"}, s);
+  drawSmithy(s, SITES.dev); drawGuildhall(s, SITES.admin); drawPost(s, SITES.mc);
+  /* team stories on heraldic banners */
+  TEAMS.forEach(team => {
+    const site = SITES[team.key]; if (!site) return;
+    const story = storyCache.get(storyKey(team)) || localStory(team);
+    const b = site.banner;
+    sv("path", {d:`M${b.x - 10} ${b.y - 2} h${b.w + 20}`, stroke:"#3b2a17", "stroke-width":"7", "stroke-linecap":"round"}, s);
+    sv("circle", {cx:b.x - 10, cy:b.y - 2, r:6, fill:"#c9a24a", stroke:"#3b2a17", "stroke-width":"1.5"}, s);
+    sv("circle", {cx:b.x + b.w + 10, cy:b.y - 2, r:6, fill:"#c9a24a", stroke:"#3b2a17", "stroke-width":"1.5"}, s);
+    htmlBox(s, b, "v-banner v-" + team.key, d => { hdiv(d, "v-banner-head", team.name + " · " + site.label); hdiv(d, "v-banner-text", story); });
+  });
+  /* market props */
+  drawWell(s, 600, 640); drawStall(s, 205, 618, "#8e2a17"); drawStall(s, 995, 618, "#3d4f7a");
+  drawBarrels(s, 395, 652); drawBarrels(s, 790, 658); drawHay(s, 1150, 1215); drawHay(s, 52, 1215);
+  drawTorch(s, 396, 560); drawTorch(s, 804, 560);
+  TEAMS.forEach(team => {
+    const pt = PATCHES[team.key]; if (!pt) return;
+    sv("ellipse", {cx:pt.x, cy:pt.y, rx:pt.rx, ry:pt.ry, fill:pt.color, opacity:".13"}, s);
+    sv("ellipse", {cx:pt.x, cy:pt.y, rx:pt.rx, ry:pt.ry, fill:"none", stroke:pt.color, "stroke-width":"2.5", "stroke-dasharray":"2 9", "stroke-linecap":"round", opacity:".45"}, s);
+    const sx = team.key === "mc" ? pt.x + pt.rx - 34 : team.key === "dev" ? pt.x - pt.rx + 34 : pt.x + 36;
+    const sy = team.key === "admin" ? 1174 : pt.y + pt.ry - 40;
+    sv("path", {d:`M${sx} ${sy + 34} v-56`, stroke:"#4a3420", "stroke-width":"4"}, s);
+    sv("path", {d:`M${sx} ${sy - 22} h${team.key === "dev" ? 70 : -70} l${team.key === "dev" ? 10 : -10} 10 l${team.key === "dev" ? -10 : 10} 10 h${team.key === "dev" ? -70 : 70} Z`, fill:pt.color, stroke:"#2b1d08", "stroke-width":"1.6"}, s);
+    const t = sv("text", {x:sx + (team.key === "dev" ? 36 : -36), y:sy - 7, "text-anchor":"middle", class:"vsign"}, s); t.textContent = team.name;
+  });
+  /* villagers mingling in small groups, each turned toward the middle of their group */
+  const firsts = new Map(); roster.forEach(h => { const f = h.name.split(" ")[0]; firsts.set(f, (firsts.get(f) || 0) + 1); });
+  const label = h => { const parts = h.name.split(" "), f = parts[0]; return firsts.get(f) > 1 ? f + " " + parts[parts.length - 1][0] + "." : f; };
+  const placed = [];
+  TEAMS.forEach(team => {
+    const groups = CLUSTERS[team.key], members = teamMembers(team);
+    const per = Math.ceil(members.length / groups.length);
+    members.forEach((h, i) => {
+      const gi = Math.min(groups.length - 1, Math.floor(i / per)), grp = groups[gi];
+      const inGroup = members.slice(gi*per, gi*per + per).length, k = i - gi*per;
+      const ang = Math.PI * (0.85 + (inGroup === 1 ? 0.65 : 1.3 * k / (inGroup - 1)));   /* fan around the front of the group */
+      const jitter = ((h.id.length * 37) % 17) - 8;
+      const x = grp.x + Math.cos(ang) * grp.rx + jitter, y = grp.y - Math.sin(ang) * grp.ry * -1 + (k % 2 ? 10 : -6);
+      placed.push({h, x, y, face: x < grp.x ? 1 : -1});
+    });
+  });
+  const people = sv("g", null, s), tails = sv("g", null, s), talk = sv("g", null, s);
+  const boxes = [];
+  const hit = (a, b) => a.x < b.x + b.w + 6 && b.x < a.x + a.w + 6 && a.y < b.y + b.h + 6 && b.y < a.y + a.h + 6;
+  placed.sort((a, b) => a.y - b.y).forEach((p, i) => {
+    const sc = 0.8 + (p.y - 860) / 1500;   /* nearer folk look a little bigger */
+    p.asleep = isAsleep(p.h);
+    villager(people, p.h, p.x, p.y, sc, p.face, i % 3 === 0, i, label(p.h), p.asleep);
+    if (p.asleep){
+      /* drifting Zs instead of a speech bubble */
+      const zz = sv("g", {class:"zzz", "aria-hidden":"true"}, talk);
+      const hx = p.x + p.face * 26 * sc, hy = p.y - 22 * sc;   /* above the head, which now rests on the pillow */
+      [[0, 0, 14], [10, -16, 17], [22, -34, 21]].forEach(([dx, dy, fs], k) => { const t = sv("text", {x:hx + p.face*dx*sc, y:hy + dy, class:"vz", "font-size":fs, style:`animation-delay:${k*0.6 + (i % 4)*0.3}s`}, zz); t.textContent = "z"; });
+    }
+    p.head = p.y - 72 * sc; p.sc = sc;
+    p.body = {x:p.x - 26*sc, y:p.head - 4, w:52*sc, h:p.y + 36*sc - p.head + 4};   /* keep bubbles off everyone's face */
+  });
+  /* place each speech bubble above its speaker, nudging it up or sideways until it doesn't cover another bubble */
+  placed.slice().filter(p => !p.asleep).sort((a, b) => b.y - a.y).forEach((p, i) => {
+    const w = 150, h = 60;
+    let best = null;
+    const others = placed.filter(q => q !== p).map(q => q.body);
+    for (let lift = 0; lift <= 320 && !best; lift += 10){
+      for (const dx of [-p.face * 26, p.face * 40, -p.face * 90, p.face * 100, 0]){
+        const r = {x: Math.max(20, Math.min(VW - w - 20, p.x - w/2 + dx)), y: p.head - h - 14 - lift, w, h};
+        if (r.y < 560) continue;
+        if (!boxes.some(b => hit(b, r)) && !others.some(b => hit(b, r))){ best = r; break; }
+      }
+    }
+    if (!best) best = {x: Math.max(20, Math.min(VW - w - 20, p.x - w/2)), y: p.head - h - 16, w, h};
+    boxes.push(best);
+    bubble(tails, talk, p.x, p.head, speech(p.h), best, i);
+  });
+  /* shrink any writing that would spill out of its banner, scroll or bubble */
+  requestAnimationFrame(() => fitText(host));
+  /* manuscript border */
+  sv("rect", {x:5, y:5, width:VW - 10, height:VH - 10, fill:"none", stroke:"#c9a24a", "stroke-width":"4", rx:10}, s);
+  sv("rect", {x:13, y:13, width:VW - 26, height:VH - 26, fill:"none", stroke:"#5a4128", "stroke-width":"1.5", rx:6}, s);
+  /* small-screen copy of the writing, since SVG text gets tiny on phones */
+  const notes = $("village-notes"); notes.textContent = "";
+  const j = mk("div", "vn-julie"); j.append(mk("b", null, "For Julie: "), document.createTextNode(jtext)); notes.appendChild(j);
+  TEAMS.forEach(team => { const d = mk("div", "vn-team"); d.append(mk("b", null, team.name + ": "), document.createTextNode(storyCache.get(storyKey(team)) || localStory(team))); notes.appendChild(d); });
+  const foot = $("village-foot");
+  const allClaude = TEAMS.every(t => storyCache.has(storyKey(t))) && julieCache.has(jk);
+  foot.textContent = allClaude ? "The banners and the castle proclamation were written by Claude from this week's Asana work. Villagers talk about their most urgent work; those with nothing urgent are napping. Click anyone to open their character sheet."
+    : villageAsking ? "Claude is writing the banners and the proclamation from this week's Asana work…"
+    : "Each villager is talking about their most urgent work from Asana; those with nothing urgent are napping. Click anyone to open their character sheet.";
+}
+function thatchRoof(s, x, y, w, fill){ sv("path", {d:`M${x - 18} ${y} L${x + w/2} ${y - 96} L${x + w + 18} ${y} Z`, fill, stroke:"#3b2a17", "stroke-width":"2.5", "stroke-linejoin":"round"}, s); sv("path", {d:`M${x - 18} ${y} h${w + 36}`, stroke:"#3b2a17", "stroke-width":"5", "stroke-linecap":"round"}, s); }
+function timbered(s, x, y, w, h){
+  sv("rect", {x, y, width:w, height:h, fill:"#ece0c3", stroke:"#3b2a17", "stroke-width":"2.5"}, s);
+  const beam = {stroke:"#4a3420", "stroke-width":"7", "stroke-linecap":"square"};
+  sv("path", Object.assign({d:`M${x} ${y + 4} h${w} M${x} ${y + h/2} h${w} M${x + 4} ${y} v${h} M${x + w - 4} ${y} v${h}`}, beam), s);
+  const n = 4, step = w / n;
+  for (let i = 0; i < n; i++){
+    const a = x + i*step, b = a + step;
+    sv("path", Object.assign({d:`M${a} ${y} V${y + h/2} M${a} ${y} L${b} ${y + h/2} M${b} ${y} L${a} ${y + h/2}`}, beam, {"stroke-width":"5"}), s);
+  }
+}
+function arched(s, x, y, w, h, fill){ sv("path", {d:`M${x} ${y + h} v${-(h - w/2)} a${w/2} ${w/2} 0 0 1 ${w} 0 v${h - w/2} Z`, fill, stroke:"#2b1d08", "stroke-width":"2.5"}, s); }
+function leaded(s, x, y){ arched(s, x, y, 26, 34, "#e9cf7f"); sv("path", {d:`M${x + 13} ${y + 2} v32 M${x} ${y + 20} h26`, stroke:"#2b1d08", "stroke-width":"1.6"}, s); }
+function drawSmithy(s, b){
+  const top = b.y + 30;
+  sv("rect", {x:b.x + b.w - 78, y:top - 104, width:34, height:96, fill:"url(#vstone)", stroke:"#5f594f", "stroke-width":"2"}, s);
+  [0, 1, 2].forEach(i => sv("circle", {class:"smoke", cx:b.x + b.w - 61, cy:top - 112, r:10 + i*4, fill:"#d9d3c7", style:`animation-delay:${i*1.1}s`}, s));
+  thatchRoof(s, b.x, top, b.w, "url(#vthatch)");
+  sv("rect", {x:b.x, y:top + b.h/2 - 10, width:b.w, height:b.h/2 - 20, fill:"url(#vstone)", stroke:"#5f594f", "stroke-width":"2.5"}, s);
+  timbered(s, b.x, top, b.w, b.h/2 - 10);
+  arched(s, b.x + b.w/2 - 40, b.y + b.h - 96, 80, 96, "#3b2a17");
+  sv("path", {class:"forge", d:`M${b.x + b.w/2 - 30} ${b.y + b.h} v-46 a30 30 0 0 1 60 0 v46 Z`, fill:"#ff8a3a", opacity:".55"}, s);
+  sv("path", {d:`M${b.x + 42} ${b.y + b.h + 4} h40 l-7 -11 h12 v-9 h-50 v9 h12 z`, fill:"#3b3a36", stroke:"#1b1209", "stroke-width":"1.5"}, s);
+  sv("path", {d:`M${b.x + 28} ${b.y + b.h - 50} l16 -26 M${b.x + 40} ${b.y + b.h - 50} l-12 -24`, stroke:"#5a5d62", "stroke-width":"4", "stroke-linecap":"round"}, s);   /* crossed tools on the wall */
+}
+function drawGuildhall(s, b){
+  const top = b.y + 40;
+  sv("path", {d:`M${b.x - 18} ${top} L${b.x + b.w/2} ${top - 92} L${b.x + b.w + 18} ${top} Z`, fill:"url(#vslate)", stroke:"#2d3138", "stroke-width":"2.5", "stroke-linejoin":"round"}, s);
+  const cx = b.x + b.w/2, cy = top - 36;
+  sv("circle", {cx, cy, r:19, fill:"#efe3c8", stroke:"#2b1d08", "stroke-width":"2.5"}, s);
+  for (let k = 0; k < 12; k++){ const a = k * Math.PI / 6; sv("path", {d:`M${(cx + 14*Math.sin(a)).toFixed(1)} ${(cy - 14*Math.cos(a)).toFixed(1)} L${(cx + 17*Math.sin(a)).toFixed(1)} ${(cy - 17*Math.cos(a)).toFixed(1)}`, stroke:"#2b1d08", "stroke-width":"1.5"}, s); }
+  const now = new Date(), hr = (now.getHours() % 12 + now.getMinutes()/60) * 30, mn = now.getMinutes() * 6;
+  sv("path", {d:`M${cx} ${cy} l${(8*Math.sin(hr*Math.PI/180)).toFixed(1)} ${(-8*Math.cos(hr*Math.PI/180)).toFixed(1)}`, stroke:"#2b1d08", "stroke-width":"3", "stroke-linecap":"round"}, s);
+  sv("path", {d:`M${cx} ${cy} l${(12*Math.sin(mn*Math.PI/180)).toFixed(1)} ${(-12*Math.cos(mn*Math.PI/180)).toFixed(1)}`, stroke:"#2b1d08", "stroke-width":"2", "stroke-linecap":"round"}, s);
+  timbered(s, b.x, top, b.w, b.h/2 - 18);
+  sv("rect", {x:b.x, y:top + b.h/2 - 18, width:b.w, height:b.h/2 - 22, fill:"url(#vstone)", stroke:"#5f594f", "stroke-width":"2.5"}, s);
+  [b.x + 26, b.x + 74, b.x + b.w - 100, b.x + b.w - 52].forEach(x => leaded(s, x, b.y + b.h - 70));
+  arched(s, b.x + b.w/2 - 42, b.y + b.h - 104, 84, 104, "#4a3420");
+  sv("path", {d:`M${b.x + b.w/2} ${b.y + b.h - 104} v104`, stroke:"#2b1d08", "stroke-width":"2"}, s);
+  [-14, 14].forEach(d => sv("circle", {cx:b.x + b.w/2 + d, cy:b.y + b.h - 44, r:3, fill:"#c9a24a"}, s));
+  sv("rect", {x:b.x - 14, y:b.y + b.h, width:b.w + 28, height:12, fill:"url(#vstone)", stroke:"#5f594f", "stroke-width":"1.5"}, s);
+}
+function drawPost(s, b){
+  const top = b.y + 30;
+  thatchRoof(s, b.x, top, b.w, "url(#vtile)");
+  timbered(s, b.x, top, b.w, b.h/2 - 10);
+  sv("rect", {x:b.x, y:top + b.h/2 - 10, width:b.w, height:b.h/2 - 20, fill:"#ece0c3", stroke:"#3b2a17", "stroke-width":"2.5"}, s);
+  arched(s, b.x + b.w/2 - 34, b.y + b.h - 92, 68, 92, "#4a3420");
+  leaded(s, b.x + 36, b.y + b.h - 72); leaded(s, b.x + b.w - 62, b.y + b.h - 72);
+  const dx = b.x + b.w - 90, dy = top - 74;
+  sv("rect", {x:dx, y:dy, width:44, height:36, fill:"#ece0c3", stroke:"#3b2a17", "stroke-width":"2"}, s);
+  sv("path", {d:`M${dx - 6} ${dy} L${dx + 22} ${dy - 22} L${dx + 50} ${dy} Z`, fill:"url(#vtile)", stroke:"#3b2a17", "stroke-width":"2"}, s);
+  [10, 26].forEach(o => arched(s, dx + o, dy + 12, 10, 14, "#2b1d08"));
+  /* hanging sign with a sealed letter */
+  sv("path", {d:`M${b.x + 20} ${top + 8} h46 M${b.x + 30} ${top + 8} v10 M${b.x + 58} ${top + 8} v10`, stroke:"#3b2a17", "stroke-width":"3"}, s);
+}
+function drawWell(s, x, y){
+  sv("ellipse", {cx:x, cy:y + 30, rx:46, ry:12, fill:"#2b1d08", opacity:".25"}, s);
+  sv("path", {d:`M${x - 40} ${y} v28 a40 10 0 0 0 80 0 v-28`, fill:"url(#vstone)", stroke:"#5f594f", "stroke-width":"2"}, s);
+  sv("ellipse", {cx:x, cy:y, rx:40, ry:10, fill:"#3b4f5c", stroke:"#5f594f", "stroke-width":"2"}, s);
+  sv("path", {d:`M${x - 34} ${y} v-54 M${x + 34} ${y} v-54`, stroke:"#4a3420", "stroke-width":"6"}, s);
+  sv("path", {d:`M${x - 48} ${y - 50} L${x} ${y - 80} L${x + 48} ${y - 50} Z`, fill:"url(#vthatch)", stroke:"#3b2a17", "stroke-width":"2"}, s);
+  sv("path", {d:`M${x - 34} ${y - 44} h68`, stroke:"#4a3420", "stroke-width":"4"}, s);
+  sv("path", {d:`M${x} ${y - 44} v22`, stroke:"#6b5330", "stroke-width":"1.5"}, s);
+  sv("path", {d:`M${x - 8} ${y - 22} h16 l-2 12 h-12 Z`, fill:"#7d5a33", stroke:"#3b2a17", "stroke-width":"1.5"}, s);
+}
+function drawStall(s, x, y, color){
+  sv("path", {d:`M${x - 60} ${y} v-56 M${x + 60} ${y} v-56`, stroke:"#4a3420", "stroke-width":"5"}, s);
+  const g = sv("g", null, s);
+  for (let i = 0; i < 6; i++) sv("path", {d:`M${x - 66 + i*22} ${y - 56} h22 v18 q-11 8 -22 0 Z`, fill: i % 2 ? "#efe3c8" : color, stroke:"#3b2a17", "stroke-width":"1.2"}, g);
+  sv("rect", {x:x - 56, y:y - 24, width:112, height:24, fill:"#7d5a33", stroke:"#3b2a17", "stroke-width":"2"}, s);
+  [[-36, "#c0442e"], [-12, "#c9a24a"], [12, "#4f6a34"], [36, "#9a3a26"]].forEach(([dx, c]) => sv("circle", {cx:x + dx, cy:y - 28, r:7, fill:c, stroke:"#3b2a17", "stroke-width":"1"}, s));
+}
+function drawBarrels(s, x, y){ [[0, 0], [30, 4], [15, -26]].forEach(([dx, dy]) => { sv("rect", {x:x + dx - 13, y:y + dy - 30, width:26, height:30, rx:6, fill:"#8a5a33", stroke:"#3b2a17", "stroke-width":"1.6"}, s); sv("path", {d:`M${x + dx - 13} ${y + dy - 22} h26 M${x + dx - 13} ${y + dy - 8} h26`, stroke:"#3b3a36", "stroke-width":"2.4"}, s); }); }
+function drawHay(s, x, y){ sv("rect", {x:x - 30, y:y - 26, width:60, height:28, rx:5, fill:"url(#vthatch)", stroke:"#6b5330", "stroke-width":"1.6"}, s); sv("path", {d:`M${x - 14} ${y - 26} v28 M${x + 14} ${y - 26} v28`, stroke:"#6b5330", "stroke-width":"2"}, s); }
+function drawTorch(s, x, y){ sv("path", {d:`M${x} ${y} v-60`, stroke:"#3b2a17", "stroke-width":"5"}, s); sv("path", {d:`M${x - 7} ${y - 60} h14 l-3 -8 h-8 Z`, fill:"#3b3a36"}, s); sv("path", {class:"flame", d:`M${x} ${y - 90} q10 12 0 22 q-10 -10 0 -22 Z`, fill:"#ff9a3a"}, s); }
+
+$("tabbtn-village").addEventListener("click", () => villageOpen(true));
+
+/* ---------- lineage ---------- */
+(function(){
+  const l = $("lineage");
+  LIEGES.forEach(g => {
+    const s = mk("span", "liege"); s.title = g.title;
+    s.appendChild(token("crown"));
+    const t = mk("span"); t.append(document.createTextNode(g.rank + " "), mk("b", null, g.name)); s.appendChild(t);
+    l.appendChild(s);
+    l.appendChild(mk("span", "sep", "›"));
+  });
+  l.appendChild(mk("span", null, "the Keep"));
+})();
+
+/* ---------- org chart ---------- */
+function card(p, small){
+  const cls = clsOf(p), list = dutiesOf(p.id);
+  const a = mk("article", "char" + (small ? " small" : "") + (p.id === ROOT ? " lead" : ""));
+  a.tabIndex = 0; a.setAttribute("role", "button"); a.dataset.id = p.id;
+  a.setAttribute("aria-label", `${p.name}, ${CLASSES[cls].label}. ${list.length} responsibilit${list.length === 1 ? "y" : "ies"}. Open character sheet.`);
+  a.appendChild(token(cls));
+  const ci = mk("div");
+  const h4 = mk("h4", null, p.name);
+  ci.append(mk("div", "cls", CLASSES[cls].label), h4); if (p.title) ci.appendChild(mk("div", "ttl", p.title));
+  h4.addEventListener("mouseenter", ev => { const bp = boardPerson(p.id); if (bp) window.__board.briefOpen(bp, ev); });
+  h4.addEventListener("mousemove", ev => { if (window.__board) window.__board.move(ev); });
+  h4.addEventListener("mouseleave", () => { if (window.__board) window.__board.briefClose(); });
+  a.appendChild(ci);
+  if (list.length) a.appendChild(mk("span", "lvl", "Lv " + list.length));
+  const ul = mk("ul", "duties");
+  const q = query.trim().toLowerCase();
+  const max = Infinity;   /* show every responsibility on the card */
+  if (!list.length) ul.appendChild(mk("li", "none", "No responsibilities yet"));
+  else {
+    const hits = q ? list.filter(d => (d.text + " " + (d.note || "")).toLowerCase().includes(q)) : [];
+    const shown = (hits.length ? hits.concat(list.filter(d => !hits.includes(d))) : list).slice(0, max);
+    shown.forEach(d => { const li = mk("li", hits.includes(d) ? "hit" : "", d.text); li.title = d.text + (d.note ? " · " + d.note : ""); ul.appendChild(li); });
+    if (list.length > max) ul.appendChild(mk("li", "more", "+" + (list.length - max) + " more"));
+  }
+  a.appendChild(ul);
+  if (q){
+    const match = list.some(d => (d.text + " " + (d.note || "")).toLowerCase().includes(q)) || p.name.toLowerCase().includes(q);
+    if (!match) a.classList.add("dim");
+  }
+  const open = ev => { ev.preventDefault(); openSheet(p.id); };
+  a.addEventListener("click", open);
+  a.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") open(ev); });
+  return a;
+}
+function renderKeep(){
+  buildRoster();
+  const keep = $("keep");
+  const label = keep.querySelector(".keep-label");
+  keep.textContent = ""; keep.appendChild(label);
+  const lord = mk("div", "lord"); lord.appendChild(card(byId.get(ROOT))); keep.appendChild(lord);
+  const court = mk("div", "court");
+  const ls = leads();
+  const company = (p, squad) => {
+    const crew = crewOf(p.id); if (!crew.length) return null;
+    const party = mk("div", "party" + (crew.length > 3 ? " wide" : "") + (squad ? " squad" : ""));
+    party.appendChild(mk("span", "party-label", `${p.name.split(" ")[0]}'s ${squad ? "Squad" : "Company"} · ${crew.length}`));
+    crew.forEach(c => {
+      const sub = company(c, true);
+      if (!sub){ party.appendChild(card(c, true)); return; }
+      const m = mk("div", "member has-crew"); m.append(card(c, true), sub); party.appendChild(m);
+    });
+    return party;
+  };
+  /* leaders without a company first, so the big companies sit together on the right */
+  ls.slice().sort((a, b) => (descendantsOf(a.id).size > 3) - (descendantsOf(b.id).size > 3)).forEach(p => {
+    const col = mk("div", "col" + (descendantsOf(p.id).size > 3 ? " big" : ""));
+    col.appendChild(card(p));
+    const party = company(p, false); if (party) col.appendChild(party);
+    court.appendChild(col);
+  });
+  if (!ls.length) court.appendChild(mk("div", "ledger-note", "No heroes report to the lord yet. Recruit one."));
+  keep.appendChild(court);
+  renderTavern(); fillWho(); renderChronicles();
+  if (sheetMode === "hero" && sheetId){ if (byId.has(sheetId)) renderSheet(); else closeSheet(); }
+}
+function renderTavern(){
+  const t = $("tavern"); t.textContent = "";
+  t.hidden = !departed.length;
+  if (!departed.length) return;
+  t.appendChild(mk("span", "tl", "The tavern · dismissed heroes"));
+  departed.forEach(p => {
+    const g = mk("span", "gone"); g.appendChild(document.createTextNode(p.name));
+    const b = mk("button", null, "Bring back"); b.type = "button"; b.disabled = !db || readOnly;
+    b.addEventListener("click", async () => {
+      b.disabled = true;
+      if (await saveHero(p.id, Object.assign({}, heroDocs[p.id] || {}, {removed:false}))){ sfx("recruit"); after(() => celebrate(cardEl(p.id), "Welcome back!", p.name + " rejoins the guild")); note(`${p.name} is back in the guild.`, "ok"); }
+      else b.disabled = false;
+    });
+    g.appendChild(b); t.appendChild(g);
+  });
+}
+
+/* ---------- quick grant ---------- */
+function fillWho(){
+  const sel = $("qa-who"), cur = sel.value;
+  sel.textContent = "";
+  const ph = mk("option", null, "Choose a hero…"); ph.value = ""; sel.appendChild(ph);
+  roster.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(p => { const o = mk("option", null, p.name); o.value = p.id; sel.appendChild(o); });
+  if (byId.has(cur)) sel.value = cur;
+}
+$("quick").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const who = $("qa-who").value, text = $("qa-text").value.trim();
+  if (!who){ note("Choose who gets the responsibility.", "err"); $("qa-who").focus(); return; }
+  if (!text){ note("Type the responsibility to grant.", "err"); $("qa-text").focus(); return; }
+  const ok = await addDuty(who, text, "", $("qa-go"));
+  if (ok){ $("qa-text").value = ""; note(`Granted “${text}” to ${byId.get(who).name}.`, "ok"); }
+});
+
+/* ---------- search ---------- */
+let sTimer = null;
+$("g-search").addEventListener("input", () => { clearTimeout(sTimer); sTimer = setTimeout(() => { query = $("g-search").value; renderKeep(); }, 120); });
+
+/* ---------- character sheet / recruit drawer ---------- */
+let sheetId = null, sheetMode = null, sheetReturnId = null;
+const back = mk("div", "sheet-back"); back.hidden = true;
+const sheet = mk("aside", "sheet"); sheet.hidden = true; sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-modal", "true"); sheet.setAttribute("aria-labelledby", "sh-name");
+document.body.append(back, sheet);
+back.addEventListener("click", closeSheet);
+document.addEventListener("keydown", ev => { if (ev.key === "Escape" && !sheet.hidden) closeSheet(); });
+function openSheet(id){ sheetMode = "hero"; sheetId = id; sheetReturnId = id; renderSheet(); back.hidden = false; sheet.hidden = false; setTimeout(() => { const f = $("sh-text"); (f && !f.disabled ? f : $("sh-close")).focus(); }, 0); }
+function openRecruit(){ sheetMode = "recruit"; sheetId = null; sheetReturnId = null; renderRecruit(); back.hidden = false; sheet.hidden = false; setTimeout(() => $("rc-name").focus(), 0); }
+function closeSheet(){
+  sheet.hidden = true; back.hidden = true; const mode = sheetMode; sheetId = null; sheetMode = null;
+  const c = sheetReturnId && cardEl(sheetReturnId);
+  if (c) c.focus(); else if (mode === "recruit") $("recruit-btn").focus();
+}
+$("recruit-btn").addEventListener("click", openRecruit);
+function head(clsKey, name, title, flavor, idForName){
+  const h = mk("div", "sheet-head");
+  h.appendChild(token(clsKey));
+  const hi = mk("div");
+  const n = mk("h3", null, name); n.id = idForName || "sh-name";
+  hi.append(mk("div", "cls", CLASSES[clsKey].label), n); if (title) hi.appendChild(mk("div", "ttl", title)); if (flavor) hi.appendChild(mk("div", "flavor", flavor));
+  h.appendChild(hi);
+  const x = mk("button", "x", "×"); x.type = "button"; x.id = "sh-close"; x.setAttribute("aria-label", "Close"); x.addEventListener("click", closeSheet);
+  h.appendChild(x);
+  return h;
+}
+function parentOptions(sel, current, excludeId){
+  const blocked = excludeId ? descendantsOf(excludeId) : new Set();
+  const lord = byId.get(ROOT);
+  const others = roster.filter(p => p.id !== ROOT && p.id !== excludeId && !blocked.has(p.id)).sort((a, b) => a.name.localeCompare(b.name));
+  [[ROOT, lord.name + " (lord of the Keep)"]].concat(others.map(p => [p.id, p.name])).forEach(([v, t]) => { const o = mk("option", null, t); o.value = v; if (v === current) o.selected = true; sel.appendChild(o); });
+}
+function renderRecruit(){
+  sheet.textContent = "";
+  sheet.appendChild(head("squire", "Recruit a hero", "", "A new adventurer joins the Keep.", "sh-name"));
+  const f = mk("form"); f.autocomplete = "off"; f.style.borderTop = "none"; f.style.paddingTop = "0";
+  const field = (label, el) => { const w = mk("div", "field"); const l = mk("label", null, label); l.htmlFor = el.id; w.append(l, el); return w; };
+  const name = mk("input"); name.id = "rc-name"; name.type = "text"; name.maxLength = 80; name.placeholder = "e.g. Jordan C. Gieselman"; name.required = true;
+  const title = mk("input"); title.id = "rc-title"; title.type = "text"; title.maxLength = 100; title.placeholder = "Job title (optional)";
+  const cls = mk("select"); cls.id = "rc-class"; PICKABLE.forEach(k => { const o = mk("option", null, CLASSES[k].label + " · " + CLASSES[k].flavor); o.value = k; cls.appendChild(o); }); cls.value = "squire";
+  const par = mk("select"); par.id = "rc-parent"; parentOptions(par, "john-wiesendanger");
+  const go = mk("button", "recruit-go", "Recruit"); go.type = "submit";
+  [name, title, cls, par, go].forEach(e => e.disabled = !db || readOnly);
+  f.append(field("Name", name), field("Title", title), field("Class", cls), field("Reports to", par), go);
+  cls.addEventListener("change", () => { const t = sheet.querySelector(".sheet-head .token"); if (t) t.replaceWith(token(cls.value)); const l = sheet.querySelector(".sheet-head .cls"); if (l) l.textContent = CLASSES[cls.value].label; });
+  f.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const n = name.value.trim(); if (!n){ name.focus(); return; }
+    const id = "r-" + n.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) + "-" + Math.random().toString(36).slice(2, 7);
+    go.disabled = true;
+    const ok = await saveHero(id, {recruit:true, name:n, title:title.value.trim(), cls:cls.value, parent:par.value, removed:false, createdAt:Date.now()});
+    if (ok){ closeSheet(); sfx("recruit"); note(`${n} joined the guild.`, "ok"); after(() => { const c = cardEl(id); if (c){ c.scrollIntoView({block:"nearest", behavior: REDUCED ? "auto" : "smooth"}); setTimeout(() => celebrate(cardEl(id), "A new hero joins!", n), REDUCED ? 0 : 350); } }); }
+    else go.disabled = false;
+  });
+  sheet.appendChild(f);
+  if (!db) sheet.appendChild(mk("div", "empty", "Saving needs the page open inside Claude."));
+}
+function renderSheet(){
+  const p = byId.get(sheetId); if (!p) return;
+  const cls = clsOf(p), list = dutiesOf(p.id);
+  const keepText = $("sh-text") ? $("sh-text").value : "", keepNote = $("sh-note") ? $("sh-note").value : "";
+  const focusId = document.activeElement && sheet.contains(document.activeElement) ? document.activeElement.id : "";
+  sheet.textContent = "";
+  const h = head(cls, p.name, p.title, CLASSES[cls].flavor);
+  h.querySelector(".cls").textContent = CLASSES[cls].label + (list.length ? " · Level " + list.length : "");
+  sheet.appendChild(h);
+  const locked = !db || readOnly;
+
+  const row = mk("div", "row");
+  const lab = mk("label", null, "Class"); lab.htmlFor = "sh-class";
+  const sel = mk("select"); sel.id = "sh-class"; sel.disabled = locked;
+  PICKABLE.forEach(k => { const o = mk("option", null, CLASSES[k].label); o.value = k; if (k === cls) o.selected = true; sel.appendChild(o); });
+  sel.addEventListener("change", () => setClass(p.id, sel.value));
+  row.append(lab, sel);
+  if (p.id !== ROOT){
+    const lab2 = mk("label", null, "Reports to"); lab2.htmlFor = "sh-parent";
+    const ps = mk("select"); ps.id = "sh-parent";
+    parentOptions(ps, p.parent, p.id);
+    ps.disabled = locked;
+    if (crewOf(p.id).length) ps.title = "Their own team moves with them";
+    ps.addEventListener("change", async () => { if (await saveHero(p.id, Object.assign({}, heroDocs[p.id] || {}, {parent:ps.value}))) note(`${p.name} now reports to ${byId.get(ps.value).name}.`, "ok"); });
+    row.append(lab2, ps);
+  }
+  sheet.appendChild(row);
+
+  sheet.appendChild(mk("h5", null, "Areas of ownership"));
+  if (!list.length) sheet.appendChild(mk("div", "empty", "No responsibilities yet. Grant the first one below."));
+  else {
+    const ol = mk("ol");
+    list.forEach(d => {
+      const li = mk("li"); li.dataset.duty = d.id; const t = mk("div");
+      t.appendChild(mk("div", "dt", d.text)); if (d.note) t.appendChild(mk("div", "dn", d.note));
+      const rm = mk("button", null, "Revoke"); rm.type = "button"; rm.disabled = locked;
+      rm.setAttribute("aria-label", "Revoke " + d.text);
+      rm.addEventListener("click", () => {
+        if (!rm.classList.contains("armed")){ rm.classList.add("armed"); rm.textContent = "Confirm revoke"; setTimeout(() => { if (document.contains(rm)){ rm.classList.remove("armed"); rm.textContent = "Revoke"; } }, 3500); return; }
+        removeDuty(d, li);
+      });
+      li.append(t, rm); ol.appendChild(li);
+    });
+    sheet.appendChild(ol);
+  }
+
+  const f = mk("form"); f.autocomplete = "off";
+  f.appendChild(mk("h5", null, "Grant a new responsibility"));
+  const inp = mk("input"); inp.id = "sh-text"; inp.type = "text"; inp.maxLength = 120; inp.placeholder = "Responsibility, e.g. RADAR support"; inp.value = keepText; inp.setAttribute("aria-label", "Responsibility");
+  const nt = mk("input"); nt.id = "sh-note"; nt.type = "text"; nt.maxLength = 200; nt.placeholder = "Note (optional), e.g. backup: Brian"; nt.value = keepNote; nt.setAttribute("aria-label", "Note");
+  const go = mk("button", null, "Grant"); go.type = "submit";
+  [inp, nt, go].forEach(e => e.disabled = locked);
+  f.append(inp, nt, go);
+  f.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const text = inp.value.trim(); if (!text){ inp.focus(); return; }
+    if (await addDuty(p.id, text, nt.value.trim(), go)){ inp.value = ""; nt.value = ""; inp.focus(); }
+  });
+  sheet.appendChild(f);
+
+  if (p.id !== ROOT){
+    const dz = mk("div", "danger");
+    const crew = crewOf(p.id).length;
+    const b = mk("button", null, "Dismiss from the guild"); b.type = "button"; b.disabled = locked || crew > 0;
+    b.addEventListener("click", async () => {
+      if (!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent = `Confirm: dismiss ${p.name.split(" ")[0]}`; setTimeout(() => { if (document.contains(b)){ b.classList.remove("armed"); b.textContent = "Dismiss from the guild"; } }, 4000); return; }
+      const el = cardEl(p.id), rect = el ? el.getBoundingClientRect() : null;
+      b.disabled = true;
+      if (await saveHero(p.id, Object.assign({}, heroDocs[p.id] || {}, {removed:true}))){
+        closeSheet(); note(`${p.name} left the guild. Find them in the tavern below to bring them back.`, "");
+        sfx("dismiss");
+        if (rect) lament(rect, "Farewell, " + p.name.split(" ")[0], "Has left the guild");
+      } else b.disabled = false;
+    });
+    dz.appendChild(b);
+    dz.appendChild(mk("div", "why", crew ? `Move the ${crew} hero${crew === 1 ? "" : "es"} in ${p.name.split(" ")[0]}'s Company to another leader first.` : "Their responsibilities are kept, so bringing them back from the tavern restores everything."));
+    sheet.appendChild(dz);
+  }
+  if (focusId && $(focusId)) $(focusId).focus();
+  if (!db) sheet.appendChild(mk("div", "empty", "Saving needs the page open inside Claude."));
+  else if (readOnly) sheet.appendChild(mk("div", "empty", "You have view-only access, so you can't change the guild."));
+}
+
+/* ---------- ledger (shared db) ---------- */
+function dbFail(e, verb){
+  const code = e && e.code;
+  if (code === "invalid_argument"){ readOnly = true; note("Your access to this page is view-only, so the guild can't be changed here.", "err"); renderKeep(); syncForm(); }
+  else if (code === "quota_exceeded") note("The ledger is full. Revoke some old responsibilities before adding more.", "err");
+  else if (code === "resource_exhausted") note("Too many changes at once. Wait a moment and try again.", "err");
+  else if (code === "revoked" || code === "not_granted" || code === "capability_disabled" || code === "capability_removed"){ db = null; note("The ledger isn't available in this view anymore. Reload the page.", "err"); syncForm(); }
+  else note(`Couldn't ${verb}. Try again in a moment.`, "err");
+}
+async function withRetry(fn){ try{ return await fn(); } catch(e){ if (e && e.code === "unavailable"){ await new Promise(r => setTimeout(r, 600 + Math.random()*900)); return await fn(); } throw e; } }
+async function saveHero(id, body){
+  if (!db || readOnly) return false;
+  const clean = {}; Object.entries(body).forEach(([k, v]) => { if (v !== undefined) clean[k] = v; });
+  try{ await withRetry(() => db.collection("heroes").doc(id).set(clean)); heroDocs[id] = clean; renderKeep(); return true; }
+  catch(e){ dbFail(e, "update the guild"); return false; }
+}
+async function addDuty(person, text, noteText, btn){
+  if (!db || readOnly) return false;
+  if (btn) btn.disabled = true;
+  const ref = db.collection("duties").doc();   /* fixed id so a retry can't make a second copy */
+  try{
+    await withRetry(() => ref.set({person, text, note: noteText || "", createdAt: Date.now()}));
+    sfx("grant");
+    after(() => {
+      const lvl = dutiesOf(person).length;
+      const inSheet = sheetMode === "hero" && sheetId === person && !sheet.hidden;
+      const li = inSheet ? sheet.querySelector(`li[data-duty="${ref.id}"]`) : null;
+      if (li){ li.classList.add("fx-new"); celebrate(li, "+1 Responsibility", "Level " + lvl + "!"); }
+      else celebrate(cardEl(person), "+1 Responsibility", "Level " + lvl + "!");
+    });
+    return true;
+  }
+  catch(e){ dbFail(e, "save that responsibility"); return false; }
+  finally{ if (btn) btn.disabled = !db || readOnly; }
+}
+async function removeDuty(d, li){
+  if (!db || readOnly) return;
+  const rect = li.getBoundingClientRect();
+  li.querySelector("button").disabled = true;
+  try{
+    await withRetry(() => db.collection("duties").doc(d.id).delete());
+    duties = duties.filter(x => x.id !== d.id); renderKeep();
+    sfx("revoke");
+    lament(rect, "−1 Responsibility", "“" + d.text + "” revoked");
+    after(() => { const c = cardEl(d.person); if (c){ c.classList.remove("fx-hit"); void c.offsetWidth; c.classList.add("fx-hit"); } });
+  }
+  catch(e){ dbFail(e, "revoke that responsibility"); const b = li.querySelector("button"); if (b) b.disabled = false; }
+}
+async function setClass(person, cls){
+  if (!db || readOnly) return;
+  try{ await withRetry(() => db.collection("classes").doc(person).set({cls})); sfx("chime"); after(() => celebrate(sheet.querySelector(".sheet-head .token") || cardEl(person), CLASSES[cls].label + "!", "Class changed")); }
+  catch(e){ dbFail(e, "change the class"); }
+}
+function syncForm(){ ["qa-who", "qa-text", "qa-go", "recruit-btn"].forEach(id => $(id).disabled = !db || readOnly); if (sheetMode === "hero" && sheetId) renderSheet(); }
+
+renderKeep(); syncForm();
+if (!$("tab-village").hidden) villageOpen(false);
+(async function(){
+  const use = window.claude && window.claude.use;
+  db = use ? await window.claude.use("db") : null;
+  if (!db){ note("Open this page inside Claude to see and edit the shared guild.", "err"); syncForm(); return; }
+  syncForm();
+  let gotDuties = false;
+  db.collection("duties").onSnapshot(snap => {
+    duties = snap.docs.filter(d => d.exists).map(d => { const v = d.data() || {}; return {id:d.id, person:String(v.person || ""), text:String(v.text || ""), note:String(v.note || ""), createdAt:Number(v.createdAt) || 0}; }).filter(d => d.text);
+    if (!gotDuties){ gotDuties = true; note(duties.length ? `${duties.length} responsibilities across the keep. Click any hero to open their character sheet.` : "No responsibilities granted yet. Use the bar above, or click a hero, to grant the first one.", ""); }
+    renderKeep();
+  }, e => dbFail(e, "load the ledger"));
+  db.collection("classes").onSnapshot(snap => {
+    classOverride = {};
+    snap.docs.forEach(d => { const v = d.data() || {}; if (d.exists && CLASSES[v.cls]) classOverride[d.id] = v.cls; });
+    renderKeep();
+  }, e => dbFail(e, "load classes"));
+  db.collection("heroes").onSnapshot(snap => {
+    const next = {};
+    snap.docs.forEach(d => { if (d.exists) next[d.id] = Object.assign({}, d.data() || {}); });
+    heroDocs = next; renderKeep();
+  }, e => dbFail(e, "load the roster"));
+})();
+})();
+</script>

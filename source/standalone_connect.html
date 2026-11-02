@@ -1,0 +1,21 @@
+<div class="acct" id="acct" hidden>
+  <span id="acct-who">Connected to Asana</span>
+  <button type="button" id="acct-out">Disconnect</button>
+</div>
+<div class="connect-back" id="connect" hidden>
+  <form class="connect" id="connect-form" role="dialog" aria-modal="true" aria-labelledby="connect-title" autocomplete="off">
+    <div class="cmt-eyebrow">Before the game begins</div>
+    <h3 id="connect-title">Connect to Asana</h3>
+    <p>This page reads the team's tasks straight from Asana with your own Asana access, so you only see what you can already see in Asana, and comments post under your name.</p>
+    <ol>
+      <li>Open <a href="https://app.asana.com/0/my-apps" target="_blank" rel="noopener">Asana's developer console</a> (sign in to Asana if asked).</li>
+      <li>Choose <b>Create new token</b>, name it <b>Settlers</b>, and agree to the terms.</li>
+      <li>Copy the token and paste it here.</li>
+    </ol>
+    <label for="connect-token" class="cmt-label">Asana personal access token</label>
+    <input id="connect-token" type="password" spellcheck="false" placeholder="2/1234567890/…" required>
+    <div class="cmt-status" id="connect-status" aria-live="polite"></div>
+    <div class="cmt-actions"><span class="sp"></span><button type="submit" id="connect-go">Connect</button></div>
+    <p class="fine">Your token stays in this browser and is only sent to Asana. On a shared computer, press <b>Disconnect</b> at the top of the page when you're done. You can revoke the token anytime in Asana's developer console.</p>
+  </form>
+</div>
