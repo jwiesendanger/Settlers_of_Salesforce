@@ -491,6 +491,15 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .tm-twrap{overflow:auto;border-radius:8px;border:1px solid var(--panel-line);min-height:120px}
 .tm-twrap .tm-table td{white-space:normal}
 .tm-pbody > .tm-btn{align-self:flex-start}
+.tm-search input{font-family:var(--f-body);font-size:14px;padding:7px 10px;border-radius:8px;border:2px solid var(--frame);background:var(--parch);color:var(--parch-ink);width:100%;box-sizing:border-box}
+.tm-filter-wide{width:min(460px,100%)}
+.tm-pad{padding:14px}
+.tm-results td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.tm-results th,.tm-results td{white-space:normal;max-width:230px;overflow-wrap:anywhere}
+.tm-results td.desc{min-width:180px;max-width:300px}
+.tm-mcard.wide{width:min(1680px,100%)}
+.tm-cell-link{background:none;border:none;padding:0;font:inherit;letter-spacing:0;color:#7a3e12;text-decoration:underline;text-underline-offset:2px;cursor:pointer;text-align:left}
+.tm-cell-link:hover{background:none;color:#a8323e}
 </style>
 
 <div class="wrap">
@@ -2741,6 +2750,7 @@ function rebuild(){
     if (v.t === "s" && v.v !== 2 && typeof v.x === "number"){ o.x = v.x + OX; o.y = v.y + OY; }
     tgt.set(id, o);
   });
+  mapIndex = null;
   T = new Map(SEED_T.filter(t => S.has(t.mine)).map(t => [t.id, Object.assign({t:"tbl"}, t)]));
   docs.forEach((v, id) => { if (v.t !== "tbl") return; if (v.removed){ T.delete(id); return; } if (S.has(v.mine) && Array.isArray(v.rows)) T.set(id, Object.assign({}, v, {id})); });
   R.forEach((r, id) => { if (!S.has(r.from) || !S.has(r.to) || r.from === r.to) R.delete(id); if (!TOOLS[r.tool]) r.tool = "tbd"; });
@@ -3128,6 +3138,7 @@ function renderPanel(){
   const head = mk("div", "tm-phead");
   head.append(mk("h3", null, "Trade Ledger"), mk("div", "tm-count", `${S.size} settlements · ${R.size} trade routes`));
   col1.appendChild(head);
+  col1.appendChild(searchBox());
   const acts = mk("div", "tm-acts tm-stack");
   acts.append(
     btn("Found a settlement", "tm-btn", () => { mode = "newS"; draft = {name:"", kind:"system", blurb:""}; renderPanel(); }, !canEdit()),
@@ -3153,6 +3164,7 @@ function renderPanel(){
 function helpCard(body){
   body.appendChild(mk("h4", null, "Reading the map"));
   body.appendChild(mk("p", "tm-p", "Zoom with the + and − buttons, Ctrl + scroll, or a pinch. Drag empty ground to pan. Fit brings everything back into view."));
+  body.appendChild(mk("p", "tm-p", "Search fields (on the left) looks through every table on the map at once. Type a word like major or email to list each source field, where it lands and the destination object and field."));
   const ul = mk("ul", "tm-help");
   [["Castle and towns", "the systems we run or send data to"], ["Mines", "sources of record where data comes from"], ["Roads", "integrations, colored by the tool that carries them"], ["Carts", "travel the way data flows; two carts mean it flows both ways"], ["Gravel roads", "integrations still being built; dotted roads are only planned, and faint ones are retired or not integrating"]]
     .forEach(([a, b]) => { const li = mk("li"); li.append(mk("b", null, a + ": "), document.createTextNode(b)); ul.appendChild(li); });
@@ -3561,6 +3573,174 @@ rebuild(); renderMap(); renderPanel();
 window.__tradeRender = renderMap;
 
 /* ---------- copy and paste settlements (with their tables; routes stay behind) ---------- */
+/* ---------- field search: every mapping row in every table, matched loosely ---------- */
+var mapIndex = null;   /* var: rebuild() clears it before this point runs */
+const SRC_HDR = /column name in source|source field|hana (source )?field|field name from view|field in view|hana view|slate field|field name in source|^view field|^source column/i;
+const DESC_HDR = /^data description|^description|^purpose|business rules?$|^notes?$/i;
+const OBJ_HDR = /^sf object$|^object$|application object|\) object$|^salesforce object|^target object/i;
+const FLD_HDR = /^sf field( api| name)?$|salesforce (target )?field|field name in salesforce|^field on |\) field$|^sortfield name|^sf field api|^target field|^field on applications/i;
+function looksLikeView(c){ return /^"?[A-Z0-9_]+"?(\."?[A-Z0-9_]+"?)+$|^SALESFORCE[_.]|^"EXTRACTS/.test(String(c).trim()); }
+function headerRow(rows){
+  let best = 0, score = -1;
+  for (let i = 0; i < Math.min(3, rows.length); i++){
+    const sc = rows[i].filter(c => SRC_HDR.test(c) || OBJ_HDR.test(c) || FLD_HDR.test(c) || DESC_HDR.test(c) || looksLikeView(c)).length;
+    if (sc > score){ score = sc; best = i; }
+  }
+  return score > 0 ? best : 0;
+}
+function tableMappings(t){
+  const rows = t.rows || []; if (!rows.length) return [];
+  const h = headerRow(rows), hdr = rows[h].map(c => String(c || "").trim());
+  let view = "";
+  for (let i = 0; i <= h; i++){ const v = rows[i].find(c => looksLikeView(c)); if (v){ view = String(v).replace(/"/g, ""); break; } }
+  let src = hdr.findIndex(c => SRC_HDR.test(c));
+  if (src < 0 && looksLikeView(hdr[0])) src = 0;
+  const desc = hdr.findIndex((c, i) => i !== src && DESC_HDR.test(c));
+  const objs = hdr.map((c, i) => OBJ_HDR.test(c) ? i : -1).filter(i => i >= 0 && i !== src);
+  let flds = hdr.map((c, i) => FLD_HDR.test(c) ? i : -1).filter(i => i >= 0 && i !== src && !objs.includes(i));
+  if (flds.some(i => /api$/i.test(hdr[i]))) flds = flds.filter(i => !/^sf field name$/i.test(hdr[i]));   /* keep the API name, not the label */
+  const fieldObj = i => {   /* the object a field column writes to: named in its heading, or the nearest object column */
+    const m = hdr[i].match(/^field on (.+?) object\s*(.*)$/i) || hdr[i].match(/^field on (.+)$/i);
+    if (m){ const o = (m[2] || m[1]).trim().split(/\s+/); return o.filter((w, k) => o.findIndex(x => x.toLowerCase() === w.toLowerCase()) === k).join(" "); }
+    if (!objs.length) return "";
+    return objs.reduce((a, b) => Math.abs(b - i) < Math.abs(a - i) || (b < i && a > i) ? b : a, objs[0]);
+  };
+  const out = [], start = h + 1;
+  for (let r = start; r < rows.length; r++){
+    const row = rows[r].map(c => String(c || "").trim()); if (!row.some(Boolean)) continue;
+    const sf = src >= 0 ? row[src] : row[0], ds = desc >= 0 ? row[desc] : "";
+    let any = false;
+    flds.forEach(i => {
+      if (!row[i]) return;
+      const o = fieldObj(i), obj = typeof o === "number" ? row[o] : o;
+      out.push({sf, ds, obj: obj || "", df: row[i]}); any = true;
+    });
+    if (!any) out.push({sf, ds: ds || row.filter((c, i) => c && i !== src).join(" · "), obj:"", df:""});
+  }
+  return out.map(m => Object.assign(m, {view}));
+}
+function destChain(sid){
+  /* follow the routes out of a settlement until a capital (or a dead end), e.g. mine → HANA → RADAR 2.0 */
+  const path = [], seen = new Set([sid]); let cur = sid;
+  for (let k = 0; k < 5; k++){
+    const outs = [...R.values()].filter(r => r.from === cur && r.status !== "none" && r.status !== "retired").map(r => r.to).filter(id => !seen.has(id) && S.has(id));
+    if (!outs.length) break;
+    const next = outs.find(id => S.get(id).kind === "capital") || outs[0];
+    path.push(S.get(next).name); seen.add(next); cur = next;
+    if (S.get(next).kind === "capital") break;
+  }
+  return path.join(" → ");
+}
+const norm = s => String(s || "").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().replace(/__c\b/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+function buildIndex(){
+  const list = [];
+  T.forEach(t => {
+    const m = S.get(t.mine); if (!m) return;
+    const dest = destChain(t.mine);
+    tableMappings(t).forEach(x => {
+      const e = Object.assign({mine:t.mine, mineName:m.name, table:t.title || "Table", tableId:t.id, dest}, x);
+      e.text = norm([e.sf, e.df, e.obj, e.ds, e.view, e.mineName, e.table, e.dest].join(" "));
+      e.words = [...new Set(e.text.split(" "))];
+      e.key = norm(e.sf + " " + e.df + " " + e.obj);
+      list.push(e);
+    });
+  });
+  return list;
+}
+function lev(a, b, max){
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({length:b.length + 1}, (_, i) => i), pp = prev;
+  for (let i = 1; i <= a.length; i++){
+    const cur = [i]; let best = i;
+    for (let j = 1; j <= b.length; j++){
+      cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) cur[j] = Math.min(cur[j], pp[j-2] + 1);   /* swapped letters count as one slip */
+      best = Math.min(best, cur[j]);
+    }
+    if (best > max) return max + 1; pp = prev; prev = cur;
+  }
+  return prev[b.length];
+}
+function termScore(e, q){
+  /* exact word > word start > anywhere > a close misspelling; field names count more than descriptions */
+  const inKey = e.key.split(" ");
+  if (inKey.includes(q)) return 6;
+  if (e.words.includes(q)) return 4;
+  if (inKey.some(w => w.startsWith(q))) return 4.5;
+  if (e.words.some(w => w.startsWith(q))) return 3;
+  if (q.length >= 3 && e.text.includes(q)) return 2;
+  if (q.length >= 4){ const max = q.length >= 7 ? 2 : 1; if (e.words.some(w => w.length >= 3 && (lev(q, w, max) <= max || lev(q, w.slice(0, q.length), max) <= max))) return 1; }
+  return 0;
+}
+function searchMappings(qs){
+  if (!mapIndex) mapIndex = buildIndex();
+  const terms = norm(qs).split(" ").filter(Boolean); if (!terms.length) return [];
+  const hits = [];
+  for (const e of mapIndex){
+    let total = 0;
+    for (const q of terms){ const sc = termScore(e, q); if (!sc){ total = 0; break; } total += sc; }
+    if (total) hits.push([total + (e.df ? .5 : 0), e]);
+  }
+  hits.sort((a, b) => b[0] - a[0] || a[1].mineName.localeCompare(b[1].mineName));
+  return hits.map(h => h[1]);
+}
+function searchBox(){
+  const wrap = mk("div", "tm-search");
+  const i = mk("input"); i.type = "search"; i.placeholder = "Search fields… e.g. major"; i.setAttribute("aria-label", "Search field mappings in every table");
+  const go = () => { const v = i.value; i.value = ""; openSearch(v); };
+  i.addEventListener("keydown", ev => { if (ev.key === "Enter" && i.value.trim()) go(); });
+  i.addEventListener("input", () => { if (i.value.trim().length >= 2) go(); });
+  wrap.appendChild(i);
+  return wrap;
+}
+function openSearch(initial){
+  closeTable(); hideTip();
+  modal = mk("div", "tm-modal"); modal.setAttribute("role", "dialog"); modal.setAttribute("aria-modal", "true"); modal.setAttribute("aria-label", "Field search");
+  const card = mk("div", "tm-mcard wide");
+  const head = mk("div", "tm-mhead");
+  const tt = mk("div"); tt.append(mk("div", "tm-kicker", "Every table on the map"), mk("h3", null, "Field Search"));
+  head.append(tt, btn("Close", "tm-btn ghost", closeTable));
+  const bar = mk("div", "tm-mbar");
+  const q = textEl(initial || "", "Search fields, objects or descriptions… e.g. major", 80); q.className = "tm-filter tm-filter-wide";
+  const count = mk("span", "tm-sub"), st = mk("span", "tm-msg");
+  let current = [];
+  const dl = btn("Download CSV", "tm-btn", async () => {
+    const rows = [["Source", "Source Table", "Source Field", "Description", "Destination System", "Destination Object", "Destination Field"]].concat(current.map(e => [e.mineName, e.view || e.table, e.sf, e.ds, e.dest, e.obj, e.df]));
+    const data = new Blob(["﻿" + toCSV(rows)], {type:"text/csv"}), name = "Field search - " + q.value.trim().replace(/[\\/:*?"<>|]+/g, "-").slice(0, 60) + ".csv";
+    try{ const d = window.claude && window.claude.use ? await window.claude.use("downloads") : null; if (d) await d.save({filename:name, data}); else { const u = URL.createObjectURL(data), a = mk("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); } }
+    catch(e){ if (!e || e.code !== "declined") st.textContent = "Couldn't save the file here."; }
+  });
+  bar.append(q, count, st, dl);
+  const wrap = mk("div", "tm-twrap");
+  const LIMIT = 400;
+  const draw = () => {
+    wrap.textContent = ""; st.textContent = "";
+    const v = q.value.trim();
+    if (!v){ count.textContent = ""; current = []; dl.disabled = true; wrap.appendChild(mk("p", "tm-note tm-pad", "Type a word or part of one, such as major, email or term. Close misspellings still match.")); return; }
+    current = searchMappings(v); dl.disabled = !current.length;
+    count.textContent = current.length ? `${current.length} match${current.length === 1 ? "" : "es"}${current.length > LIMIT ? `, showing the best ${LIMIT}` : ""}` : "No matches";
+    if (!current.length) return;
+    const tb = mk("table", "tm-table tm-results");
+    const th = mk("thead"), tr = mk("tr");
+    ["Source", "Source Table", "Source Field", "Description", "Destination System", "Object", "Destination Field"].forEach(h => tr.appendChild(mk("th", null, h)));
+    th.appendChild(tr); tb.appendChild(th);
+    const bd = mk("tbody");
+    current.slice(0, LIMIT).forEach(e => {
+      const r = mk("tr");
+      const srcCell = mk("td"); const sb = btn(e.mineName, "tm-cell-link", () => { closeTable(); const s0 = S.get(e.mine); if (s0) showPoint(s0.x, s0.y); select({type:"s", id:e.mine}); pulse(e.mine); }); sb.title = "Show " + e.mineName + " on the map"; srcCell.appendChild(sb);
+      const tabCell = mk("td"); const tbtn = btn(e.view || e.table, "tm-cell-link", () => { const t = T.get(e.tableId); if (t){ openTable(t); const f = modal && modal.querySelector(".tm-filter"); if (f){ f.value = e.sf || e.df; f.dispatchEvent(new Event("input")); } } }); tbtn.title = "Open this table"; tabCell.appendChild(tbtn);
+      r.append(srcCell, tabCell, mk("td", "mono", e.sf), mk("td", "desc", e.ds), mk("td", null, e.dest || "—"), mk("td", null, e.obj), mk("td", "mono", e.df));
+      bd.appendChild(r);
+    });
+    tb.appendChild(bd); wrap.appendChild(tb);
+  };
+  let tmr = 0; q.addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(draw, 120); });
+  card.append(head, bar, wrap); modal.appendChild(card);
+  modal.addEventListener("click", ev => { if (ev.target === modal) closeTable(); });
+  document.body.appendChild(modal); document.addEventListener("keydown", escClose);
+  draw(); q.focus(); q.setSelectionRange(q.value.length, q.value.length);
+}
+
 var CLIP_KEY = "settlers-trade-clip";
 var clipMem = null, lastPointer = null;   /* var: renderPanel reads these before this point runs */
 function readClip(){ if (clipMem) return clipMem; try{ const c = JSON.parse(localStorage.getItem(CLIP_KEY) || "null"); if (c && c.s && c.s.name) return (clipMem = Object.assign({tables:[]}, c)); }catch(e){} return null; }

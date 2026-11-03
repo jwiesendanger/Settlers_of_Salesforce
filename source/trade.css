@@ -128,3 +128,12 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .tm-twrap{overflow:auto;border-radius:8px;border:1px solid var(--panel-line);min-height:120px}
 .tm-twrap .tm-table td{white-space:normal}
 .tm-pbody > .tm-btn{align-self:flex-start}
+.tm-search input{font-family:var(--f-body);font-size:14px;padding:7px 10px;border-radius:8px;border:2px solid var(--frame);background:var(--parch);color:var(--parch-ink);width:100%;box-sizing:border-box}
+.tm-filter-wide{width:min(460px,100%)}
+.tm-pad{padding:14px}
+.tm-results td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.tm-results th,.tm-results td{white-space:normal;max-width:230px;overflow-wrap:anywhere}
+.tm-results td.desc{min-width:180px;max-width:300px}
+.tm-mcard.wide{width:min(1680px,100%)}
+.tm-cell-link{background:none;border:none;padding:0;font:inherit;letter-spacing:0;color:#7a3e12;text-decoration:underline;text-underline-offset:2px;cursor:pointer;text-align:left}
+.tm-cell-link:hover{background:none;color:#a8323e}
