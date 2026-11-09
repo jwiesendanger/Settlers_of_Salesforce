@@ -131,6 +131,68 @@ function noteBody(text){
 const fmtDate = iso => { if (!iso) return ""; const d = new Date(iso.length === 10 ? iso + "T12:00:00" : iso); return d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}); };
 function roman(n){ const m = [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]]; let s = ""; for (const [v, r] of m) while (n >= v){ s += r; n -= v; } return s; }
 
+/* ---------- wear and tear: every scroll is battered in its own way, the same way every time ---------- */
+function seeded(key){ let h = 2166136261; for (const c of String(key)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296; }
+function ragged(r, depth){ const pts = []; for (let x = 0; x <= 100; x += 12.5) pts.push(`${x}% ${Math.round(r() * depth * 10) / 10}px`); pts.push("100% 100%", "0 100%"); return `polygon(${pts.join(",")})`; }
+function tornTag(r){
+  const pts = ["0 0", "100% 0"];
+  for (let x = 100; x >= 0; x -= 6.25) pts.push(`${x}% calc(100% - ${(r() * (r() < .15 ? 9 : 4)).toFixed(1)}px)`);
+  if (r() < .5) pts.splice(1, 0, `${70 + r() * 25}% 0`, `${85 + r() * 10}% ${(2 + r() * 5).toFixed(1)}px`);
+  return `polygon(${pts.join(",")})`;
+}
+function raggedSheet(r){
+  const top = [], bot = [];
+  for (let x = 0; x <= 100; x += 2){ const bite = r() < .07 ? 10 + r() * 16 : r() * 7; top.push(`${x}% ${bite.toFixed(1)}px`); }
+  for (let x = 100; x >= 0; x -= 2){ const bite = r() < .07 ? 10 + r() * 16 : r() * 7; bot.push(`${x}% calc(100% - ${bite.toFixed(1)}px)`); }
+  return `polygon(${top.join(",")},${bot.join(",")})`;
+}
+
+/* ---------- the sound of old papyrus: a dry hiss with crackles as the fibres separate ---------- */
+let noiseBuf = null;
+function paperSound(kind){
+  const a = window.__audio && window.__audio(); if (!a) return;
+  try{
+    if (!noiseBuf || noiseBuf.sampleRate !== a.sampleRate){
+      noiseBuf = a.createBuffer(1, a.sampleRate * 2, a.sampleRate); const d = noiseBuf.getChannelData(0);
+      let b = 0; for (let i = 0; i < d.length; i++){ const w = Math.random() * 2 - 1; b = .97 * b + .03 * w; d[i] = w * .7 + b * 2; }
+    }
+    const out = a.createGain(); out.gain.value = .9; out.connect(a.destination);
+    const t0 = a.currentTime + .01;
+    const burst = (at, dur, {f = 3000, q = 1, vol = .1, type = "bandpass", attack = .002} = {}) => {
+      const src = a.createBufferSource(); src.buffer = noiseBuf;
+      const fl = a.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+      const g = a.createGain(); g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vol, at + attack); g.gain.exponentialRampToValueAtTime(.0008, at + dur);
+      src.connect(fl); fl.connect(g); g.connect(out);
+      src.start(at, Math.random() * 1.5, dur + .05); src.stop(at + dur + .06);
+    };
+    const swell = (at, dur, f, vol) => {
+      const src = a.createBufferSource(); src.buffer = noiseBuf;
+      const fl = a.createBiquadFilter(); fl.type = "bandpass"; fl.frequency.setValueAtTime(f * .6, at); fl.frequency.linearRampToValueAtTime(f, at + dur * .6); fl.Q.value = .6;
+      const g = a.createGain(); g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vol, at + dur * .25); g.gain.linearRampToValueAtTime(vol * .7, at + dur * .7); g.gain.linearRampToValueAtTime(0, at + dur);
+      src.connect(fl); fl.connect(g); g.connect(out); src.start(at, Math.random()); src.stop(at + dur + .05);
+    };
+    if (kind === "slide"){
+      swell(t0, .32, 900, .07);
+      for (let k = 0; k < 5; k++) burst(t0 + .05 + Math.random() * .25, .012 + Math.random() * .02, {f:2200 + Math.random() * 2000, vol:.04 + Math.random() * .05});
+      burst(t0 + .62, .09, {type:"lowpass", f:420, q:.7, vol:.16, attack:.004});   /* set down on the table */
+    } else if (kind === "unroll"){
+      const D = .85;
+      swell(t0, D, 2600, .085);
+      swell(t0 + .05, D * .9, 700, .05);
+      /* crackles come thick as the scroll first gives, then thin out as it lies flat */
+      for (let k = 0; k < 46; k++){ const u = Math.pow(Math.random(), 1.6); burst(t0 + u * D, .006 + Math.random() * .03, {f:1600 + Math.random() * 4200, q:.8 + Math.random() * 2.5, vol:(.05 + Math.random() * .14) * (1 - u * .6)}); }
+      for (let k = 0; k < 4; k++) burst(t0 + .1 + Math.random() * .6, .05 + Math.random() * .05, {f:5200 + Math.random() * 1500, q:.6, vol:.035});   /* a dry tearing whisper */
+      burst(t0 + D, .12, {type:"lowpass", f:300, q:.8, vol:.18, attack:.005});   /* the rods knock against the table */
+    } else {
+      const D = .48;
+      swell(t0, D, 2200, .07);
+      for (let k = 0; k < 26; k++){ const u = Math.random(); burst(t0 + u * D, .006 + Math.random() * .02, {f:1800 + Math.random() * 3600, q:1 + Math.random() * 2, vol:(.04 + Math.random() * .1) * (.5 + u * .5)}); }
+      burst(t0 + D, .08, {type:"lowpass", f:380, q:.8, vol:.12, attack:.004});
+    }
+    setTimeout(() => out.disconnect(), 2000);
+  }catch(e){}
+}
+
 /* ---------- the shelf of scrolls ---------- */
 function renderShelf(){
   shelf.textContent = ""; pinakes.textContent = "";
@@ -141,9 +203,16 @@ function renderShelf(){
     b.style.setProperty("--tilt", ((i * 37) % 7 - 3) + "deg");
     b.style.setProperty("--hue", ((i * 53) % 24 - 12) + "deg");
     const roll = mk("span", "ath-roll");
-    roll.append(mk("i", "knob l"), mk("i", "band"), mk("i", "knob r"));
+    const r1 = seeded(t.gid);
+    roll.style.setProperty("--sx", Math.round(r1() * 100) + "%"); roll.style.setProperty("--sy", Math.round(r1() * 100) + "%");
+    roll.style.setProperty("--fx", Math.round(18 + r1() * 55) + "%"); roll.style.setProperty("--age", (r1() * .25).toFixed(2));
+    const flap = mk("i", "flap"); flap.style.clipPath = ragged(r1, 6);
+    roll.append(mk("i", "knob l"), mk("i", "band"), flap, mk("i", "knob r"));
+    const tw = mk("span", "ath-tagwrap");
     const tag = mk("span", "ath-tag"); tag.append(mk("small", null, roman(i + 1)), mk("span", null, t.name));
-    b.append(roll, tag);
+    tag.style.clipPath = tornTag(r1);
+    tw.appendChild(tag);
+    b.append(roll, tw);
     b.addEventListener("click", () => draw(t, b));
     shelf.appendChild(b);
     const li = mk("li"); const a = mk("button", "ath-cat"); a.type = "button";
@@ -161,7 +230,7 @@ async function draw(t, from){
   if (open) await close(true);
   busy = true; open = t;
   shelf.querySelectorAll(".ath-scroll").forEach(e => e.classList.toggle("taken", e === from));
-  sfx("chime");
+  paperSound("slide");
   if (!REDUCED && from && from.isConnected){
     const a = from.querySelector(".ath-roll").getBoundingClientRect(), c = crypt.getBoundingClientRect();
     const fly = from.querySelector(".ath-roll").cloneNode(true); fly.classList.add("ath-fly");
@@ -175,6 +244,7 @@ async function draw(t, from){
   reader.hidden = false;
   const cr = crypt.getBoundingClientRect(); if (cr.top < 0 || cr.bottom > innerHeight) crypt.scrollIntoView({block: cr.height > innerHeight ? "start" : "center", behavior: REDUCED ? "auto" : "smooth"});
   reader.classList.remove("rolled"); void reader.offsetWidth; reader.classList.add("open");
+  paperSound("unroll");
   busy = false;
   setTimeout(() => { const f = reader.querySelector(".ath-close"); if (f) f.focus({preventScroll:true}); }, REDUCED ? 0 : 900);
 }
@@ -182,7 +252,14 @@ function buildReader(t){
   reader.textContent = "";
   const veil = mk("div", "ath-veil"); veil.addEventListener("click", () => close());
   const pap = mk("div", "ath-papyrus"); pap.setAttribute("role", "dialog"); pap.setAttribute("aria-label", t.name);
-  const sheet = mk("div", "ath-sheet");
+  const outer = mk("div", "ath-sheet");
+  const r2 = seeded(t.gid + "sheet");
+  const paper = mk("div", "ath-paper"); paper.style.clipPath = raggedSheet(r2);
+  paper.style.setProperty("--bx", Math.round(r2() * 520) + "px"); paper.style.setProperty("--by", Math.round(r2() * 520) + "px");
+  for (let k = 0, n = 3 + Math.floor(r2() * 3); k < n; k++){ const h = mk("i", "ath-hole"); const z = 6 + r2() * 12; Object.assign(h.style, {left:(4 + r2() * 92) + "%", top:(r2() < .5 ? 2 + r2() * 10 : 86 + r2() * 11) + "%", width:z + "px", height:z * (.7 + r2() * .5) + "px"}); paper.appendChild(h); }
+  for (let k = 0, n = 1 + Math.floor(r2() * 2); k < n; k++){ const g = mk("i", "ath-ring"); const z = 70 + r2() * 90; Object.assign(g.style, {left:(10 + r2() * 70) + "%", top:(10 + r2() * 60) + "%", width:z + "px", height:z * (.85 + r2() * .3) + "px"}); paper.appendChild(g); }
+  const sheet = mk("div", "ath-content");
+  outer.append(paper, sheet);
   sheet.appendChild(mk("div", "ath-kicker", "From the Knowledge shelf"));
   sheet.appendChild(mk("h3", "ath-title", t.name));
   const meta = [`Inscribed ${fmtDate(t.created_at)}`];
@@ -197,13 +274,14 @@ function buildReader(t){
   const back = mk("button", "ath-btn ghost ath-close", "Return it to the shelf"); back.type = "button"; back.addEventListener("click", () => close());
   acts.append(go, back);
   sheet.appendChild(acts);
-  pap.append(mk("i", "ath-rod l"), sheet, mk("i", "ath-rod r"));
+  pap.append(mk("i", "ath-rod l"), outer, mk("i", "ath-rod r"));
   reader.append(veil, pap);
 }
 async function close(quick){
   if (!open) return;
   const was = open; open = null;
   reader.classList.remove("open"); reader.classList.add("rolled");
+  if (!quick) paperSound("rollup");
   if (!REDUCED && !quick) await new Promise(r => setTimeout(r, 520));
   reader.hidden = true; reader.classList.remove("rolled");
   shelf.querySelectorAll(".ath-scroll").forEach(e => e.classList.remove("taken"));
