@@ -8,6 +8,7 @@ A Catan-style view of the Enterprise Salesforce Ops Group's Asana work, plus the
 - **The Board** and **The Treasure Hoard** read open and recently completed tasks live from Asana.
 - Clicking a block lets you comment on the task in Asana (posted under your own name) or open it.
 - **Trade Map** shows systems and data sources as settlements and integrations as trade routes, colored by the tool that carries them. Anyone with access can add, edit, move or remove settlements and routes, and paste tables (field lists, mappings, codes) into a mine to keep for reference. Those changes are stored in the same Guild Hall Ledger project.
+- **The Lost Athenaeum** shows the open tasks in the Knowledge section of John's My Tasks as scrolls. That section is private to John's Asana account, so other people see the crypt sealed.
 - **Guild Hall** data (responsibilities, recruits, dismissals, class changes) is stored as tasks in the Asana project **Guild Hall Ledger (Settlers of Salesforce Ops)**, so everyone sees the same thing. To edit it, a person needs access to that project. It's private to the Enterprise Salesforce Operations Group team.
 
 ## Hosting on GitHub Pages

@@ -11,6 +11,8 @@
 | `trade_ores.js` | The mines recreated from the Ed Cloud Data Dictionary, with their tables. Made by `gen_ores.py`. |
 | `gen_ores.py` | Rebuilds `trade_ores.js` from the data dictionary workbook: `python3 gen_ores.py "Ed_Cloud_Data_Dictionary.xlsx"`. Red tabs become mines that feed Name Sources, teal tabs mines that feed HANA. |
 | `splice_trade.py` | Puts `trade.css`, `trade_ores.js` and `trade.js` into `ops-catan.html`. Run it after changing any of them, then run `build_standalone.py`. |
+| `ath.js`, `ath.css`, `ath.html` | The Lost Athenaeum tab (scrolls from the Knowledge section of John's My Tasks). |
+| `splice_ath.py` | Puts the three Athenaeum files into `ops-catan.html`. Run it after changing any of them, then run `build_standalone.py`. |
 | `standalone_shim.js` | Asana bridge for the GitHub version (personal access token, ledger-project storage). |
 | `standalone_connect.html` | The "Connect to Asana" dialog for the GitHub version. |
 | `build_standalone.py` | Turns `ops-catan.html` into the GitHub version. |

@@ -1,0 +1,27 @@
+  <section id="tab-athenaeum" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-athenaeum" hidden>
+    <div class="ath-head">
+      <div>
+        <h2>The Lost Athenaeum</h2>
+        <p>Scrolls sealed beneath the Library: every open task in the Knowledge section of your Asana.</p>
+      </div>
+      <div class="ath-ctl">
+        <span class="ath-count" id="ath-count"></span>
+        <button type="button" id="ath-oracle" title="Let the Librarian choose a scroll for you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 7.5 10 6 12 3Z"/><path d="M7 14h10l-1.5 6h-7Z"/><path d="M12 12.5v1.5"/></svg>Ask the Librarian</button>
+        <button type="button" id="ath-refresh" title="Read the Knowledge section from Asana again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20 15 9"/><path d="M14 4l6 6-3 1-4-4Z"/><path d="M6 14l-2 2M9 17l-2 2"/></svg>Dust the Shelves</button>
+      </div>
+    </div>
+    <div class="ath-status" id="ath-status" aria-live="polite"></div>
+    <div class="ath-crypt" id="ath-crypt">
+      <svg id="ath-arch" aria-hidden="true"></svg>
+      <div class="ath-lamp l" id="ath-lamp-l" aria-hidden="true"><i class="glow"></i><i class="bowl"></i><i class="flame"></i></div>
+      <div class="ath-lamp r" id="ath-lamp-r" aria-hidden="true"><i class="glow"></i><i class="bowl"></i><i class="flame"></i></div>
+      <div id="ath-shelf" role="list" aria-label="Scrolls in the Knowledge section"></div>
+      <div class="ath-dark" aria-hidden="true"></div>
+      <div id="ath-dust" aria-hidden="true"></div>
+      <div id="ath-reader" hidden></div>
+    </div>
+    <div class="ath-pinakes-wrap">
+      <h3>The Pinakes <small>· the catalogue of this crypt</small></h3>
+      <ol id="ath-pinakes"></ol>
+    </div>
+  </section>

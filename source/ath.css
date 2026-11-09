@@ -1,0 +1,91 @@
+/* ---------- The Lost Athenaeum ---------- */
+#tab-athenaeum{width:calc(100vw - 48px);max-width:2400px;margin-left:calc(50% - min(50vw - 24px, 1200px))}
+@media (max-width:600px){#tab-athenaeum{width:calc(100vw - 32px);margin-left:calc(50% - 50vw + 16px)}}
+.ath-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 18px}
+.ath-head h2{margin:0;font-family:"Cinzel",var(--f-display);font-weight:700;font-size:clamp(24px,3vw,34px);letter-spacing:.06em;color:#e9c886;text-shadow:0 2px 12px rgba(255,160,60,.25)}
+.ath-head p{margin:2px 0 0;color:var(--muted);font-size:14.5px}
+.ath-ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ath-ctl .ath-count{font-family:var(--f-label);letter-spacing:.06em;color:#e9c886;font-size:14px;margin-right:4px}
+.ath-ctl button{display:flex;align-items:center;gap:7px}
+.ath-ctl button svg{width:18px;height:18px}
+.ath-status{font-size:13.5px;color:var(--muted);min-height:1.2em}
+.ath-status.warn{color:#f0b37a}
+.ath-crypt{position:relative;height:clamp(560px,calc(100vh - 150px),980px);border-radius:14px;overflow:hidden;border:2px solid #5c4626;background:#0b0806;box-shadow:0 14px 40px rgba(0,0,0,.5),inset 0 0 80px rgba(0,0,0,.8);--lx:50%;--ly:40%;isolation:isolate}
+#ath-arch{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+.ath-inscription{font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:30px;letter-spacing:.42em;fill:#c9a86a;opacity:.75}
+.ath-lamp{position:absolute;z-index:1;width:0;height:0;pointer-events:none}
+.ath-lamp .glow{position:absolute;left:-220px;top:-220px;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle,rgba(255,170,80,.34),rgba(255,120,40,.1) 40%,rgba(0,0,0,0) 70%);animation:athglow 3.1s ease-in-out infinite;mix-blend-mode:screen}
+.ath-lamp .flame{position:absolute;left:-9px;top:-34px;width:18px;height:30px;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:radial-gradient(ellipse at 50% 70%,#fff6d6 0,#ffd27a 30%,#ff8a2a 65%,rgba(255,80,0,0) 72%);transform-origin:50% 100%;animation:athflame 1.3s ease-in-out infinite alternate}
+.ath-lamp .bowl{position:absolute;left:-26px;top:-6px;width:52px;height:14px;border-radius:0 0 26px 26px;background:linear-gradient(#8a6a3a,#3a2a17);box-shadow:0 2px 0 #1c140c}
+.ath-lamp.r .glow{animation-delay:-1.4s}.ath-lamp.r .flame{animation-delay:-.6s}
+@keyframes athglow{0%,100%{opacity:.85;transform:scale(1)}40%{opacity:1;transform:scale(1.04)}70%{opacity:.75;transform:scale(.97)}}
+@keyframes athflame{0%{transform:scaleY(1) skewX(0)}50%{transform:scaleY(1.12) skewX(3deg)}100%{transform:scaleY(.92) skewX(-4deg)}}
+#ath-shelf{position:absolute;z-index:2;left:50%;top:16%;transform:translateX(-50%);width:min(1000px,66%);max-height:56%;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));align-content:start;gap:6px 10px;padding:10px 18px 18px;background:linear-gradient(180deg,rgba(26,18,11,.92),rgba(14,10,6,.95));border:6px solid #4a3622;border-top-width:10px;border-radius:6px;box-shadow:inset 0 0 40px rgba(0,0,0,.85),0 0 0 2px #1c140c,0 20px 50px rgba(0,0,0,.6);scrollbar-color:#6b5030 #1a120b}
+.ath-empty{grid-column:1/-1;margin:30px 0;text-align:center;font-family:"IM Fell English",Georgia,serif;font-style:italic;font-size:19px;color:#c9a86a}
+.ath-crypt .ath-scroll,.ath-crypt .ath-scroll:hover,.ath-crypt .ath-scroll:active{background:none;box-shadow:none}
+.ath-scroll{position:relative;background:none;border:none;border-radius:8px;padding:16px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:0;color:inherit;cursor:pointer;letter-spacing:0;transition:opacity .3s}
+.ath-scroll::before{content:"";position:absolute;left:-6px;right:-6px;top:54px;height:9px;background:linear-gradient(#5c4127,#2e2014);border-top:1px solid #7a5a36;box-shadow:0 4px 6px rgba(0,0,0,.6);z-index:0}
+.ath-roll{position:relative;z-index:1;width:142px;height:36px;border-radius:18px;background:linear-gradient(180deg,#6f5530 0,#cdb27a 22%,#f1e1b6 42%,#d6bc86 64%,#8b6d40 100%);box-shadow:inset -10px 0 14px rgba(70,45,15,.35),0 3px 4px rgba(0,0,0,.5);transform:rotate(var(--tilt,0deg));filter:hue-rotate(var(--hue,0deg));transition:transform .35s cubic-bezier(.3,1.4,.5,1),box-shadow .3s}
+.ath-roll .knob{position:absolute;top:4px;width:18px;height:28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#9a7446,#4a3018 60%,#24170b);box-shadow:0 0 0 1px #1b1108}
+.ath-roll .knob.l{left:-12px}.ath-roll .knob.r{right:-12px}
+.ath-roll .band{position:absolute;left:58%;top:-1px;width:9px;height:38px;border-radius:2px;background:linear-gradient(90deg,#6e1414,#b52a22 45%,#6e1414)}
+.ath-tag{position:relative;z-index:2;margin-top:12px;width:164px;padding:6px 8px 7px;background:linear-gradient(180deg,#efe0b8,#dcc792);color:#3a2a17;border:1px solid #8a6a3a;border-radius:2px 2px 6px 6px;box-shadow:0 4px 8px rgba(0,0,0,.55);font-family:"IM Fell English",Georgia,serif;font-size:14px;line-height:1.2;text-align:center;transform-origin:50% -10px;transition:transform .3s}
+.ath-tag::before{content:"";position:absolute;left:50%;top:-13px;width:1px;height:13px;background:#c9a86a}
+.ath-tag small{display:block;font-family:"Cinzel",Georgia,serif;font-size:10.5px;letter-spacing:.2em;color:#8a5a22}
+.ath-tag span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ath-scroll:hover .ath-roll,.ath-scroll:focus-visible .ath-roll,.ath-scroll.lit .ath-roll{transform:translateY(-7px) rotate(0);box-shadow:0 0 22px 6px rgba(255,190,90,.55),0 8px 10px rgba(0,0,0,.5)}
+.ath-scroll:hover .ath-tag,.ath-scroll:focus-visible .ath-tag,.ath-scroll.lit .ath-tag{animation:athswing 1.1s ease-in-out}
+.ath-scroll.lit .ath-tag{box-shadow:0 0 18px rgba(255,190,90,.6)}
+.ath-scroll:focus{outline:none}
+.ath-scroll:focus-visible{outline:2px dashed #e9c886;outline-offset:2px}
+.ath-scroll.taken{opacity:.12;pointer-events:none}
+@keyframes athswing{0%{transform:rotate(0)}20%{transform:rotate(7deg)}45%{transform:rotate(-5deg)}70%{transform:rotate(3deg)}100%{transform:rotate(0)}}
+.ath-dark{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at var(--lx) var(--ly),rgba(255,200,120,.07) 0,rgba(0,0,0,0) 150px,rgba(6,4,2,.58) 470px),radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.6) 100%)}
+#ath-dust{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+#ath-dust i{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,222,170,.75);box-shadow:0 0 4px rgba(255,200,120,.6);animation:athdust linear infinite}
+@keyframes athdust{0%{transform:translate(0,0);opacity:0}15%{opacity:.8}85%{opacity:.6}100%{transform:translate(var(--dx),-120px);opacity:0}}
+.ath-fly{position:absolute;z-index:6;pointer-events:none;box-shadow:0 0 30px 10px rgba(255,190,90,.5)}
+#ath-reader{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center}
+#ath-reader[hidden]{display:none}
+.ath-veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(20,12,4,.55),rgba(0,0,0,.85));cursor:pointer}
+.ath-papyrus{position:relative;width:min(880px,88%);max-height:84%;display:flex}
+.ath-sheet{position:relative;flex:1;min-width:0;overflow:auto;padding:26px 40px 22px;background:repeating-linear-gradient(0deg,rgba(120,90,40,.06) 0 2px,rgba(0,0,0,0) 2px 7px),repeating-linear-gradient(90deg,rgba(120,90,40,.05) 0 1px,rgba(0,0,0,0) 1px 9px),linear-gradient(180deg,#ead9ad,#e1cb93 60%,#d7bd80);color:#2b1d0e;box-shadow:0 20px 60px rgba(0,0,0,.7),inset 0 0 50px rgba(110,70,20,.35);font-family:"IM Fell English",Georgia,serif;font-size:17.5px;line-height:1.5;scrollbar-color:#8a6a3a #d7bd80}
+.ath-rod{position:absolute;top:-16px;bottom:-16px;width:26px;z-index:1;border-radius:13px;background:linear-gradient(90deg,#24170b,#6e4c28 35%,#a37a48 50%,#6e4c28 65%,#24170b);box-shadow:0 8px 16px rgba(0,0,0,.6)}
+.ath-rod::before,.ath-rod::after{content:"";position:absolute;left:-5px;width:36px;height:16px;border-radius:50%;background:radial-gradient(circle at 45% 35%,#c69a5c,#5a3a1a 70%)}
+.ath-rod::before{top:-8px}.ath-rod::after{bottom:-8px}
+.ath-rod.l{left:-13px}.ath-rod.r{right:-13px}
+#ath-reader.open .ath-sheet{animation:athunroll .85s cubic-bezier(.5,0,.2,1) both}
+#ath-reader.open .ath-rod.l{animation:athrodl .85s cubic-bezier(.5,0,.2,1) both}
+#ath-reader.open .ath-rod.r{animation:athrodr .85s cubic-bezier(.5,0,.2,1) both}
+#ath-reader.open .ath-veil{animation:athfade .5s both}
+#ath-reader.rolled .ath-sheet{animation:athunroll .5s cubic-bezier(.6,0,.6,1) reverse both}
+#ath-reader.rolled .ath-rod.l{animation:athrodl .5s cubic-bezier(.6,0,.6,1) reverse both}
+#ath-reader.rolled .ath-rod.r{animation:athrodr .5s cubic-bezier(.6,0,.6,1) reverse both}
+#ath-reader.rolled .ath-veil{animation:athfade .5s reverse both}
+@keyframes athunroll{from{clip-path:inset(0 50% 0 50%)}to{clip-path:inset(0 0 0 0)}}
+@keyframes athrodl{from{left:calc(50% - 26px)}to{left:-13px}}
+@keyframes athrodr{from{right:calc(50% - 26px)}to{right:-13px}}
+@keyframes athfade{from{opacity:0}to{opacity:1}}
+.ath-kicker{font-family:"Cinzel",Georgia,serif;font-size:12px;letter-spacing:.25em;color:#8a5a22;text-transform:uppercase}
+.ath-title{margin:4px 0 2px;font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:clamp(22px,2.6vw,30px);line-height:1.15;color:#2b1d0e;overflow-wrap:anywhere}
+.ath-meta{font-style:italic;font-size:15px;color:#6b4a22}
+.ath-rule{height:14px;margin:10px 0 12px;background:radial-gradient(circle,#8a5a22 0 3px,rgba(0,0,0,0) 3.5px) center/14px 14px no-repeat,linear-gradient(#8a5a22,#8a5a22) left 50%/calc(50% - 14px) 1px no-repeat,linear-gradient(#8a5a22,#8a5a22) right 50%/calc(50% - 14px) 1px no-repeat}
+.ath-text p{margin:0 0 10px;white-space:pre-line;overflow-wrap:anywhere}
+.ath-blank{font-style:italic;color:#6b4a22}
+.ath-seal{display:inline-flex;align-items:center;gap:6px;margin:2px 4px 2px 0;padding:1px 8px 1px 2px;border-radius:14px;background:rgba(110,20,20,.08);color:#6e1414;text-decoration:none;font-family:var(--f-body);font-weight:700;font-size:14.5px;line-height:1.6;vertical-align:baseline;white-space:nowrap}
+.ath-seal i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#e0574a,#9a1f17 55%,#5e0f0b);box-shadow:0 1px 2px rgba(0,0,0,.4),inset 0 0 0 2px rgba(255,255,255,.12)}
+.ath-seal:hover span{text-decoration:underline}
+.ath-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.ath-btn{display:inline-flex;align-items:center;font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:14px;letter-spacing:.06em;padding:7px 14px;border-radius:8px;border:2px solid #6e4c28;background:#3a2a17;color:#f3e6c2;text-decoration:none;cursor:pointer}
+.ath-btn:hover{background:#4e3820}
+.ath-btn.ghost{background:transparent;color:#3a2a17}
+.ath-btn.ghost:hover{background:rgba(110,76,40,.12)}
+.ath-pinakes-wrap{display:flex;flex-direction:column;gap:6px}
+.ath-pinakes-wrap h3{margin:0;font-family:"Cinzel",var(--f-display);font-size:17px;letter-spacing:.08em;color:#e9c886}
+.ath-pinakes-wrap h3 small{font-family:var(--f-body);font-size:13px;letter-spacing:0;color:var(--muted);font-weight:400}
+#ath-pinakes{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.ath-cat{font-family:"IM Fell English",Georgia,serif;font-weight:400;font-size:15px;letter-spacing:0;padding:4px 10px;background:rgba(233,200,134,.08);color:var(--ink);border:1px solid #5c4626;border-radius:6px}
+.ath-cat b{font-family:"Cinzel",Georgia,serif;font-size:12px;color:#e9c886;letter-spacing:.08em}
+.ath-cat:hover{background:rgba(233,200,134,.18)}
+@media (max-width:700px){#ath-shelf{width:92%;top:12%;max-height:62%}.ath-lamp{display:none}.ath-sheet{padding:20px 22px}}
+@media (prefers-reduced-motion:reduce){.ath-lamp .glow,.ath-lamp .flame,.ath-scroll .ath-tag{animation:none!important}#ath-reader .ath-sheet,#ath-reader .ath-rod,#ath-reader .ath-veil{animation:none!important}}

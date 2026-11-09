@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Settlers of Salesforce Ops</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700;800&family=Alegreya+Sans:wght@400;500;700&family=Alegreya+Sans+SC:wght@700&family=Alegreya:ital@0;1&family=MedievalSharp&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700;800&family=Alegreya+Sans:wght@400;500;700&family=Alegreya+Sans+SC:wght@700&family=Alegreya:ital@0;1&family=MedievalSharp&family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap">
 <style>
 /* Layout: a Catan board at sea — teammates are terrain hexes, open Asana tasks are resource blocks; a ledger panel sits beside the board (below it on phones). Single deliberate look: night-table ocean. */
 :root{
@@ -506,6 +506,97 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .tm-mcard.wide{width:min(1680px,100%)}
 .tm-cell-link{background:none;border:none;padding:0;font:inherit;letter-spacing:0;color:#7a3e12;text-decoration:underline;text-underline-offset:2px;cursor:pointer;text-align:left}
 .tm-cell-link:hover{background:none;color:#a8323e}
+/* ---------- The Lost Athenaeum ---------- */
+#tab-athenaeum{width:calc(100vw - 48px);max-width:2400px;margin-left:calc(50% - min(50vw - 24px, 1200px))}
+@media (max-width:600px){#tab-athenaeum{width:calc(100vw - 32px);margin-left:calc(50% - 50vw + 16px)}}
+.ath-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 18px}
+.ath-head h2{margin:0;font-family:"Cinzel",var(--f-display);font-weight:700;font-size:clamp(24px,3vw,34px);letter-spacing:.06em;color:#e9c886;text-shadow:0 2px 12px rgba(255,160,60,.25)}
+.ath-head p{margin:2px 0 0;color:var(--muted);font-size:14.5px}
+.ath-ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ath-ctl .ath-count{font-family:var(--f-label);letter-spacing:.06em;color:#e9c886;font-size:14px;margin-right:4px}
+.ath-ctl button{display:flex;align-items:center;gap:7px}
+.ath-ctl button svg{width:18px;height:18px}
+.ath-status{font-size:13.5px;color:var(--muted);min-height:1.2em}
+.ath-status.warn{color:#f0b37a}
+.ath-crypt{position:relative;height:clamp(560px,calc(100vh - 150px),980px);border-radius:14px;overflow:hidden;border:2px solid #5c4626;background:#0b0806;box-shadow:0 14px 40px rgba(0,0,0,.5),inset 0 0 80px rgba(0,0,0,.8);--lx:50%;--ly:40%;isolation:isolate}
+#ath-arch{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+.ath-inscription{font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:30px;letter-spacing:.42em;fill:#c9a86a;opacity:.75}
+.ath-lamp{position:absolute;z-index:1;width:0;height:0;pointer-events:none}
+.ath-lamp .glow{position:absolute;left:-220px;top:-220px;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle,rgba(255,170,80,.34),rgba(255,120,40,.1) 40%,rgba(0,0,0,0) 70%);animation:athglow 3.1s ease-in-out infinite;mix-blend-mode:screen}
+.ath-lamp .flame{position:absolute;left:-9px;top:-34px;width:18px;height:30px;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:radial-gradient(ellipse at 50% 70%,#fff6d6 0,#ffd27a 30%,#ff8a2a 65%,rgba(255,80,0,0) 72%);transform-origin:50% 100%;animation:athflame 1.3s ease-in-out infinite alternate}
+.ath-lamp .bowl{position:absolute;left:-26px;top:-6px;width:52px;height:14px;border-radius:0 0 26px 26px;background:linear-gradient(#8a6a3a,#3a2a17);box-shadow:0 2px 0 #1c140c}
+.ath-lamp.r .glow{animation-delay:-1.4s}.ath-lamp.r .flame{animation-delay:-.6s}
+@keyframes athglow{0%,100%{opacity:.85;transform:scale(1)}40%{opacity:1;transform:scale(1.04)}70%{opacity:.75;transform:scale(.97)}}
+@keyframes athflame{0%{transform:scaleY(1) skewX(0)}50%{transform:scaleY(1.12) skewX(3deg)}100%{transform:scaleY(.92) skewX(-4deg)}}
+#ath-shelf{position:absolute;z-index:2;left:50%;top:16%;transform:translateX(-50%);width:min(1000px,66%);max-height:56%;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));align-content:start;gap:6px 10px;padding:10px 18px 18px;background:linear-gradient(180deg,rgba(26,18,11,.92),rgba(14,10,6,.95));border:6px solid #4a3622;border-top-width:10px;border-radius:6px;box-shadow:inset 0 0 40px rgba(0,0,0,.85),0 0 0 2px #1c140c,0 20px 50px rgba(0,0,0,.6);scrollbar-color:#6b5030 #1a120b}
+.ath-empty{grid-column:1/-1;margin:30px 0;text-align:center;font-family:"IM Fell English",Georgia,serif;font-style:italic;font-size:19px;color:#c9a86a}
+.ath-crypt .ath-scroll,.ath-crypt .ath-scroll:hover,.ath-crypt .ath-scroll:active{background:none;box-shadow:none}
+.ath-scroll{position:relative;background:none;border:none;border-radius:8px;padding:16px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:0;color:inherit;cursor:pointer;letter-spacing:0;transition:opacity .3s}
+.ath-scroll::before{content:"";position:absolute;left:-6px;right:-6px;top:54px;height:9px;background:linear-gradient(#5c4127,#2e2014);border-top:1px solid #7a5a36;box-shadow:0 4px 6px rgba(0,0,0,.6);z-index:0}
+.ath-roll{position:relative;z-index:1;width:142px;height:36px;border-radius:18px;background:linear-gradient(180deg,#6f5530 0,#cdb27a 22%,#f1e1b6 42%,#d6bc86 64%,#8b6d40 100%);box-shadow:inset -10px 0 14px rgba(70,45,15,.35),0 3px 4px rgba(0,0,0,.5);transform:rotate(var(--tilt,0deg));filter:hue-rotate(var(--hue,0deg));transition:transform .35s cubic-bezier(.3,1.4,.5,1),box-shadow .3s}
+.ath-roll .knob{position:absolute;top:4px;width:18px;height:28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#9a7446,#4a3018 60%,#24170b);box-shadow:0 0 0 1px #1b1108}
+.ath-roll .knob.l{left:-12px}.ath-roll .knob.r{right:-12px}
+.ath-roll .band{position:absolute;left:58%;top:-1px;width:9px;height:38px;border-radius:2px;background:linear-gradient(90deg,#6e1414,#b52a22 45%,#6e1414)}
+.ath-tag{position:relative;z-index:2;margin-top:12px;width:164px;padding:6px 8px 7px;background:linear-gradient(180deg,#efe0b8,#dcc792);color:#3a2a17;border:1px solid #8a6a3a;border-radius:2px 2px 6px 6px;box-shadow:0 4px 8px rgba(0,0,0,.55);font-family:"IM Fell English",Georgia,serif;font-size:14px;line-height:1.2;text-align:center;transform-origin:50% -10px;transition:transform .3s}
+.ath-tag::before{content:"";position:absolute;left:50%;top:-13px;width:1px;height:13px;background:#c9a86a}
+.ath-tag small{display:block;font-family:"Cinzel",Georgia,serif;font-size:10.5px;letter-spacing:.2em;color:#8a5a22}
+.ath-tag span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ath-scroll:hover .ath-roll,.ath-scroll:focus-visible .ath-roll,.ath-scroll.lit .ath-roll{transform:translateY(-7px) rotate(0);box-shadow:0 0 22px 6px rgba(255,190,90,.55),0 8px 10px rgba(0,0,0,.5)}
+.ath-scroll:hover .ath-tag,.ath-scroll:focus-visible .ath-tag,.ath-scroll.lit .ath-tag{animation:athswing 1.1s ease-in-out}
+.ath-scroll.lit .ath-tag{box-shadow:0 0 18px rgba(255,190,90,.6)}
+.ath-scroll:focus{outline:none}
+.ath-scroll:focus-visible{outline:2px dashed #e9c886;outline-offset:2px}
+.ath-scroll.taken{opacity:.12;pointer-events:none}
+@keyframes athswing{0%{transform:rotate(0)}20%{transform:rotate(7deg)}45%{transform:rotate(-5deg)}70%{transform:rotate(3deg)}100%{transform:rotate(0)}}
+.ath-dark{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at var(--lx) var(--ly),rgba(255,200,120,.07) 0,rgba(0,0,0,0) 150px,rgba(6,4,2,.58) 470px),radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.6) 100%)}
+#ath-dust{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+#ath-dust i{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,222,170,.75);box-shadow:0 0 4px rgba(255,200,120,.6);animation:athdust linear infinite}
+@keyframes athdust{0%{transform:translate(0,0);opacity:0}15%{opacity:.8}85%{opacity:.6}100%{transform:translate(var(--dx),-120px);opacity:0}}
+.ath-fly{position:absolute;z-index:6;pointer-events:none;box-shadow:0 0 30px 10px rgba(255,190,90,.5)}
+#ath-reader{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center}
+#ath-reader[hidden]{display:none}
+.ath-veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(20,12,4,.55),rgba(0,0,0,.85));cursor:pointer}
+.ath-papyrus{position:relative;width:min(880px,88%);max-height:84%;display:flex}
+.ath-sheet{position:relative;flex:1;min-width:0;overflow:auto;padding:26px 40px 22px;background:repeating-linear-gradient(0deg,rgba(120,90,40,.06) 0 2px,rgba(0,0,0,0) 2px 7px),repeating-linear-gradient(90deg,rgba(120,90,40,.05) 0 1px,rgba(0,0,0,0) 1px 9px),linear-gradient(180deg,#ead9ad,#e1cb93 60%,#d7bd80);color:#2b1d0e;box-shadow:0 20px 60px rgba(0,0,0,.7),inset 0 0 50px rgba(110,70,20,.35);font-family:"IM Fell English",Georgia,serif;font-size:17.5px;line-height:1.5;scrollbar-color:#8a6a3a #d7bd80}
+.ath-rod{position:absolute;top:-16px;bottom:-16px;width:26px;z-index:1;border-radius:13px;background:linear-gradient(90deg,#24170b,#6e4c28 35%,#a37a48 50%,#6e4c28 65%,#24170b);box-shadow:0 8px 16px rgba(0,0,0,.6)}
+.ath-rod::before,.ath-rod::after{content:"";position:absolute;left:-5px;width:36px;height:16px;border-radius:50%;background:radial-gradient(circle at 45% 35%,#c69a5c,#5a3a1a 70%)}
+.ath-rod::before{top:-8px}.ath-rod::after{bottom:-8px}
+.ath-rod.l{left:-13px}.ath-rod.r{right:-13px}
+#ath-reader.open .ath-sheet{animation:athunroll .85s cubic-bezier(.5,0,.2,1) both}
+#ath-reader.open .ath-rod.l{animation:athrodl .85s cubic-bezier(.5,0,.2,1) both}
+#ath-reader.open .ath-rod.r{animation:athrodr .85s cubic-bezier(.5,0,.2,1) both}
+#ath-reader.open .ath-veil{animation:athfade .5s both}
+#ath-reader.rolled .ath-sheet{animation:athunroll .5s cubic-bezier(.6,0,.6,1) reverse both}
+#ath-reader.rolled .ath-rod.l{animation:athrodl .5s cubic-bezier(.6,0,.6,1) reverse both}
+#ath-reader.rolled .ath-rod.r{animation:athrodr .5s cubic-bezier(.6,0,.6,1) reverse both}
+#ath-reader.rolled .ath-veil{animation:athfade .5s reverse both}
+@keyframes athunroll{from{clip-path:inset(0 50% 0 50%)}to{clip-path:inset(0 0 0 0)}}
+@keyframes athrodl{from{left:calc(50% - 26px)}to{left:-13px}}
+@keyframes athrodr{from{right:calc(50% - 26px)}to{right:-13px}}
+@keyframes athfade{from{opacity:0}to{opacity:1}}
+.ath-kicker{font-family:"Cinzel",Georgia,serif;font-size:12px;letter-spacing:.25em;color:#8a5a22;text-transform:uppercase}
+.ath-title{margin:4px 0 2px;font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:clamp(22px,2.6vw,30px);line-height:1.15;color:#2b1d0e;overflow-wrap:anywhere}
+.ath-meta{font-style:italic;font-size:15px;color:#6b4a22}
+.ath-rule{height:14px;margin:10px 0 12px;background:radial-gradient(circle,#8a5a22 0 3px,rgba(0,0,0,0) 3.5px) center/14px 14px no-repeat,linear-gradient(#8a5a22,#8a5a22) left 50%/calc(50% - 14px) 1px no-repeat,linear-gradient(#8a5a22,#8a5a22) right 50%/calc(50% - 14px) 1px no-repeat}
+.ath-text p{margin:0 0 10px;white-space:pre-line;overflow-wrap:anywhere}
+.ath-blank{font-style:italic;color:#6b4a22}
+.ath-seal{display:inline-flex;align-items:center;gap:6px;margin:2px 4px 2px 0;padding:1px 8px 1px 2px;border-radius:14px;background:rgba(110,20,20,.08);color:#6e1414;text-decoration:none;font-family:var(--f-body);font-weight:700;font-size:14.5px;line-height:1.6;vertical-align:baseline;white-space:nowrap}
+.ath-seal i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#e0574a,#9a1f17 55%,#5e0f0b);box-shadow:0 1px 2px rgba(0,0,0,.4),inset 0 0 0 2px rgba(255,255,255,.12)}
+.ath-seal:hover span{text-decoration:underline}
+.ath-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.ath-btn{display:inline-flex;align-items:center;font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:14px;letter-spacing:.06em;padding:7px 14px;border-radius:8px;border:2px solid #6e4c28;background:#3a2a17;color:#f3e6c2;text-decoration:none;cursor:pointer}
+.ath-btn:hover{background:#4e3820}
+.ath-btn.ghost{background:transparent;color:#3a2a17}
+.ath-btn.ghost:hover{background:rgba(110,76,40,.12)}
+.ath-pinakes-wrap{display:flex;flex-direction:column;gap:6px}
+.ath-pinakes-wrap h3{margin:0;font-family:"Cinzel",var(--f-display);font-size:17px;letter-spacing:.08em;color:#e9c886}
+.ath-pinakes-wrap h3 small{font-family:var(--f-body);font-size:13px;letter-spacing:0;color:var(--muted);font-weight:400}
+#ath-pinakes{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.ath-cat{font-family:"IM Fell English",Georgia,serif;font-weight:400;font-size:15px;letter-spacing:0;padding:4px 10px;background:rgba(233,200,134,.08);color:var(--ink);border:1px solid #5c4626;border-radius:6px}
+.ath-cat b{font-family:"Cinzel",Georgia,serif;font-size:12px;color:#e9c886;letter-spacing:.08em}
+.ath-cat:hover{background:rgba(233,200,134,.18)}
+@media (max-width:700px){#ath-shelf{width:92%;top:12%;max-height:62%}.ath-lamp{display:none}.ath-sheet{padding:20px 22px}}
+@media (prefers-reduced-motion:reduce){.ath-lamp .glow,.ath-lamp .flame,.ath-scroll .ath-tag{animation:none!important}#ath-reader .ath-sheet,#ath-reader .ath-rod,#ath-reader .ath-veil{animation:none!important}}
 
 /* ---------- standalone: Asana connection ---------- */
 body{margin:0}
@@ -544,6 +635,7 @@ body{margin:0}
     <button class="tab" role="tab" id="tabbtn-guild" aria-controls="tab-guild" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 19 6v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M12 8v8M9 11h6"/></svg>Guild Hall</button>
     <button class="tab" role="tab" id="tabbtn-village" aria-controls="tab-village" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21h18M5 21V11l7-6 7 6v10"/><path d="M10 21v-5h4v5"/></svg>Village Square</button>
     <button class="tab" role="tab" id="tabbtn-trade" aria-controls="tab-trade" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="7" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M7 6.5c4 0 6 .3 10 .5M6.3 8 11 16.2M17.8 9 13.3 16.2" stroke-dasharray="2.5 2"/></svg>Trade Map</button>
+    <button class="tab" role="tab" id="tabbtn-athenaeum" aria-controls="tab-athenaeum" aria-selected="false" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="18" height="7" rx="3.5"/><path d="M14 6v7"/><path d="M8 13v4l2-1.2 2 1.2v-4"/></svg>The Lost Athenaeum</button>
   </nav>
 
   <div id="tab-board" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-board">
@@ -632,6 +724,33 @@ body{margin:0}
       </div>
     </div>
   </section>
+  <section id="tab-athenaeum" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-athenaeum" hidden>
+    <div class="ath-head">
+      <div>
+        <h2>The Lost Athenaeum</h2>
+        <p>Scrolls sealed beneath the Library: every open task in the Knowledge section of your Asana.</p>
+      </div>
+      <div class="ath-ctl">
+        <span class="ath-count" id="ath-count"></span>
+        <button type="button" id="ath-oracle" title="Let the Librarian choose a scroll for you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3c2 3 3 4.5 3 6.5a3 3 0 0 1-6 0C9 7.5 10 6 12 3Z"/><path d="M7 14h10l-1.5 6h-7Z"/><path d="M12 12.5v1.5"/></svg>Ask the Librarian</button>
+        <button type="button" id="ath-refresh" title="Read the Knowledge section from Asana again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20 15 9"/><path d="M14 4l6 6-3 1-4-4Z"/><path d="M6 14l-2 2M9 17l-2 2"/></svg>Dust the Shelves</button>
+      </div>
+    </div>
+    <div class="ath-status" id="ath-status" aria-live="polite"></div>
+    <div class="ath-crypt" id="ath-crypt">
+      <svg id="ath-arch" aria-hidden="true"></svg>
+      <div class="ath-lamp l" id="ath-lamp-l" aria-hidden="true"><i class="glow"></i><i class="bowl"></i><i class="flame"></i></div>
+      <div class="ath-lamp r" id="ath-lamp-r" aria-hidden="true"><i class="glow"></i><i class="bowl"></i><i class="flame"></i></div>
+      <div id="ath-shelf" role="list" aria-label="Scrolls in the Knowledge section"></div>
+      <div class="ath-dark" aria-hidden="true"></div>
+      <div id="ath-dust" aria-hidden="true"></div>
+      <div id="ath-reader" hidden></div>
+    </div>
+    <div class="ath-pinakes-wrap">
+      <h3>The Pinakes <small>· the catalogue of this crypt</small></h3>
+      <ol id="ath-pinakes"></ol>
+    </div>
+  </section>
 </div>
 <div class="tip" id="tip" hidden></div>
 <div class="connect-back" id="connect" hidden>
@@ -681,7 +800,7 @@ body{margin:0}
    directly from the browser with each person's own Asana personal access token,
    which stays in that person's browser (localStorage) and is sent only to app.asana.com.
    It exposes the same small interface the page's code already uses:
-     claude.use("mcp") -> callTool("Asana", "get_users" | "search_tasks" | "add_comment", input)
+     claude.use("mcp") -> callTool("Asana", "get_users" | "search_tasks" | "add_comment" | "get_tasks", input)
      claude.use("db")  -> collection(...).onSnapshot / doc(...).set / delete, stored as tasks
                           in the Guild Hall Ledger project in Asana                        */
 (function(){
@@ -726,7 +845,8 @@ const TOOLS = {
       "created_at.before": i.created_at_before, "completed_at.after": i.completed_at_after, "completed_at.before": i.completed_at_before
     }});
   },
-  async add_comment({task_id, text}){ return asana("POST", `/tasks/${task_id}/stories`, {body: {text}}); }
+  async add_comment({task_id, text}){ return asana("POST", `/tasks/${task_id}/stories`, {body: {text}}); },
+  async get_tasks(i){ return asana("GET", `/sections/${i.section}/tasks`, {query: {opt_fields: i.opt_fields, completed_since: i.completed_since, limit: i.limit}}); }
 };
 const mcp = {
   async callTool(server, tool, input){
@@ -1732,7 +1852,7 @@ const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- tabs ---------- */
 const TAB_KEY = "settlers-tab";
-const TABS = ["board", "guild", "village", "trade"];
+const TABS = ["board", "guild", "village", "trade", "athenaeum"];
 function showTab(name){
   if (!TABS.includes(name)) name = "board";
   TABS.forEach(t => {
@@ -4042,6 +4162,297 @@ document.addEventListener("keydown", ev => {
     if (first){ first = false; note(`${R.size} trade routes between ${S.size} settlements. Click anything to see or change it.`, ""); }
   }, e => fail(e, "load the trade ledger"));
 })();
+})();
+</script>
+<script>
+(function(){
+/* ================= The Lost Athenaeum: tasks from John's "Knowledge" section, kept as scrolls in a crypt beneath the Library ================= */
+const $ = id => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+function sv(tag, attrs, parent){ const e = document.createElementNS(SVGNS, tag); if (attrs) for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function mk(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sfx = n => { try{ if (window.__sfx) window.__sfx(n); }catch(e){} };
+
+const SERVER = "Asana";
+const KNOWLEDGE_SECTION = "1220179858997729";   /* the "Knowledge" section of John's My Tasks */
+const CACHE_KEY = "settlers-athenaeum";
+const FIELDS = "name,notes,due_on,created_at,modified_at,completed,permalink_url";
+
+const root = $("tab-athenaeum");
+const crypt = $("ath-crypt"), shelf = $("ath-shelf"), reader = $("ath-reader"), pinakes = $("ath-pinakes"), status = $("ath-status");
+let scrolls = [], open = null, busy = false;
+
+/* ---------- the crypt itself (drawn once; nothing inside it moves, so it never repaints) ---------- */
+function drawCrypt(){
+  const s = $("ath-arch"); s.textContent = "";
+  s.setAttribute("viewBox", "0 0 1600 900"); s.setAttribute("preserveAspectRatio", "xMidYMid slice");
+  const d = sv("defs", null, s);
+  const g = (id, stops, attrs) => { const el = sv(attrs && attrs.r ? "radialGradient" : "linearGradient", Object.assign({id}, attrs || {x1:0, y1:0, x2:0, y2:1}), d); stops.forEach(([o, c, op]) => sv("stop", {offset:o, "stop-color":c, "stop-opacity":op == null ? 1 : op}, el)); };
+  g("ath-wall", [["0", "#2c2117"], ["1", "#120d09"]]);
+  g("ath-floor", [["0", "#2a2016"], ["1", "#0c0907"]]);
+  g("ath-col", [["0", "#1c150f"], [".35", "#4a3a28"], [".6", "#3a2d20"], ["1", "#120d09"]], {x1:0, y1:0, x2:1, y2:0});
+  g("ath-warm", [["0", "#ffb35c", .28], [".5", "#ff8a3a", .08], ["1", "#000", 0]], {r:"50%", cx:"50%", cy:"50%"});
+  const pat = sv("pattern", {id:"ath-stone", width:"120", height:"60", patternUnits:"userSpaceOnUse"}, d);
+  sv("path", {d:"M0 0 H120 M0 30 H120 M40 0 V30 M100 0 V30 M10 30 V60 M70 30 V60", stroke:"#000", "stroke-width":"2", opacity:".35", fill:"none"}, pat);
+  /* back wall, honeycombed with the library's scroll niches */
+  sv("rect", {x:0, y:0, width:1600, height:900, fill:"url(#ath-wall)"}, s);
+  sv("rect", {x:0, y:0, width:1600, height:900, fill:"url(#ath-stone)"}, s);
+  const niches = sv("g", null, s);
+  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  for (let y = 150; y < 700; y += 52){
+    for (let x = 250; x < 1350; x += 62){
+      sv("rect", {x, y, width:54, height:44, rx:3, fill:"#0b0806", stroke:"#3d2f20", "stroke-width":"2"}, niches);
+      const n = rnd() < .18 ? 0 : 1 + Math.floor(rnd() * 3);
+      for (let k = 0; k < n; k++){
+        const cx = x + 12 + k * 15 + rnd() * 4, cy = y + 30 - rnd() * 6, r = 6 + rnd() * 2.5;
+        sv("circle", {cx, cy, r, fill: rnd() < .5 ? "#6e5733" : "#5a4528", stroke:"#2a1f12", "stroke-width":"1"}, niches);
+        sv("circle", {cx, cy, r:r * .45, fill:"none", stroke:"#2a1f12", "stroke-width":".8"}, niches);
+        if (rnd() < .35) sv("path", {d:`M${cx} ${cy + r} l${-2 + rnd() * 4} ${9 + rnd() * 6}`, stroke:"#a8865a", "stroke-width":"1.2", opacity:".7"}, niches);
+      }
+    }
+  }
+  /* lintel and its inscription: "the healing-place of the soul", said to have hung over the great libraries of Egypt */
+  sv("rect", {x:220, y:62, width:1160, height:66, fill:"#3b2e20", stroke:"#5c4930", "stroke-width":"3"}, s);
+  sv("rect", {x:232, y:72, width:1136, height:46, fill:"none", stroke:"#1b140d", "stroke-width":"2"}, s);
+  const ins = sv("text", {x:800, y:107, "text-anchor":"middle", class:"ath-inscription"}, s); ins.textContent = "ΨΥΧΗΣ · ΙΑΤΡΕΙΟΝ";
+  /* floor, in perspective */
+  sv("path", {d:"M0 720 H1600 V900 H0 Z", fill:"url(#ath-floor)"}, s);
+  const fl = sv("g", {stroke:"#000", "stroke-width":"2", opacity:".45"}, s);
+  for (let i = -8; i <= 8; i++) sv("line", {x1:800 + i * 40, y1:720, x2:800 + i * 260, y2:900}, fl);
+  [740, 770, 812, 870].forEach(y => sv("line", {x1:0, y1:y, x2:1600, y2:y}, fl));
+  /* a great arch frames the vault; everything outside it is cold stone */
+  sv("path", {d:"M0 0 H1600 V900 H1440 V430 A640 380 0 0 0 160 430 V900 H0 Z", fill:"#0e0b08"}, s);
+  sv("path", {d:"M0 0 H1600 V900 H1440 V430 A640 380 0 0 0 160 430 V900 H0 Z", fill:"url(#ath-stone)", opacity:".8"}, s);
+  const vs = sv("g", {stroke:"#4a3a28", "stroke-width":"3", fill:"none"}, s);
+  sv("path", {d:"M160 430 A640 380 0 0 1 1440 430"}, vs);
+  sv("path", {d:"M128 430 A672 412 0 0 1 1472 430", stroke:"#2a2016"}, vs);
+  for (let a = 0; a <= 180; a += 9){ const t = a * Math.PI / 180; sv("line", {x1:800 - Math.cos(t) * 640, y1:430 - Math.sin(t) * 380, x2:800 - Math.cos(t) * 672, y2:430 - Math.sin(t) * 412}, vs); }
+  /* papyrus-bundle columns with lotus capitals */
+  [[118, 1], [1402, -1]].forEach(([x]) => {
+    const c = sv("g", null, s);
+    sv("rect", {x, y:300, width:80, height:600, fill:"url(#ath-col)"}, c);
+    for (let k = 1; k < 5; k++) sv("line", {x1:x + k * 16, y1:310, x2:x + k * 16, y2:900, stroke:"#120d09", "stroke-width":"2", opacity:".6"}, c);
+    sv("path", {d:`M${x - 26} 300 Q ${x + 40} 214 ${x + 106} 300 Z`, fill:"#4d3c29", stroke:"#1c150f", "stroke-width":"2"}, c);
+    for (let k = 0; k < 5; k++) sv("path", {d:`M${x + 4 + k * 18} 300 Q ${x + 10 + k * 18} 250 ${x + 14 + k * 15} 236`, stroke:"#2a1f14", "stroke-width":"2", fill:"none"}, c);
+    sv("rect", {x:x - 14, y:300, width:108, height:16, fill:"#3b2e20", stroke:"#1c150f", "stroke-width":"2"}, c);
+    sv("rect", {x:x - 10, y:870, width:100, height:30, fill:"#2a2016"}, c);
+  });
+  /* the reading table where a drawn scroll is laid open */
+  sv("path", {d:"M560 760 L1040 760 L1090 820 L510 820 Z", fill:"#2f2418", stroke:"#120d09", "stroke-width":"2"}, s);
+  sv("rect", {x:540, y:820, width:520, height:20, fill:"#1d160f"}, s);
+  /* cobwebs in the upper corners */
+  [[0, 0, 1], [1600, 0, -1]].forEach(([x, y, f]) => {
+    const w = sv("g", {stroke:"#cfc6b4", "stroke-width":"1", fill:"none", opacity:".18", transform:`translate(${x} ${y}) scale(${f} 1)`}, s);
+    for (let k = 0; k < 6; k++){ const a = k * 15 * Math.PI / 180; sv("line", {x1:0, y1:0, x2:Math.cos(a) * 190, y2:Math.sin(a) * 190}, w); }
+    [50, 95, 140, 180].forEach(r => { let p = ""; for (let k = 0; k <= 5; k++){ const a = k * 15 * Math.PI / 180; p += (k ? " Q " + (Math.cos(a - .13) * r * .9).toFixed(1) + " " + (Math.sin(a - .13) * r * .9).toFixed(1) + " " : "M") + (Math.cos(a) * r).toFixed(1) + " " + (Math.sin(a) * r).toFixed(1); } sv("path", {d:p}, w); });
+  });
+}
+
+/* ---------- dust drifting through the lamp light ---------- */
+function dust(){
+  const box = $("ath-dust"); box.textContent = "";
+  if (REDUCED) return;
+  for (let i = 0; i < 26; i++){
+    const m = mk("i");
+    m.style.left = (5 + Math.random() * 90) + "%"; m.style.top = (10 + Math.random() * 80) + "%";
+    m.style.animationDuration = (9 + Math.random() * 12).toFixed(1) + "s"; m.style.animationDelay = (-Math.random() * 20).toFixed(1) + "s";
+    m.style.setProperty("--dx", (Math.random() * 60 - 30).toFixed(0) + "px");
+    box.appendChild(m);
+  }
+}
+
+/* ---------- the lantern: darkness everywhere except where you hold the light ---------- */
+let lx = 50, ly = 45, raf = 0;
+crypt.addEventListener("pointermove", ev => {
+  const r = crypt.getBoundingClientRect(); lx = (ev.clientX - r.left) / r.width * 100; ly = (ev.clientY - r.top) / r.height * 100;
+  if (!raf) raf = requestAnimationFrame(() => { raf = 0; crypt.style.setProperty("--lx", lx.toFixed(1) + "%"); crypt.style.setProperty("--ly", ly.toFixed(1) + "%"); });
+});
+crypt.addEventListener("pointerleave", () => { crypt.style.setProperty("--lx", "50%"); crypt.style.setProperty("--ly", "40%"); });
+
+/* ---------- reading a task's notes: plain text, with links turned into labelled seals ---------- */
+function linkLabel(u){
+  let h = ""; try{ h = new URL(u).hostname; }catch(e){ return "Link"; }
+  if (/teams\.microsoft\.com/.test(h)) return /meetingrecap/.test(u) ? "Teams recording" : "Teams link";
+  if (/sharepoint\.com/.test(h)){ if (/\.mp4|:v:/i.test(u)) return "Video on SharePoint"; if (/\.xlsx|:x:/i.test(u)) return "Spreadsheet on SharePoint"; if (/\.docx|:w:/i.test(u)) return "Document on SharePoint"; return "SharePoint file"; }
+  if (/asana\.com/.test(h)) return /get_asset/.test(u) ? "Attachment in Asana" : "Asana link";
+  if (/force\.com/.test(h)) return /\/Report\//.test(u) ? "Salesforce report" : "Salesforce link";
+  return h.replace(/^www\./, "");
+}
+function noteBody(text){
+  const box = mk("div", "ath-text");
+  const paras = String(text || "").replace(/\r/g, "").split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+  paras.forEach(p => {
+    const el = mk("p"); let last = 0; const re = /https?:\/\/[^\s<>"]+/g; let m;
+    while ((m = re.exec(p))){
+      if (m.index > last) el.appendChild(document.createTextNode(p.slice(last, m.index)));
+      const a = mk("a", "ath-seal"); a.href = m[0]; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = m[0];
+      a.append(mk("i"), mk("span", null, linkLabel(m[0])));
+      el.appendChild(a); last = m.index + m[0].length;
+    }
+    if (last < p.length) el.appendChild(document.createTextNode(p.slice(last)));
+    box.appendChild(el);
+  });
+  return box;
+}
+const fmtDate = iso => { if (!iso) return ""; const d = new Date(iso.length === 10 ? iso + "T12:00:00" : iso); return d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}); };
+function roman(n){ const m = [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]]; let s = ""; for (const [v, r] of m) while (n >= v){ s += r; n -= v; } return s; }
+
+/* ---------- the shelf of scrolls ---------- */
+function renderShelf(){
+  shelf.textContent = ""; pinakes.textContent = "";
+  if (!scrolls.length){ shelf.appendChild(mk("p", "ath-empty", status.dataset.empty || "The shelves are bare. Nothing waits in your Knowledge section.")); }
+  scrolls.forEach((t, i) => {
+    const b = mk("button", "ath-scroll"); b.type = "button"; b.dataset.gid = t.gid;
+    b.setAttribute("aria-label", `Draw the scroll: ${t.name}`); b.title = t.name;
+    b.style.setProperty("--tilt", ((i * 37) % 7 - 3) + "deg");
+    b.style.setProperty("--hue", ((i * 53) % 24 - 12) + "deg");
+    const roll = mk("span", "ath-roll");
+    roll.append(mk("i", "knob l"), mk("i", "band"), mk("i", "knob r"));
+    const tag = mk("span", "ath-tag"); tag.append(mk("small", null, roman(i + 1)), mk("span", null, t.name));
+    b.append(roll, tag);
+    b.addEventListener("click", () => draw(t, b));
+    shelf.appendChild(b);
+    const li = mk("li"); const a = mk("button", "ath-cat"); a.type = "button";
+    a.append(mk("b", null, roman(i + 1) + "."), document.createTextNode(" " + t.name));
+    a.addEventListener("click", () => draw(t, b));
+    li.appendChild(a); pinakes.appendChild(li);
+  });
+  $("ath-count").textContent = scrolls.length ? `${scrolls.length} scroll${scrolls.length === 1 ? "" : "s"}` : "";
+  $("ath-oracle").disabled = !scrolls.length;
+}
+
+/* draw a scroll: it flies off the shelf to the reading table, then unrolls */
+async function draw(t, from){
+  if (busy) return;
+  if (open) await close(true);
+  busy = true; open = t;
+  shelf.querySelectorAll(".ath-scroll").forEach(e => e.classList.toggle("taken", e === from));
+  sfx("chime");
+  if (!REDUCED && from && from.isConnected){
+    const a = from.querySelector(".ath-roll").getBoundingClientRect(), c = crypt.getBoundingClientRect();
+    const fly = from.querySelector(".ath-roll").cloneNode(true); fly.classList.add("ath-fly");
+    Object.assign(fly.style, {left:(a.left - c.left) + "px", top:(a.top - c.top) + "px", width:a.width + "px", height:a.height + "px"});
+    crypt.appendChild(fly);
+    const tx = c.width / 2 - (a.left - c.left) - a.width / 2, ty = c.height * .5 - (a.top - c.top) - a.height / 2;
+    await fly.animate([{transform:"translate(0,0) rotate(0) scale(1)"}, {transform:`translate(${tx * .5}px, ${ty * .5 - 60}px) rotate(-12deg) scale(1.5)`, offset:.55}, {transform:`translate(${tx}px, ${ty}px) rotate(0) scale(2.2)`}], {duration:720, easing:"cubic-bezier(.3,.1,.25,1)"}).finished.catch(() => {});
+    fly.remove();
+  }
+  buildReader(t);
+  reader.hidden = false;
+  const cr = crypt.getBoundingClientRect(); if (cr.top < 0 || cr.bottom > innerHeight) crypt.scrollIntoView({block: cr.height > innerHeight ? "start" : "center", behavior: REDUCED ? "auto" : "smooth"});
+  reader.classList.remove("rolled"); void reader.offsetWidth; reader.classList.add("open");
+  busy = false;
+  setTimeout(() => { const f = reader.querySelector(".ath-close"); if (f) f.focus({preventScroll:true}); }, REDUCED ? 0 : 900);
+}
+function buildReader(t){
+  reader.textContent = "";
+  const veil = mk("div", "ath-veil"); veil.addEventListener("click", () => close());
+  const pap = mk("div", "ath-papyrus"); pap.setAttribute("role", "dialog"); pap.setAttribute("aria-label", t.name);
+  const sheet = mk("div", "ath-sheet");
+  sheet.appendChild(mk("div", "ath-kicker", "From the Knowledge shelf"));
+  sheet.appendChild(mk("h3", "ath-title", t.name));
+  const meta = [`Inscribed ${fmtDate(t.created_at)}`];
+  if (t.modified_at) meta.push(`last touched ${fmtDate(t.modified_at)}`);
+  if (t.due_on) meta.push(`due ${fmtDate(t.due_on)}`);
+  sheet.appendChild(mk("div", "ath-meta", meta.join(" · ")));
+  sheet.appendChild(mk("div", "ath-rule"));
+  if (String(t.notes || "").trim()) sheet.appendChild(noteBody(t.notes));
+  else sheet.appendChild(mk("p", "ath-blank", "This scroll is blank. Whatever it holds is still in your head, or in Asana's attachments."));
+  const acts = mk("div", "ath-acts");
+  const go = mk("a", "ath-btn", "Open in Asana"); go.href = t.permalink_url || ("https://app.asana.com/0/0/" + t.gid); go.target = "_blank"; go.rel = "noopener noreferrer";
+  const back = mk("button", "ath-btn ghost ath-close", "Return it to the shelf"); back.type = "button"; back.addEventListener("click", () => close());
+  acts.append(go, back);
+  sheet.appendChild(acts);
+  pap.append(mk("i", "ath-rod l"), sheet, mk("i", "ath-rod r"));
+  reader.append(veil, pap);
+}
+async function close(quick){
+  if (!open) return;
+  const was = open; open = null;
+  reader.classList.remove("open"); reader.classList.add("rolled");
+  if (!REDUCED && !quick) await new Promise(r => setTimeout(r, 520));
+  reader.hidden = true; reader.classList.remove("rolled");
+  shelf.querySelectorAll(".ath-scroll").forEach(e => e.classList.remove("taken"));
+  const b = shelf.querySelector(`.ath-scroll[data-gid="${was.gid}"]`); if (b && !quick) b.focus({preventScroll:true});
+}
+document.addEventListener("keydown", ev => { if (ev.key === "Escape" && open && !root.hidden) close(); });
+
+/* ask the librarian: the lamp wanders the shelf and settles on a scroll for you */
+async function oracle(){
+  if (busy || !scrolls.length) return;
+  if (open) await close(true);
+  busy = true;
+  const els = [...shelf.querySelectorAll(".ath-scroll")];
+  const pick = Math.floor(Math.random() * els.length);
+  const hops = REDUCED ? 1 : Math.max(8, els.length * 2) + pick;
+  let at = 0;
+  for (let h = 0; h < hops; h++){
+    at = REDUCED ? pick : (h % els.length);
+    els.forEach((e, k) => e.classList.toggle("lit", k === at));
+    if (!REDUCED) await new Promise(r => setTimeout(r, 70 + Math.pow(h / hops, 3) * 420));
+  }
+  at = pick; els.forEach((e, k) => e.classList.toggle("lit", k === at));
+  await new Promise(r => setTimeout(r, REDUCED ? 0 : 380));
+  els[at].classList.remove("lit");
+  busy = false;
+  draw(scrolls[at], els[at]);
+}
+$("ath-oracle").addEventListener("click", oracle);
+
+/* ---------- reading the Knowledge section from Asana ---------- */
+function payloadOf(res){ let p = res && res.payload !== undefined ? res.payload : res; if (typeof p === "string"){ try{ p = JSON.parse(p); }catch(e){} } return p; }
+function say(text, kind){ status.textContent = text; status.className = "ath-status" + (kind ? " " + kind : ""); }
+function saveCache(list){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({at:Date.now(), list})); }catch(e){} }
+function readCache(){ try{ const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); return c && Array.isArray(c.list) ? c : null; }catch(e){ return null; } }
+let loading = false, loaded = false;
+async function load(fresh){
+  if (loading) return; loading = true;
+  const btn = $("ath-refresh"); btn.disabled = true;
+  try{
+    const mcp = window.claude && window.claude.use ? await window.claude.use("mcp") : null;
+    if (!mcp){
+      const c = readCache();
+      say(c ? "Showing the scrolls you last read in this browser. Connect to Asana to dust the shelves." : "The crypt is sealed. Connect to Asana to read the scrolls.", "warn");
+      return;
+    }
+    say("Lighting the lamps…");
+    const opts = {cache: fresh ? {refresh:true, staleTime:0, gcTime:600000} : {staleTime:120000, gcTime:600000}};
+    let res;
+    try{ res = payloadOf(await mcp.callTool(SERVER, "get_tasks", {section: KNOWLEDGE_SECTION, completed_since: "now", opt_fields: FIELDS, limit: 100}, opts)); }
+    catch(e){ if (e && e.retryable){ await new Promise(r => setTimeout(r, 1200)); res = payloadOf(await mcp.callTool(SERVER, "get_tasks", {section: KNOWLEDGE_SECTION, completed_since: "now", opt_fields: FIELDS, limit: 100}, opts)); } else throw e; }
+    const list = ((res && res.data) || []).filter(t => !t.completed)
+      .map(t => ({gid:t.gid, name:t.name || "Untitled", notes:t.notes || "", due_on:t.due_on || null, created_at:t.created_at || null, modified_at:t.modified_at || null, permalink_url:t.permalink_url || ""}));
+    scrolls = list; loaded = true; saveCache(list); renderShelf();
+    status.dataset.empty = "";
+    say(list.length ? "Hold the lamp near a scroll, then draw it from its niche. Or ask the Librarian to choose." : "The shelves are bare. Nothing waits in your Knowledge section.");
+  }catch(err){
+    const code = err && err.code;
+    if (code === "server_not_connected" || code === "not_granted" || code === "capability_disabled") say("The crypt is sealed. Asana isn't connected here.", "warn");
+    else if (code === "needs_reauth") say("Your Asana sign-in has expired. Reconnect Asana, then dust the shelves again.", "warn");
+    else if (code === "tool_error" || code === "forbidden" || code === "not_found") say("These scrolls are sealed: the Knowledge section lives in John's own My Tasks, which only his Asana account can open.", "warn");
+    else say("The lamps guttered out before the scrolls could be read. Try dusting the shelves again.", "warn");
+    if (!loaded){ const c = readCache(); if (c){ scrolls = c.list; renderShelf(); } }
+  }finally{ loading = false; btn.disabled = false; }
+}
+$("ath-refresh").addEventListener("click", () => load(true));
+
+/* the oil lamps sit on the column capitals, wherever the cropped scene puts them */
+function placeLamps(){
+  const r = crypt.getBoundingClientRect(); if (!r.width) return;
+  const k = Math.max(r.width / 1600, r.height / 900), ox = (r.width - 1600 * k) / 2, oy = (r.height - 900 * k) / 2;
+  [["ath-lamp-l", 158], ["ath-lamp-r", 1442]].forEach(([id, x]) => { const e = $(id); e.style.left = (ox + x * k) + "px"; e.style.top = (oy + 226 * k) + "px"; e.style.transform = `scale(${Math.max(.7, Math.min(1.4, k)).toFixed(2)})`; });
+}
+new ResizeObserver(placeLamps).observe(crypt);
+
+drawCrypt(); dust();
+const c0 = readCache(); if (c0){ scrolls = c0.list; }
+renderShelf();
+let started = false;
+const start = () => { if (!started){ started = true; load(false); } };
+$("tabbtn-athenaeum").addEventListener("click", start);
+if (!root.hidden) start();
+new MutationObserver(() => { if (!root.hidden) start(); }).observe(root, {attributes:true, attributeFilter:["hidden"]});
 })();
 </script>
 <script>

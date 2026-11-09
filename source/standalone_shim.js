@@ -4,7 +4,7 @@
    directly from the browser with each person's own Asana personal access token,
    which stays in that person's browser (localStorage) and is sent only to app.asana.com.
    It exposes the same small interface the page's code already uses:
-     claude.use("mcp") -> callTool("Asana", "get_users" | "search_tasks" | "add_comment", input)
+     claude.use("mcp") -> callTool("Asana", "get_users" | "search_tasks" | "add_comment" | "get_tasks", input)
      claude.use("db")  -> collection(...).onSnapshot / doc(...).set / delete, stored as tasks
                           in the Guild Hall Ledger project in Asana                        */
 (function(){
@@ -49,7 +49,8 @@ const TOOLS = {
       "created_at.before": i.created_at_before, "completed_at.after": i.completed_at_after, "completed_at.before": i.completed_at_before
     }});
   },
-  async add_comment({task_id, text}){ return asana("POST", `/tasks/${task_id}/stories`, {body: {text}}); }
+  async add_comment({task_id, text}){ return asana("POST", `/tasks/${task_id}/stories`, {body: {text}}); },
+  async get_tasks(i){ return asana("GET", `/sections/${i.section}/tasks`, {query: {opt_fields: i.opt_fields, completed_since: i.completed_since, limit: i.limit}}); }
 };
 const mcp = {
   async callTool(server, tool, input){
