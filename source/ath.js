@@ -347,6 +347,75 @@ function renderShelf(){
   $("ath-oracle").disabled = !scrolls.length;
 }
 
+/* ---------- searching every scroll: each hit shows the words around it ---------- */
+const qBox = $("ath-q"), qMeta = $("ath-q-meta"), qHits = $("ath-hits");
+const plainCache = new Map();
+function plainOf(t){
+  const k = t.gid + "|" + (t.modified_at || "");
+  if (plainCache.has(k)) return plainCache.get(k);
+  let txt = "";
+  if (t.html_notes){ try { const d = new DOMParser().parseFromString(t.html_notes.replace(/<\/(h1|h2|li|blockquote|pre|tr|p)>/gi, "$&\n").replace(/<br\s*\/?>/gi, "\n"), "text/html"); txt = d.body.textContent || ""; } catch(e){} }
+  if (!txt.trim()) txt = t.notes || "";
+  txt = txt.replace(/https?:\/\/[^\s<>"]+/g, u => "‹" + linkLabel(u) + "›").replace(/\s+/g, " ").trim();
+  plainCache.set(k, txt); return txt;
+}
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function snippets(text, re, max){
+  const out = []; re.lastIndex = 0; let m, n = 0;
+  while ((m = re.exec(text))){
+    n++;
+    if (out.length < max){
+      let st = m.index, en = m.index + m[0].length;
+      for (let k = 0; k <= 10 && st > 0; k++){ const j = text.lastIndexOf(" ", st - 2); st = j < 0 ? 0 : j + 1; if (j < 0) break; }
+      for (let k = 0; k <= 10 && en < text.length; k++){ const j = text.indexOf(" ", en + 1); en = j < 0 ? text.length : j; if (j < 0) break; }
+      out.push({pre:(st > 0 ? "…" : "") + text.slice(st, m.index), hit:m[0], post:text.slice(m.index + m[0].length, en) + (en < text.length ? "…" : "")});
+    }
+    if (m[0].length === 0) re.lastIndex++;
+  }
+  return {list:out, count:n};
+}
+function runSearch(){
+  const q = qBox.value.trim(); qHits.textContent = "";
+  if (q.length < 2){ qMeta.textContent = q ? "Type at least two letters." : ""; return; }
+  const re = new RegExp(reEsc(q), "gi"), res = [];
+  scrolls.forEach((t, i) => {
+    const inTitle = new RegExp(reEsc(q), "i").test(t.name);
+    const sn = snippets(plainOf(t), re, 3);
+    if (inTitle || sn.count) res.push({t, i, inTitle, sn});
+  });
+  res.sort((a, b) => (b.inTitle - a.inTitle) || (b.sn.count - a.sn.count));
+  const total = res.reduce((n, r) => n + r.sn.count, 0);
+  qMeta.textContent = res.length ? `${res.length} scroll${res.length === 1 ? "" : "s"} · ${total} mention${total === 1 ? "" : "s"} of “${q}”` : `No scroll mentions “${q}”.`;
+  const mark = (el, str) => { const parts = str.split(new RegExp(`(${reEsc(q)})`, "gi")); parts.forEach((p, k) => el.appendChild(k % 2 ? mk("mark", null, p) : document.createTextNode(p))); };
+  res.forEach(r => {
+    const li = mk("li"), btn = mk("button", "ath-hit"); btn.type = "button";
+    const head = mk("span", "ath-hit-head");
+    head.appendChild(mk("b", "ath-hit-num", roman(r.i + 1) + "."));
+    const nm = mk("span", "ath-hit-name"); mark(nm, r.t.name); head.appendChild(nm);
+    if (r.sn.count) head.appendChild(mk("em", null, `${r.sn.count} mention${r.sn.count === 1 ? "" : "s"}`));
+    btn.appendChild(head);
+    r.sn.list.forEach(x => { const q1 = mk("span", "ath-hit-snip"); q1.appendChild(document.createTextNode(x.pre)); q1.appendChild(mk("mark", null, x.hit)); q1.appendChild(document.createTextNode(x.post)); btn.appendChild(q1); });
+    if (r.sn.count > r.sn.list.length) btn.appendChild(mk("span", "ath-hit-more", `…and ${r.sn.count - r.sn.list.length} more in this scroll`));
+    btn.addEventListener("click", () => {
+      const el = shelf.querySelector(`.ath-scroll[data-gid="${r.t.gid}"]`);
+      crypt.scrollIntoView({block:"start", behavior: REDUCED ? "auto" : "smooth"});
+      draw(r.t, el).then(() => highlightInReader(q));
+    });
+    li.appendChild(btn); qHits.appendChild(li);
+  });
+}
+function highlightInReader(q){
+  const box = $("ath-reader"); if (!box || box.hidden) return;
+  const re = new RegExp(reEsc(q), "gi"), walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT), nodes = [];
+  while (walker.nextNode()){ const n = walker.currentNode; if (n.parentNode && !/^(MARK|SCRIPT|STYLE)$/.test(n.parentNode.nodeName) && !n.parentNode.closest("svg") && re.test(n.nodeValue)) nodes.push(n); re.lastIndex = 0; }
+  let first = null;
+  nodes.forEach(n => { const f = document.createDocumentFragment(); n.nodeValue.split(new RegExp(`(${reEsc(q)})`, "gi")).forEach((p, k) => { if (k % 2){ const m = mk("mark", "ath-found", p); f.appendChild(m); first = first || m; } else if (p) f.appendChild(document.createTextNode(p)); }); n.parentNode.replaceChild(f, n); });
+  if (first) setTimeout(() => first.scrollIntoView({block:"center", behavior: REDUCED ? "auto" : "smooth"}), 350);
+}
+let qTimer = 0;
+qBox.addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(runSearch, 120); });
+qBox.addEventListener("keydown", e => { if (e.key === "Escape"){ qBox.value = ""; runSearch(); } if (e.key === "Enter"){ const f = qHits.querySelector(".ath-hit"); if (f) f.click(); } });
+
 /* draw a scroll: it flies off the shelf to the reading table, then unrolls */
 async function draw(t, from){
   if (busy) return;
@@ -466,7 +535,7 @@ async function load(fresh){
     }
     const list = ((res && res.data) || []).filter(t => !t.completed)
       .map(t => ({gid:t.gid, name:t.name || "Untitled", notes:t.notes || "", html_notes:t.html_notes || "", due_on:t.due_on || null, created_at:t.created_at || null, modified_at:t.modified_at || null, permalink_url:t.permalink_url || ""}));
-    scrolls = list; loaded = true; saveCache(list); renderShelf();
+    scrolls = list; loaded = true; saveCache(list); renderShelf(); if (qBox && qBox.value.trim()) runSearch();
     status.dataset.empty = "";
     say(list.length ? "Hold the lamp near a scroll, then draw it from its niche. Or ask the Librarian to choose." : "The shelves are bare. Nothing waits in your Knowledge section.");
   }catch(err){
