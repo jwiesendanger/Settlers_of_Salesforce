@@ -602,6 +602,12 @@ const ARC_LINES = {
   idle:["Eh? Another visitor. Leave your link and the words behind it, and I'll set it down properly.", "Mind the ink. It never comes off, you know. Not in forty years.", "A recording, you say? I can't hear them. Bring me the transcript and I'll make sense of it.", "Everything worth knowing ends up in here eventually. Usually misfiled."],
   linkOnly:"A link, eh? The doors behind it are sealed to me, sign-ins and such. Paste me the words, or drop the transcript or file itself.",
   ready:"Ah, that's something I can read. Hand it over when you're ready.",
+  spLink:"SharePoint, is it? Lend me your key: press “Fetch with my sign-in” and I'll go through your own door for the transcript.",
+  fetching:"Shuffling down to the SharePoint stacks with your key… a moment.",
+  signIn:"The door wants your name. Sign in to Microsoft in the browser pane of the Claude app (Ctrl+Shift+B shows it), then press Fetch again.",
+  noTranscript:"I found the recording, but no one kept a transcript of it. Transcription has to be on during the meeting. Paste me notes instead.",
+  noBrowser:"My key only turns in the Claude desktop app, where its browser lives. Open this page there, or drop the transcript file.",
+  fetched:w => `Got it: ${w} from the transcript. Hand it over when you're ready.`,
   reading:["Squinting at it now…", "Hmm. Hmm. Yes…", "Turning the pages…"],
   writing:"Setting it down: what you need to know, the key points, the steps, and a map of the process…",
   done:"There. Read it over. If it suits you, I'll seal it onto the Knowledge shelf.",
@@ -614,29 +620,96 @@ arc.svg.addEventListener("click", () => { if (!arcBusy) arcSay(ARC_LINES.idle[Ma
 /* ---------- sources: links, files and pasted text ---------- */
 function corpusChars(){ return arcSources.reduce((n, x) => n + (x.text ? x.text.length : 0), 0) + arc.text.value.trim().length; }
 function wordsLabel(t){ const n = t.split(/\s+/).filter(Boolean).length; return n < 1000 ? `${n} words` : `${Math.round(n / 100) / 10}k words`; }
-function arcRefresh(){
+function arcRefresh(quiet){
   arc.list.textContent = "";
   arcSources.forEach((x, i) => {
     const li = mk("li", "arc-src" + (x.kind === "link" ? " link" : ""));
     const ic = mk("i"); li.appendChild(ic);
     if (x.kind === "link"){ const a = mk("a", null, x.label); a.href = x.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = x.url; li.appendChild(a); }
     else li.appendChild(mk("span", null, x.name));
-    li.appendChild(mk("em", null, x.kind === "link" ? "link" : x.error ? x.error : x.text ? wordsLabel(x.text) : "reading…"));
+    li.appendChild(mk("em", null, x.fetching ? "fetching…" : x.error ? x.error : x.text ? wordsLabel(x.text) : x.kind === "link" ? "link" : "reading…"));
+    if (x.kind === "link" && isSharePoint(x.url) && !x.text && !x.fetching){
+      const fb = mk("button", "arc-fetch", "Fetch with my sign-in"); fb.type = "button";
+      fb.title = "Opens it in the Claude app's browser, where you're signed in to Microsoft, and pulls the transcript";
+      fb.disabled = arcBusy || arcSources.some(s => s.fetching);
+      fb.addEventListener("click", () => fetchSigned(x)); li.appendChild(fb);
+    }
     const rm = mk("button", "arc-x", "×"); rm.type = "button"; rm.title = "Take it back"; rm.setAttribute("aria-label", "Remove " + (x.name || x.label));
     rm.addEventListener("click", () => { arcSources.splice(i, 1); arcRefresh(); });
     li.appendChild(rm); arc.list.appendChild(li);
   });
   const chars = corpusChars(), links = arcSources.filter(x => x.kind === "link").length;
   const w = Math.round(chars / 6);
-  const vid = arcSources.some(x => x.kind === "link" && /video|recording|stream/i.test(x.label + " " + x.url));
+  const vid = arcSources.some(x => x.kind === "link" && !x.text && /video|recording|stream/i.test(x.label + " " + x.url));
+  const sp = arcSources.some(x => x.kind === "link" && !x.text && isSharePoint(x.url));
   arc.meter.classList.toggle("wait", !chars && !!links);
   arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read`
-    : links ? (vid ? "Waiting on the transcript. In Teams: meeting recap → Transcript → Download, then drop the file here or paste its text above."
+    : links ? (sp ? "Press “Fetch with my sign-in” on the link (Claude desktop app), or drop the transcript file / paste its text above."
+             : vid ? "Waiting on the transcript. In Teams: meeting recap → Transcript → Download, then drop the file here or paste its text above."
                    : "Waiting on the words. He can't open links behind a sign-in, so drop the file itself or paste its text above.")
     : "";
   arc.start.disabled = arcBusy || !chars;
-  if (!arcBusy){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(vid ? ARC_LINES.video : ARC_LINES.linkOnly); }
+  if (!quiet && !arcBusy && !arcSources.some(s => s.fetching)){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(sp ? ARC_LINES.spLink : vid ? ARC_LINES.video : ARC_LINES.linkOnly); }
   arc.text.classList.toggle("arc-want", !chars && !!links);
+}
+/* ---------- reading SharePoint / OneDrive recordings through the viewer's own Microsoft sign-in ----------
+   The page can't hold Microsoft credentials, but the Claude desktop app's browser can: the viewer signs in there once,
+   and the Archivist asks that browser to open SharePoint's own file API (cookie-authenticated, read-only GETs). */
+const BROWSER = "host:claude_browser";
+function isSharePoint(u){ try { return /(^|\.)sharepoint\.com$/i.test(new URL(u).hostname); } catch(e){ return false; } }
+function b64url(s){ return btoa(unescape(encodeURIComponent(s))).replace(/=+$/, "").replace(/\//g, "_").replace(/\+/g, "-"); }
+function resText(r){ return ((r && r.content) || []).filter(b => b && b.type === "text").map(b => b.text).join("\n") || (typeof r?.payload === "string" ? r.payload : ""); }
+function resJson(r){
+  if (r && r.payload && typeof r.payload === "object" && !Array.isArray(r.payload) && (r.payload.id || r.payload.value)) return r.payload;
+  const t = resText(r), a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a < 0 || b < a) return null;
+  try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ return null; }
+}
+let arcTab = null;
+const pause = ms => new Promise(r => setTimeout(r, ms));
+async function fetchSigned(src){
+  if (arcBusy || src.fetching) return;
+  const mcp = window.claude && await claude.use("mcp").catch(() => null);
+  if (!mcp){ src.error = "needs the Claude app"; arcRefresh(); arcSay(ARC_LINES.noBrowser, ""); return; }
+  src.fetching = true; src.error = null; arcRefresh(); arcSay(ARC_LINES.fetching, "reading");
+  const host = new URL(src.url).host, call = (tool, input) => mcp.callTool(BROWSER, tool, input, {cache:false});
+  let tab = arcTab;
+  const go = async url => { const r = await call("navigate", tab ? {url, tabId:tab} : {url}); await pause(900); return r; };
+  const page = async () => resJson(await call("get_page_text", tab ? {tabId:tab, max_chars:900000} : {max_chars:900000}));
+  const signIn = async () => { try { await go(src.url); } catch(e){} src.error = "sign in, then fetch again"; arcSay(ARC_LINES.signIn, ""); };
+  try {
+    let reused = false;
+    if (tab){ try { await go(src.url); reused = true; } catch(e){ tab = null; } }
+    if (!reused){
+      const opened = await call("preview_start", {url:src.url});
+      tab = arcTab = opened?.payload?.tabId || (/tab\s*_?id["'\s:=]+["']?([\w-]+)/i.exec(resText(opened)) || [])[1] || null;
+    }
+    await pause(1500);
+    await go(`https://${host}/_api/v2.0/shares/u!${b64url(src.url)}/driveItem?$select=id,name,parentReference,file`);
+    const item = await page();
+    if (!item || !item.id){ if (item && item.error) throw new Error(item.error.message || item.error.code); return await signIn(); }
+    const base = `https://${host}/_api/v2.1/drives/${item.parentReference.driveId}/items/${item.id}`;
+    src.label = item.name || src.label;
+    await go(base + "/media/transcripts");
+    const list = await page(), ts = (list && list.value) || [];
+    if (!list) return await signIn();
+    if (!ts.length){ src.error = "no transcript on it"; arcSay(ARC_LINES.noTranscript, ""); return; }
+    await go(`${base}/media/transcripts/${ts[0].id}/streamContent`);
+    let raw = resText(await call("get_page_text", {tabId:tab, max_chars:900000}));
+    const v = raw.indexOf("WEBVTT"); if (v > 0) raw = raw.slice(v);
+    let text = /-->/.test(raw) ? cleanCaptions(raw) : "";
+    if (!text){ const j = resJson({content:[{type:"text", text:raw}]}); const e = j && (j.entries || j.value);
+      if (Array.isArray(e)) text = e.map(x => (x.speakerDisplayName ? x.speakerDisplayName + ": " : "") + (x.text || "")).join("\n"); }
+    if (!text || text.length < 40) throw new Error("the transcript came back empty");
+    src.text = text.slice(0, ARC_MAX_CHARS); src.name = src.label;
+    try { await go(src.url); } catch(e){}
+    arcSay(ARC_LINES.fetched(wordsLabel(src.text)), "");
+  } catch(e){
+    const code = e && e.code;
+    if (code === "server_not_connected" || code === "not_in_manifest" || code === "capability_disabled"){ src.error = "needs the Claude app"; arcSay(ARC_LINES.noBrowser, ""); }
+    else if (code === "not_granted" || code === "consent_required"){ src.error = "browser not allowed"; arcSay("You'd not let me use the browser. Fair enough. Drop the transcript file instead.", ""); }
+    else { src.error = "couldn't fetch"; arcSay("The shelves wouldn't give it up: " + String((e && e.message) || e).slice(0, 140) + ". Drop the transcript file instead, if you have it.", ""); }
+  } finally { src.fetching = false; arcRefresh(true); }
 }
 function addLink(raw){
   const u = String(raw || "").trim(); if (!/^https?:\/\//i.test(u)) return false;
