@@ -24,4 +24,29 @@
       <h3>The Pinakes <small>· the catalogue of this crypt</small></h3>
       <ol id="ath-pinakes"></ol>
     </div>
+    <div class="arc-desk" id="arc-desk">
+      <div class="arc-figure">
+        <svg id="arc-svg" viewBox="0 0 380 400" role="img" aria-label="The Archivist: a hunched old scribe in a patched robe, ink on his fingers, at a cluttered desk"></svg>
+        <div class="arc-bubble" id="arc-say" aria-live="polite">Eh? Another visitor. Leave your link and the words behind it, and I'll set it down properly.</div>
+      </div>
+      <div class="arc-work">
+        <div class="arc-headline">
+          <h3>The Archivist</h3>
+          <p>Hand him a meeting recording, a big document or a transcript. He writes it up as a knowledge article (what you need to know, the key points, the steps, and a process map) and files it on the Knowledge shelf as a new scroll.</p>
+        </div>
+        <div class="arc-tray" id="arc-tray" tabindex="0" role="group" aria-label="Drop links or files for the Archivist">
+          <div class="arc-tray-hint"><b>Drop links or files here</b><span>Teams or SharePoint links, transcripts (.vtt, .docx), PDFs, Word or text files</span></div>
+          <div class="arc-linkrow">
+            <input type="url" id="arc-url" placeholder="…or paste a link and press Enter" aria-label="Link to a source">
+            <button type="button" id="arc-add">Add link</button>
+            <label class="arc-file"><input type="file" id="arc-file" multiple accept=".txt,.vtt,.srt,.md,.csv,.json,.html,.htm,.docx,.pdf"><span>Choose files</span></label>
+          </div>
+          <ul class="arc-sources" id="arc-sources"></ul>
+        </div>
+        <label class="arc-field"><span>The words themselves <em>(paste a transcript or document text if he can't open the link)</em></span><textarea id="arc-text" rows="5" spellcheck="false" placeholder="Paste the meeting transcript, notes or document text here…"></textarea></label>
+        <label class="arc-field"><span>Anything he should focus on? <em>(optional)</em></span><input type="text" id="arc-focus" maxlength="200" placeholder="e.g. the steps to build the postcard file"></label>
+        <div class="arc-go"><button type="button" id="arc-start" disabled>Hand it to the Archivist</button><span class="arc-meter" id="arc-meter"></span></div>
+        <div class="arc-result" id="arc-result" hidden></div>
+      </div>
+    </div>
   </section>

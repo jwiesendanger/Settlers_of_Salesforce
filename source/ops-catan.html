@@ -600,6 +600,83 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .ath-cat:hover{background:rgba(233,200,134,.18)}
 @media (max-width:700px){#ath-shelf{width:92%;top:12%;max-height:62%}.ath-lamp{display:none}.ath-content{padding:22px 24px}}
 @media (prefers-reduced-motion:reduce){.ath-lamp .glow,.ath-lamp .flame,.ath-scroll .ath-tagwrap{animation:none!important}#ath-reader .ath-sheet,#ath-reader .ath-rod,#ath-reader .ath-veil{animation:none!important}}
+/* rich notes and process maps inside a scroll */
+.ath-rich h4{margin:16px 0 6px;font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#6e3a12;border-bottom:1px solid rgba(110,58,18,.35);padding-bottom:3px}
+.ath-rich ul,.ath-rich ol{margin:0 0 8px;padding-left:24px}
+.ath-rich li{margin:3px 0}
+.ath-rich ul li::marker{color:#8a3a1a}
+.ath-rich ol li::marker{font-family:"Cinzel",Georgia,serif;font-weight:700;color:#8a3a1a}
+.ath-rich blockquote{margin:6px 0 10px;padding:4px 0 4px 14px;border-left:3px solid rgba(110,58,18,.45);font-style:italic}
+.ath-rich hr{border:none;border-top:1px solid rgba(110,58,18,.35);margin:14px 0}
+.ath-rich table{border-collapse:collapse;margin:6px 0 10px}.ath-rich td{border:1px solid rgba(110,58,18,.4);padding:3px 8px;vertical-align:top}
+.ath-pre{white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:13px;background:rgba(110,70,20,.08);padding:8px 10px;border-radius:4px}
+.ath-flowbox{margin:8px 0 12px;padding:8px;border:1px dashed rgba(110,58,18,.45);border-radius:6px;background:rgba(255,248,225,.18);overflow:auto}
+.ath-flow{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.ath-flow .edge{fill:none;stroke:#3b2610;stroke-width:1.7;stroke-linecap:round}
+.ath-flow .elabel{font-family:"IM Fell English",Georgia,serif;font-style:italic;font-size:13px;fill:#6e3a12}
+.ath-flow .node rect,.ath-flow .node path{fill:rgba(255,246,220,.55);stroke:#3b2610;stroke-width:1.7}
+.ath-flow .node.decision path{fill:rgba(240,214,160,.6)}
+.ath-flow .node.start rect,.ath-flow .node.end rect{fill:rgba(120,40,20,.14);stroke:#6e1414}
+.ath-flow .node text{font-family:"IM Fell English",Georgia,serif;font-size:14.5px;fill:#2b1d0e}
+/* ---------- the Archivist's desk ---------- */
+.arc-desk{display:grid;grid-template-columns:minmax(260px,400px) minmax(0,1fr);gap:22px;align-items:start;padding:18px;border-radius:14px;border:2px solid #5c4626;background:radial-gradient(ellipse at 15% 30%,rgba(255,170,80,.12),rgba(0,0,0,0) 50%),linear-gradient(180deg,#1b130c,#0f0a06);box-shadow:inset 0 0 60px rgba(0,0,0,.7)}
+@media (max-width:860px){.arc-desk{grid-template-columns:minmax(0,1fr)}}
+.arc-figure{position:relative}
+#arc-svg{display:block;width:100%;height:auto;border-radius:10px;cursor:pointer}
+.arc-bubble{position:relative;margin-top:-6px;padding:10px 14px 12px;background:var(--ath-blot,none) 40% 30%/300px,linear-gradient(180deg,#e2cf9e,#cdb47b);color:#2e1f0c;border-radius:10px 10px 10px 2px;font-family:"IM Fell English",Georgia,serif;font-style:italic;font-size:16.5px;line-height:1.4;box-shadow:0 6px 14px rgba(0,0,0,.5);min-height:3em}
+.arc-bubble::before{content:"";position:absolute;left:38%;top:-12px;border:8px solid transparent;border-bottom:12px solid #e2cf9e}
+.arc-work{display:flex;flex-direction:column;gap:12px;min-width:0}
+.arc-headline h3{margin:0;font-family:"Cinzel",var(--f-display);font-weight:700;font-size:24px;letter-spacing:.06em;color:#e9c886}
+.arc-headline p{margin:4px 0 0;color:var(--ink);font-size:15px;line-height:1.45;opacity:.9}
+.arc-tray{border:2px dashed #8a6a3a;border-radius:10px;padding:14px;background:rgba(233,200,134,.05);display:flex;flex-direction:column;gap:10px;transition:background .2s,border-color .2s,box-shadow .2s}
+.arc-tray.hot{background:rgba(255,190,90,.14);border-color:#e9c886;box-shadow:0 0 24px rgba(255,190,90,.25)}
+.arc-tray:focus-visible{outline:2px solid #e9c886;outline-offset:2px}
+.arc-tray-hint{display:flex;flex-direction:column;gap:2px;text-align:center}
+.arc-tray-hint b{font-family:"Cinzel",Georgia,serif;font-size:16px;letter-spacing:.06em;color:#e9c886}
+.arc-tray-hint span{font-size:13.5px;color:var(--muted)}
+.arc-linkrow{display:flex;flex-wrap:wrap;gap:8px}
+.arc-linkrow input{flex:1;min-width:200px;font-family:var(--f-body);font-size:14px;padding:7px 10px;border-radius:8px;border:1px solid #8a6a3a;background:#f0e2bd;color:#2e1f0c}
+.arc-file{display:inline-flex;align-items:center;cursor:pointer}
+.arc-file input{position:absolute;width:1px;height:1px;opacity:0}
+.arc-file span{font-family:var(--f-label);font-weight:700;font-size:14px;letter-spacing:.04em;background:var(--parch);color:var(--parch-ink);border:2px solid var(--frame);border-radius:8px;padding:6px 12px}
+.arc-file input:focus-visible+span{outline:2px solid #e9c886;outline-offset:2px}
+.arc-sources{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.arc-src{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;background:rgba(233,200,134,.08);border:1px solid #4a3622;font-size:14px;min-width:0}
+.arc-src i{width:14px;height:17px;flex:none;border-radius:2px;background:linear-gradient(#d8c493,#b99c66);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+.arc-src.link i{border-radius:50%;width:15px;height:15px;background:radial-gradient(circle at 38% 35%,#e0574a,#9a1f17 55%,#5e0f0b)}
+.arc-src a,.arc-src span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.arc-src em{font-style:normal;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.arc-x{background:none;border:none;color:var(--muted);font-size:18px;line-height:1;padding:0 4px;cursor:pointer}
+.arc-x:hover{color:#f0b37a;background:none}
+.arc-field{display:flex;flex-direction:column;gap:4px;font-family:var(--f-label);font-size:13px;letter-spacing:.04em;color:#e9c886}
+.arc-field em{font-family:var(--f-body);font-style:normal;letter-spacing:0;color:var(--muted)}
+.arc-field textarea,.arc-field input{font-family:var(--f-body);font-size:14px;letter-spacing:0;padding:8px 10px;border-radius:8px;border:1px solid #8a6a3a;background:#f0e2bd;color:#2e1f0c;resize:vertical;width:100%;box-sizing:border-box}
+.arc-go{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.arc-go button{font-family:"Cinzel",Georgia,serif;font-size:15px;padding:9px 18px;background:#e9c886;border-color:#8a6a3a}
+.arc-go button:disabled{opacity:.5;cursor:not-allowed}
+.arc-meter{font-size:13.5px;color:var(--muted)}
+.arc-article{position:relative;padding:22px 26px;border-radius:4px;background:var(--ath-blot,none) 20% 40%,var(--ath-grain,none),linear-gradient(180deg,#e2cf9e,#cdb47b 70%,#bfa067);color:#2e1f0c;font-family:"IM Fell English",Georgia,serif;font-size:17px;line-height:1.5;box-shadow:0 14px 30px rgba(0,0,0,.6),inset 0 0 40px rgba(70,40,10,.45)}
+.arc-title{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:2px 4px;font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:clamp(20px,2.2vw,26px);color:#2b1d0e;background:transparent;border:none;border-bottom:1px dashed rgba(110,58,18,.5)}
+.arc-title:focus{outline:none;background:rgba(255,248,225,.35)}
+.arc-msg{margin-top:8px;font-family:var(--f-body);font-size:14px;color:#7a1f12}
+#arc-svg .arc-body{transform-origin:290px 360px;animation:arcbreathe 4.8s ease-in-out infinite}
+#arc-svg .arc-head{transform-origin:196px 160px;animation:arcnod 7s ease-in-out infinite}
+#arc-svg .arc-lid{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0);animation:arcblink 5.5s infinite}
+#arc-svg .arc-flame{transform-box:fill-box;transform-origin:50% 100%;animation:athflame 1.2s ease-in-out infinite alternate}
+#arc-svg .arc-glow{animation:athglow 3s ease-in-out infinite}
+#arc-svg .arc-quill{transform-box:view-box;transform-origin:150px 280px}
+#arc-svg.writing .arc-hand{animation:arcscribble .32s ease-in-out infinite alternate}
+#arc-svg.writing .arc-head{animation:arcpeer 1.6s ease-in-out infinite}
+#arc-svg.reading .arc-head{animation:arcread 2.4s ease-in-out infinite}
+#arc-svg.done .arc-quill{animation:arcflourish 1.2s ease-out 1}
+@keyframes arcbreathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.008,1.018)}}
+@keyframes arcnod{0%,100%{transform:rotate(0)}50%{transform:rotate(2.5deg)}}
+@keyframes arcblink{0%,93%,100%{transform:scaleY(0)}95%,97%{transform:scaleY(1)}}
+@keyframes arcscribble{from{transform:translate(0,0) rotate(0)}to{transform:translate(9px,-1px) rotate(-3deg)}}
+@keyframes arcpeer{0%,100%{transform:rotate(3deg) translate(0,2px)}50%{transform:rotate(5deg) translate(2px,3px)}}
+@keyframes arcread{0%,100%{transform:rotate(1deg)}25%{transform:rotate(4deg) translate(-3px,1px)}75%{transform:rotate(-1deg) translate(3px,0)}}
+@keyframes arcflourish{0%{transform:rotate(0)}40%{transform:rotate(-14deg)}100%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){#arc-svg *{animation:none!important}}
 </style>
 
 <div class="wrap">
@@ -733,6 +810,31 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
     <div class="ath-pinakes-wrap">
       <h3>The Pinakes <small>· the catalogue of this crypt</small></h3>
       <ol id="ath-pinakes"></ol>
+    </div>
+    <div class="arc-desk" id="arc-desk">
+      <div class="arc-figure">
+        <svg id="arc-svg" viewBox="0 0 380 400" role="img" aria-label="The Archivist: a hunched old scribe in a patched robe, ink on his fingers, at a cluttered desk"></svg>
+        <div class="arc-bubble" id="arc-say" aria-live="polite">Eh? Another visitor. Leave your link and the words behind it, and I'll set it down properly.</div>
+      </div>
+      <div class="arc-work">
+        <div class="arc-headline">
+          <h3>The Archivist</h3>
+          <p>Hand him a meeting recording, a big document or a transcript. He writes it up as a knowledge article (what you need to know, the key points, the steps, and a process map) and files it on the Knowledge shelf as a new scroll.</p>
+        </div>
+        <div class="arc-tray" id="arc-tray" tabindex="0" role="group" aria-label="Drop links or files for the Archivist">
+          <div class="arc-tray-hint"><b>Drop links or files here</b><span>Teams or SharePoint links, transcripts (.vtt, .docx), PDFs, Word or text files</span></div>
+          <div class="arc-linkrow">
+            <input type="url" id="arc-url" placeholder="…or paste a link and press Enter" aria-label="Link to a source">
+            <button type="button" id="arc-add">Add link</button>
+            <label class="arc-file"><input type="file" id="arc-file" multiple accept=".txt,.vtt,.srt,.md,.csv,.json,.html,.htm,.docx,.pdf"><span>Choose files</span></label>
+          </div>
+          <ul class="arc-sources" id="arc-sources"></ul>
+        </div>
+        <label class="arc-field"><span>The words themselves <em>(paste a transcript or document text if he can't open the link)</em></span><textarea id="arc-text" rows="5" spellcheck="false" placeholder="Paste the meeting transcript, notes or document text here…"></textarea></label>
+        <label class="arc-field"><span>Anything he should focus on? <em>(optional)</em></span><input type="text" id="arc-focus" maxlength="200" placeholder="e.g. the steps to build the postcard file"></label>
+        <div class="arc-go"><button type="button" id="arc-start" disabled>Hand it to the Archivist</button><span class="arc-meter" id="arc-meter"></span></div>
+        <div class="arc-result" id="arc-result" hidden></div>
+      </div>
     </div>
   </section>
 </div>
@@ -3950,7 +4052,7 @@ const sfx = n => { try{ if (window.__sfx) window.__sfx(n); }catch(e){} };
 const SERVER = "Asana";
 const KNOWLEDGE_SECTION = "1220179858997729";   /* the "Knowledge" section of John's My Tasks */
 const CACHE_KEY = "settlers-athenaeum";
-const FIELDS = "name,notes,due_on,created_at,modified_at,completed,permalink_url";
+const FIELDS = "name,notes,html_notes,due_on,created_at,modified_at,completed,permalink_url";
 
 const root = $("tab-athenaeum");
 const crypt = $("ath-crypt"), shelf = $("ath-shelf"), reader = $("ath-reader"), pinakes = $("ath-pinakes"), status = $("ath-status");
@@ -4070,6 +4172,126 @@ function noteBody(text){
 }
 const fmtDate = iso => { if (!iso) return ""; const d = new Date(iso.length === 10 ? iso + "T12:00:00" : iso); return d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}); };
 function roman(n){ const m = [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]]; let s = ""; for (const [v, r] of m) while (n >= v){ s += r; n -= v; } return s; }
+
+/* ---------- rich notes: Asana's formatted description, with any process map drawn as a diagram ---------- */
+function richBody(html){
+  if (!html || !/<(h1|h2|ul|ol|pre|table|blockquote|strong)\b/i.test(html)) return null;
+  let doc; try{ doc = new DOMParser().parseFromString(html, "text/html"); }catch(e){ return null; }
+  const box = mk("div", "ath-text ath-rich");
+  const KEEP = {H1:"h4", H2:"h4", UL:"ul", OL:"ol", LI:"li", STRONG:"strong", EM:"em", U:"u", S:"s", CODE:"code", BLOCKQUOTE:"blockquote", HR:"hr", TABLE:"table", TR:"tr", TD:"td"};
+  const walk = (src, dst) => {
+    src.childNodes.forEach(n => {
+      if (n.nodeType === 3){ dst.appendChild(document.createTextNode(n.textContent)); return; }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName;
+      if (tag === "A"){
+        const href = n.getAttribute("href") || "";
+        if (/^https?:\/\//i.test(href)){ const a = mk("a", "ath-seal"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = href; const label = n.textContent.trim(); a.append(mk("i"), mk("span", null, label && label !== href ? label : linkLabel(href))); dst.appendChild(a); }
+        else dst.appendChild(document.createTextNode(n.textContent));
+        return;
+      }
+      if (tag === "PRE"){
+        const txt = n.textContent.trim();
+        if (/^(flowchart|graph)\b/i.test(txt)){ const fig = flowFigure(parseFlow(txt)); if (fig){ dst.appendChild(fig); return; } }
+        dst.appendChild(mk("pre", "ath-pre", txt)); return;
+      }
+      if (tag === "BR"){ dst.appendChild(document.createElement("br")); return; }
+      const keep = KEEP[tag];
+      if (keep){ const el = document.createElement(keep); dst.appendChild(el); walk(n, el); }
+      else walk(n, dst);
+    });
+  };
+  walk(doc.body, box);
+  return box;
+}
+
+/* ---------- process maps: a small subset of Mermaid flowchart syntax, drawn in ink ---------- */
+function parseFlow(code){
+  const nodes = new Map(), edges = [];
+  const node = (id, raw) => {
+    if (!nodes.has(id)) nodes.set(id, {id, label:id, type:"step"});
+    if (raw){
+      const n = nodes.get(id);
+      let m;
+      if ((m = raw.match(/^\(\[\s*"?(.*?)"?\s*\]\)$/))) { n.label = m[1]; n.type = /^(end|finish|done|stop)\b/i.test(m[1]) ? "end" : "start"; }
+      else if ((m = raw.match(/^\(\(\s*"?(.*?)"?\s*\)\)$/))) { n.label = m[1]; n.type = "end"; }
+      else if ((m = raw.match(/^\{\s*"?(.*?)"?\s*\}$/))) { n.label = m[1]; n.type = "decision"; }
+      else if ((m = raw.match(/^\[\s*"?(.*?)"?\s*\]$/))) { n.label = m[1]; }
+      else if ((m = raw.match(/^\(\s*"?(.*?)"?\s*\)$/))) { n.label = m[1]; }
+    }
+    return id;
+  };
+  const tok = /([A-Za-z_][\w-]*)\s*(\(\[.*?\]\)|\(\(.*?\)\)|\{.*?\}|\[.*?\]|\(.*?\))?/y;
+  String(code).split(/\n|;/).slice(1).forEach(line => {
+    line = line.trim(); if (!line || line.startsWith("%%") || /^(classDef|class|style|linkStyle|subgraph|end)\b/.test(line)) return;
+    let i = 0, prev = null, label = null;
+    const skip = () => { while (i < line.length && line[i] === " ") i++; };
+    while (i < line.length){
+      skip(); tok.lastIndex = i; const m = tok.exec(line); if (!m) break;
+      const id = node(m[1], m[2]); i = tok.lastIndex;
+      if (prev) edges.push({from:prev, to:id, label});
+      prev = id; label = null; skip();
+      const arrow = line.slice(i).match(/^(-->|---|==>|-\.->)\s*(\|([^|]*)\|)?|^--\s*([^-]+?)\s*-->/);
+      if (!arrow) break;
+      label = (arrow[3] || arrow[4] || "").trim() || null; i += arrow[0].length;
+    }
+  });
+  return {nodes:[...nodes.values()], edges};
+}
+function wrapText(t, n){ const words = String(t).split(/\s+/), lines = []; let cur = ""; words.forEach(w => { if ((cur + " " + w).trim().length > n && cur){ lines.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }); if (cur) lines.push(cur); return lines.slice(0, 4); }
+function flowFigure(flow){
+  if (!flow || !flow.nodes.length) return null;
+  const N = flow.nodes, E = flow.edges.filter(e => e.from !== e.to);
+  const idx = new Map(N.map((n, i) => [n.id, i]));
+  /* rank each node by its longest path from a start, ignoring loops back up the chart */
+  const out = N.map(() => []), indeg = N.map(() => 0), back = new Set();
+  const order = [], seen = new Set(), stack = new Set();
+  const dfs = i => { seen.add(i); stack.add(i); E.forEach((e, k) => { if (idx.get(e.from) !== i) return; const j = idx.get(e.to); if (stack.has(j)) back.add(k); else if (!seen.has(j)) dfs(j); }); stack.delete(i); order.unshift(i); };
+  N.forEach((n, i) => { if (!seen.has(i) && !E.some(e => e.to === n.id)) dfs(i); });
+  N.forEach((n, i) => { if (!seen.has(i)) dfs(i); });
+  E.forEach((e, k) => { if (back.has(k)) return; out[idx.get(e.from)].push(idx.get(e.to)); indeg[idx.get(e.to)]++; });
+  const rank = N.map(() => 0);
+  order.forEach(i => out[i].forEach(j => { rank[j] = Math.max(rank[j], rank[i] + 1); }));
+  const rows = []; order.forEach(i => { (rows[rank[i]] = rows[rank[i]] || []).push(i); });
+  const box = N.map(n => { const lines = wrapText(n.label, n.type === "decision" ? 16 : 22); const w = Math.max(96, Math.min(230, Math.max(...lines.map(l => l.length)) * 7.4 + 30)); const h = 18 * lines.length + (n.type === "decision" ? 34 : 18); return {lines, w: n.type === "decision" ? w + 26 : w, h}; });
+  const GAPX = 34, GAPY = 52, PAD = 24;
+  const rowW = rows.map(r => r.reduce((s, i) => s + box[i].w, 0) + GAPX * (r.length - 1));
+  const W = Math.max(...rowW) + PAD * 2 + 60, pos = [];
+  let y = PAD;
+  rows.forEach((r, ri) => {
+    const h = Math.max(...r.map(i => box[i].h)); let x = (W - 60 - rowW[ri]) / 2;
+    r.forEach(i => { pos[i] = {x: x + box[i].w / 2, y: y + h / 2}; x += box[i].w + GAPX; });
+    y += h + GAPY;
+  });
+  const H = y - GAPY + PAD;
+  const svg = sv("svg", {viewBox:`0 0 ${W} ${H}`, class:"ath-flow", role:"img", "aria-label":"Process map: " + N.map(n => n.label).join(", ")});
+  const d = sv("defs", null, svg);
+  const mkr = sv("marker", {id:"ath-arrow", viewBox:"0 0 10 10", refX:"9", refY:"5", markerWidth:"8", markerHeight:"8", orient:"auto-start-reverse"}, d);
+  sv("path", {d:"M0 1 L10 5 L0 9 Z", fill:"#3b2610"}, mkr);
+  const eg = sv("g", {class:"edges"}, svg), ng = sv("g", {class:"nodes"}, svg);
+  E.forEach((e, k) => {
+    const a = idx.get(e.from), b = idx.get(e.to), A = pos[a], B = pos[b];
+    let path, lx, ly;
+    if (back.has(k) || rank[b] <= rank[a]){
+      const sx = A.x + box[a].w / 2, ex = B.x + box[b].w / 2, rx = Math.max(sx, ex) + 40;
+      path = `M${sx} ${A.y} C ${rx} ${A.y}, ${rx} ${B.y}, ${ex + 4} ${B.y}`; lx = rx - 6; ly = (A.y + B.y) / 2;
+    } else {
+      const sy = A.y + box[a].h / 2, ey = B.y - box[b].h / 2 - 3, my = (sy + ey) / 2;
+      path = `M${A.x} ${sy} C ${A.x} ${my}, ${B.x} ${my}, ${B.x} ${ey}`; lx = (A.x + B.x) / 2; ly = my;
+    }
+    sv("path", {d:path, class:"edge", "marker-end":"url(#ath-arrow)"}, eg);
+    if (e.label){ const t = sv("text", {x:lx + 6, y:ly + 4, class:"elabel"}, eg); t.textContent = e.label; }
+  });
+  N.forEach((n, i) => {
+    const {x, y: cy} = pos[i], {w, h, lines} = box[i], g = sv("g", {class:"node " + n.type}, ng);
+    if (n.type === "decision") sv("path", {d:`M${x} ${cy - h / 2} L${x + w / 2} ${cy} L${x} ${cy + h / 2} L${x - w / 2} ${cy} Z`}, g);
+    else sv("rect", {x:x - w / 2, y:cy - h / 2, width:w, height:h, rx: n.type === "step" ? 6 : h / 2}, g);
+    const t = sv("text", {x, y:cy - (lines.length - 1) * 9 + 5, "text-anchor":"middle"}, g);
+    lines.forEach((l, k) => { const s2 = sv("tspan", {x, dy: k ? 18 : 0}, t); s2.textContent = l; });
+  });
+  const fig = mk("figure", "ath-flowbox"); fig.appendChild(svg);
+  return fig;
+}
 
 /* ---------- wear and tear: every scroll is battered in its own way, the same way every time ---------- */
 function seeded(key){ let h = 2166136261; for (const c of String(key)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296; }
@@ -4207,7 +4429,9 @@ function buildReader(t){
   if (t.due_on) meta.push(`due ${fmtDate(t.due_on)}`);
   sheet.appendChild(mk("div", "ath-meta", meta.join(" · ")));
   sheet.appendChild(mk("div", "ath-rule"));
-  if (String(t.notes || "").trim()) sheet.appendChild(noteBody(t.notes));
+  const rich = richBody(t.html_notes);
+  if (rich) sheet.appendChild(rich);
+  else if (String(t.notes || "").trim()) sheet.appendChild(noteBody(t.notes));
   else sheet.appendChild(mk("p", "ath-blank", "This scroll is blank. Whatever it holds is still in your head, or in Asana's attachments."));
   const acts = mk("div", "ath-acts");
   const go = mk("a", "ath-btn", "Open in Asana"); go.href = t.permalink_url || ("https://app.asana.com/0/0/" + t.gid); go.target = "_blank"; go.rel = "noopener noreferrer";
@@ -4280,7 +4504,7 @@ async function load(fresh){
       else throw e;
     }
     const list = ((res && res.data) || []).filter(t => !t.completed)
-      .map(t => ({gid:t.gid, name:t.name || "Untitled", notes:t.notes || "", due_on:t.due_on || null, created_at:t.created_at || null, modified_at:t.modified_at || null, permalink_url:t.permalink_url || ""}));
+      .map(t => ({gid:t.gid, name:t.name || "Untitled", notes:t.notes || "", html_notes:t.html_notes || "", due_on:t.due_on || null, created_at:t.created_at || null, modified_at:t.modified_at || null, permalink_url:t.permalink_url || ""}));
     scrolls = list; loaded = true; saveCache(list); renderShelf();
     status.dataset.empty = "";
     say(list.length ? "Hold the lamp near a scroll, then draw it from its niche. Or ask the Librarian to choose." : "The shelves are bare. Nothing waits in your Knowledge section.");
@@ -4320,6 +4544,340 @@ addEventListener("resize", bleed);
 new MutationObserver(bleed).observe(root, {attributes:true, attributeFilter:["hidden"]});
 const tr = $("tab-trade"); if (tr) new MutationObserver(bleed).observe(tr, {attributes:true, attributeFilter:["hidden"]});
 setTimeout(bleed, 0);
+
+/* ================= The Archivist: turns a recording, document or transcript into a knowledge article and files it ================= */
+const arc = {svg:$("arc-svg"), say:$("arc-say"), tray:$("arc-tray"), url:$("arc-url"), list:$("arc-sources"), text:$("arc-text"), focus:$("arc-focus"), start:$("arc-start"), meter:$("arc-meter"), result:$("arc-result")};
+let arcSources = [], arcBusy = false, arcArticle = null, arcAbort = null;
+const ARC_MAX_CHARS = 600000;
+
+function drawArchivist(){
+  const s = arc.svg; s.textContent = "";
+  const d = sv("defs", null, s);
+  const rg = sv("radialGradient", {id:"arc-candle", cx:"50%", cy:"50%", r:"50%"}, d);
+  sv("stop", {offset:"0", "stop-color":"#ffc070", "stop-opacity":".55"}, rg); sv("stop", {offset:"1", "stop-color":"#ffc070", "stop-opacity":"0"}, rg);
+  const robe = sv("linearGradient", {id:"arc-robe", x1:"0", y1:"0", x2:"1", y2:"1"}, d);
+  sv("stop", {offset:"0", "stop-color":"#5e462a"}, robe); sv("stop", {offset:".6", "stop-color":"#433019"}, robe); sv("stop", {offset:"1", "stop-color":"#2a1d0e"}, robe);
+  const skin = sv("radialGradient", {id:"arc-skin", cx:"40%", cy:"35%", r:"70%"}, d);
+  sv("stop", {offset:"0", "stop-color":"#d9b48a"}, skin); sv("stop", {offset:"1", "stop-color":"#9c7652"}, skin);
+  /* the gloom behind him: a shelf of crumbling codices */
+  sv("rect", {x:0, y:0, width:380, height:400, fill:"#120d08"}, s);
+  const bk = sv("g", {opacity:".55"}, s);
+  sv("rect", {x:14, y:96, width:352, height:8, fill:"#3a2a18"}, bk); sv("rect", {x:14, y:186, width:352, height:8, fill:"#3a2a18"}, bk);
+  let x = 20; const cols = ["#4a2e1c", "#2e3a24", "#5a3d22", "#3a2618", "#4d3a2a", "#2c2a38"];
+  for (let i = 0; x < 360; i++){ const w = 10 + (i * 7) % 12, h = 46 + (i * 13) % 30, lean = i % 9 === 4 ? -10 : 0; sv("rect", {x, y:96 - h, width:w, height:h, fill:cols[i % cols.length], transform: lean ? `rotate(${lean} ${x} 96)` : null}, bk); x += w + 2; }
+  x = 24; for (let i = 0; x < 350; i++){ const w = 12 + (i * 5) % 10, h = 40 + (i * 11) % 34; sv("rect", {x, y:186 - h, width:w, height:h, fill:cols[(i + 3) % cols.length]}, bk); x += w + 3; }
+  /* candle glow */
+  sv("circle", {cx:62, cy:232, r:120, fill:"url(#arc-candle)", class:"arc-glow"}, s);
+  /* the stool, and the hem of his robe hanging ragged below the desk */
+  sv("path", {d:"M262 360 L256 400 M338 360 L346 400 M300 362 L300 400", stroke:"#2a1c0f", "stroke-width":"7"}, s);
+  sv("rect", {x:250, y:352, width:100, height:12, rx:4, fill:"#3b2915"}, s);
+  const body = sv("g", {class:"arc-body"}, s);
+  sv("path", {d:"M336 358 C 352 284, 330 192, 268 150 C 240 136, 210 138, 192 154 C 182 190, 194 244, 212 300 L 226 356 L 236 348 L 244 360 L 254 347 L 264 362 L 274 350 L 286 361 L 298 349 L 310 362 L 322 350 Z", fill:"url(#arc-robe)", stroke:"#1c1309", "stroke-width":"2"}, body);
+  /* the arch of his back, a patch or two, worn threads */
+  sv("path", {d:"M318 300 C 330 250, 312 196, 268 166", stroke:"#6b5232", "stroke-width":"2", fill:"none", opacity:".7"}, body);
+  sv("path", {d:"M300 330 C 300 300, 290 270, 276 252", stroke:"#1c1309", "stroke-width":"2", fill:"none", opacity:".6"}, body);
+  sv("rect", {x:276, y:206, width:26, height:20, fill:"#6e5634", stroke:"#c9b48a", "stroke-width":"1.1", "stroke-dasharray":"3 2", transform:"rotate(-14 289 216)"}, body);
+  sv("rect", {x:236, y:272, width:18, height:15, fill:"#38281a", stroke:"#a8946c", "stroke-width":"1", "stroke-dasharray":"2.5 2", transform:"rotate(9 245 280)"}, body);
+  sv("path", {d:"M326 330 l6 10 M312 342 l3 12 M284 344 l-2 12", stroke:"#5e462a", "stroke-width":"1.4"}, body);
+  /* cowl slumped at the neck */
+  sv("path", {d:"M196 150 C 214 128, 252 130, 270 152 C 252 160, 220 162, 196 150 Z", fill:"#3a2a17", stroke:"#1c1309", "stroke-width":"1.5"}, body);
+  /* head, thrust forward and low */
+  const head = sv("g", {class:"arc-head"}, s);
+  sv("path", {d:"M200 118 C 214 132, 214 156, 200 168", stroke:"#e9e3d4", "stroke-width":"3", fill:"none", opacity:".85"}, head);
+  sv("path", {d:"M205 126 c 10 6, 12 16, 6 26 M198 112 c 12 0, 18 8, 16 16", stroke:"#dcd5c4", "stroke-width":"1.6", fill:"none"}, head);
+  sv("ellipse", {cx:176, cy:136, rx:28, ry:31, fill:"url(#arc-skin)", transform:"rotate(-18 176 136)", stroke:"#6b4a2c", "stroke-width":"1.2"}, head);
+  sv("circle", {cx:182, cy:116, r:3, fill:"#9a724c", opacity:".7"}, head); sv("circle", {cx:191, cy:124, r:2, fill:"#9a724c", opacity:".7"}, head); sv("circle", {cx:172, cy:112, r:1.6, fill:"#9a724c", opacity:".6"}, head);
+  sv("ellipse", {cx:196, cy:144, rx:6, ry:9, fill:"#b98d64", stroke:"#6b4a2c", "stroke-width":"1"}, head);
+  /* nose: long, hooked; cheeks hollow; an ink smudge where he rubbed his face */
+  sv("path", {d:"M156 132 C 150 142, 140 152, 141 160 C 144 162, 150 160, 154 157", fill:"#c49a70", stroke:"#6b4a2c", "stroke-width":"1.3"}, head);
+  sv("path", {d:"M168 150 c 4 6, 4 12, 0 16", stroke:"#8a6440", "stroke-width":"1.2", fill:"none", opacity:".8"}, head);
+  sv("ellipse", {cx:180, cy:156, rx:5, ry:2.5, fill:"#1d1b2c", opacity:".55", transform:"rotate(-25 180 156)"}, head);
+  /* bushy brow, a tired eye, spectacles slipping down */
+  sv("path", {d:"M152 124 c 6 -6, 16 -6, 22 -1", stroke:"#ece6d8", "stroke-width":"3.4", "stroke-linecap":"round", fill:"none"}, head);
+  sv("circle", {cx:162, cy:132, r:2.3, fill:"#1a120a"}, head);
+  sv("ellipse", {cx:162, cy:131, rx:5, ry:4, fill:"#b98d64", class:"arc-lid"}, head);
+  sv("path", {d:"M156 137 c 4 3, 9 3, 12 0", stroke:"#7a5636", "stroke-width":"1", fill:"none"}, head);
+  sv("circle", {cx:158, cy:139, r:8, fill:"rgba(220,235,240,.12)", stroke:"#a8956c", "stroke-width":"1.4"}, head);
+  sv("path", {d:"M166 137 L 194 140", stroke:"#a8956c", "stroke-width":"1.1"}, head);
+  sv("path", {d:"M150 165 c 4 2, 8 2, 11 0", stroke:"#5a3a20", "stroke-width":"1.4", fill:"none"}, head);
+  /* scraggly beard */
+  const beard = sv("g", {stroke:"#ddd6c6", "stroke-width":"1.5", fill:"none", "stroke-linecap":"round"}, head);
+  ["M156 166 C 152 182, 158 196, 150 214", "M162 166 C 162 184, 168 198, 162 220", "M168 164 C 172 180, 176 192, 172 208", "M152 166 C 146 178, 148 190, 142 200", "M174 160 C 180 172, 182 182, 180 194"].forEach(p => sv("path", {d:p}, beard));
+  /* the writing arm: frayed sleeve, ink-blotched cuff, bony fingers black at the tips */
+  const arm = sv("g", {class:"arc-arm"}, s);
+  sv("path", {d:"M206 168 C 222 200, 214 236, 190 262 L 172 270 L 168 262 L 160 266 L 158 256 C 172 240, 186 210, 192 176 Z", fill:"#4a3520", stroke:"#1c1309", "stroke-width":"1.8"}, arm);
+  sv("path", {d:"M160 258 l -4 8 M166 262 l -2 9 M172 266 l 0 8", stroke:"#5e462a", "stroke-width":"1.3"}, arm);
+  sv("ellipse", {cx:176, cy:258, rx:7, ry:4, fill:"#16152a", opacity:".7"}, arm);
+  const hand = sv("g", {class:"arc-hand"}, arm);
+  sv("path", {d:"M150 262 C 144 266, 140 274, 144 282 C 152 288, 166 286, 170 276 C 170 268, 162 262, 150 262 Z", fill:"url(#arc-skin)", stroke:"#6b4a2c", "stroke-width":"1.2"}, hand);
+  [[142, 282, 134, 296], [148, 285, 142, 299], [155, 286, 151, 300], [162, 284, 160, 296]].forEach(([x1, y1, x2, y2]) => {
+    sv("path", {d:`M${x1} ${y1} L${x2} ${y2}`, stroke:"#a57d58", "stroke-width":"3.6", "stroke-linecap":"round"}, hand);
+    sv("circle", {cx:x2, cy:y2, r:2.2, fill:"#151427"}, hand);
+  });
+  const quill = sv("g", {class:"arc-quill"}, hand);
+  sv("path", {d:"M138 296 L 196 196", stroke:"#d8cbb0", "stroke-width":"1.6"}, quill);
+  sv("path", {d:"M196 196 C 176 214, 160 240, 150 270 C 168 248, 186 226, 204 206 C 206 200, 202 196, 196 196 Z", fill:"#ebe2cc", stroke:"#9a8a6a", "stroke-width":"1"}, quill);
+  for (let k = 0; k < 7; k++){ const t = k / 7, xx = 196 - t * 44, yy = 198 + t * 70; sv("path", {d:`M${xx} ${yy} l ${-8 + k} ${-4}`, stroke:"#b8a888", "stroke-width":".8"}, quill); }
+  sv("circle", {cx:138, cy:297, r:1.6, fill:"#151427"}, quill);
+  /* the desk and its clutter */
+  sv("path", {d:"M6 300 L 272 300 L 282 322 L 0 322 Z", fill:"#3d2a16", stroke:"#1c1309", "stroke-width":"2"}, s);
+  sv("rect", {x:0, y:322, width:282, height:78, fill:"#2a1c0e"}, s);
+  sv("path", {d:"M10 340 H 270 M10 372 H 270", stroke:"#1a1108", "stroke-width":"2"}, s);
+  sv("path", {d:"M98 300 L 104 290 L 214 290 L 220 300 Z", fill:"#d8c493", stroke:"#8a6a3a", "stroke-width":"1"}, s);
+  const lines = sv("g", {stroke:"#3a2a1a", "stroke-width":"1", opacity:".7", class:"arc-lines"}, s);
+  [[112, 292.5, 168], [110, 295, 196], [108, 297.5, 150]].forEach(([x1, y, x2]) => sv("path", {d:`M${x1} ${y} H ${x2}`, "stroke-dasharray":"5 2 9 2 3 2"}, lines));
+  sv("circle", {cx:202, cy:296, r:3, fill:"#151427", opacity:".8"}, s); sv("circle", {cx:226, cy:306, r:5, fill:"#151427", opacity:".55"}, s);
+  sv("path", {d:"M232 300 C 230 288, 252 286, 252 300 Z", fill:"#1b1a2a", stroke:"#0b0a14", "stroke-width":"1.5"}, s);
+  sv("rect", {x:236, y:283, width:12, height:5, rx:1.5, fill:"#2c2a3a"}, s);
+  [[18, 270, 64, 30, "#4a2e1c"], [24, 254, 54, 16, "#2e3a24"], [14, 240, 60, 14, "#5a3d22"]].forEach(([x1, y1, w, h, c], k) => sv("rect", {x:x1, y:y1, width:w, height:h, rx:2, fill:c, stroke:"#1c1309", "stroke-width":"1.2", transform:`rotate(${[-2, 3, -4][k]} ${x1 + w / 2} ${y1 + h / 2})`}, s));
+  sv("path", {d:"M82 300 C 86 290, 94 288, 96 300", fill:"#d8c493", stroke:"#8a6a3a"}, s);
+  /* the candle stub, guttering */
+  sv("path", {d:"M54 300 L 54 262 C 56 258, 68 258, 70 262 L 70 300 Z", fill:"#e7dcc0", stroke:"#a8946c", "stroke-width":"1"}, s);
+  sv("path", {d:"M56 264 c 0 8, 3 10, 2 18 M68 264 c 1 6, -2 9, 0 14", stroke:"#d4c6a2", "stroke-width":"2.4", fill:"none"}, s);
+  sv("rect", {x:44, y:298, width:36, height:6, rx:3, fill:"#6b5232"}, s);
+  sv("path", {d:"M62 262 L 62 254", stroke:"#1c1309", "stroke-width":"1.2"}, s);
+  sv("path", {class:"arc-flame", d:"M62 232 C 54 244, 56 254, 62 256 C 68 254, 70 244, 62 232 Z", fill:"#ffcf6a"}, s);
+  sv("path", {class:"arc-flame", d:"M62 242 C 59 248, 60 252, 62 253 C 64 252, 65 248, 62 242 Z", fill:"#fff5d6"}, s);
+}
+
+const ARC_LINES = {
+  idle:["Eh? Another visitor. Leave your link and the words behind it, and I'll set it down properly.", "Mind the ink. It never comes off, you know. Not in forty years.", "A recording, you say? I can't hear them. Bring me the transcript and I'll make sense of it.", "Everything worth knowing ends up in here eventually. Usually misfiled."],
+  linkOnly:"A link, eh? The doors behind it are sealed to me, sign-ins and such. Paste me the words, or drop the transcript or file itself.",
+  ready:"Ah, that's something I can read. Hand it over when you're ready.",
+  reading:["Squinting at it now…", "Hmm. Hmm. Yes…", "Turning the pages…"],
+  writing:"Setting it down: what you need to know, the key points, the steps, and a map of the process…",
+  done:"There. Read it over. If it suits you, I'll seal it onto the Knowledge shelf.",
+  filed:"Filed. It's on the shelf now, with the others.",
+  video:"A recording? My ears are long gone. In Teams, open the meeting recap, then Transcript, then Download, and bring me that instead."
+};
+function arcSay(text, state){ arc.say.textContent = text; arc.svg.setAttribute("class", state || ""); }
+arc.svg.addEventListener("click", () => { if (!arcBusy) arcSay(ARC_LINES.idle[Math.floor(Math.random() * ARC_LINES.idle.length)]); });
+
+/* ---------- sources: links, files and pasted text ---------- */
+function corpusChars(){ return arcSources.reduce((n, x) => n + (x.text ? x.text.length : 0), 0) + arc.text.value.trim().length; }
+function wordsLabel(t){ const n = t.split(/\s+/).filter(Boolean).length; return n < 1000 ? `${n} words` : `${Math.round(n / 100) / 10}k words`; }
+function arcRefresh(){
+  arc.list.textContent = "";
+  arcSources.forEach((x, i) => {
+    const li = mk("li", "arc-src" + (x.kind === "link" ? " link" : ""));
+    const ic = mk("i"); li.appendChild(ic);
+    if (x.kind === "link"){ const a = mk("a", null, x.label); a.href = x.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = x.url; li.appendChild(a); }
+    else li.appendChild(mk("span", null, x.name));
+    li.appendChild(mk("em", null, x.kind === "link" ? "link" : x.error ? x.error : x.text ? wordsLabel(x.text) : "reading…"));
+    const rm = mk("button", "arc-x", "×"); rm.type = "button"; rm.title = "Take it back"; rm.setAttribute("aria-label", "Remove " + (x.name || x.label));
+    rm.addEventListener("click", () => { arcSources.splice(i, 1); arcRefresh(); });
+    li.appendChild(rm); arc.list.appendChild(li);
+  });
+  const chars = corpusChars(), links = arcSources.filter(x => x.kind === "link").length;
+  const w = Math.round(chars / 6); arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read` : "";
+  arc.start.disabled = arcBusy || !chars;
+  if (!arcBusy){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(ARC_LINES.linkOnly); }
+}
+function addLink(raw){
+  const u = String(raw || "").trim(); if (!/^https?:\/\//i.test(u)) return false;
+  if (!arcSources.some(x => x.url === u)) arcSources.push({kind:"link", url:u, label:linkLabel(u)});
+  arcRefresh(); return true;
+}
+const scriptCache = {};
+function loadScript(src){ return scriptCache[src] || (scriptCache[src] = new Promise((res, rej) => { const el = document.createElement("script"); el.src = src; el.onload = res; el.onerror = () => { delete scriptCache[src]; rej(new Error("Couldn't load a reader for that file type.")); }; document.head.appendChild(el); })); }
+function cleanCaptions(t){
+  return t.replace(/^WEBVTT.*$/m, "").replace(/^\d+\s*$/gm, "").replace(/^[\d:.,]+\s*-->\s*[\d:.,]+.*$/gm, "")
+    .replace(/<v\s+([^>]+)>/g, "$1: ").replace(/<\/?[^>]+>/g, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+async function readFile(file){
+  const name = file.name, ext = (name.split(".").pop() || "").toLowerCase();
+  if (/^(mp4|m4a|mov|wav|mp3|webm|avi|mkv)$/.test(ext) || /^(video|audio)\//.test(file.type)) throw new Error("recording");
+  if (file.size > 40 * 1024 * 1024) throw new Error("too big (40 MB max)");
+  if (ext === "vtt" || ext === "srt") return cleanCaptions(await file.text());
+  if (ext === "html" || ext === "htm"){ const doc = new DOMParser().parseFromString(await file.text(), "text/html"); return doc.body.innerText || doc.body.textContent || ""; }
+  if (ext === "docx"){
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+    const zip = await window.JSZip.loadAsync(await file.arrayBuffer());
+    const xml = await zip.file("word/document.xml").async("string");
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    return [...doc.getElementsByTagNameNS(W, "p")].map(p => [...p.getElementsByTagNameNS(W, "t")].map(t => t.textContent).join("")).filter(Boolean).join("\n");
+  }
+  if (ext === "pdf"){
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+    const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const pdf = await lib.getDocument({data: new Uint8Array(await file.arrayBuffer())}).promise;
+    const out = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 300); i++){ const pg = await pdf.getPage(i); const tc = await pg.getTextContent(); out.push(tc.items.map(x => x.str).join(" ")); }
+    return out.join("\n\n");
+  }
+  return await file.text();
+}
+async function addFiles(files){
+  for (const f of files){
+    const item = {kind:"file", name:f.name, text:""}; arcSources.push(item); arcRefresh();
+    try{
+      item.text = String(await readFile(f)).slice(0, ARC_MAX_CHARS).trim();
+      if (!item.text) item.error = "no readable text";
+      paperSound("slide");
+    }catch(e){
+      if (e && e.message === "recording"){ item.error = "a recording"; arcSay(ARC_LINES.video); }
+      else item.error = (e && e.message) || "couldn't read";
+    }
+    arcRefresh();
+    if (item.error === "a recording") arcSay(ARC_LINES.video);
+  }
+}
+arc.tray.addEventListener("dragover", ev => { ev.preventDefault(); arc.tray.classList.add("hot"); });
+arc.tray.addEventListener("dragleave", ev => { if (!arc.tray.contains(ev.relatedTarget)) arc.tray.classList.remove("hot"); });
+arc.tray.addEventListener("drop", ev => {
+  ev.preventDefault(); arc.tray.classList.remove("hot");
+  const dt = ev.dataTransfer; if (!dt) return;
+  if (dt.files && dt.files.length){ addFiles([...dt.files]); return; }
+  const uris = (dt.getData("text/uri-list") || "").split(/\r?\n/).filter(l => l && !l.startsWith("#"));
+  if (uris.length){ uris.forEach(addLink); return; }
+  const txt = dt.getData("text/plain") || "";
+  if (/^https?:\/\/\S+$/i.test(txt.trim())) addLink(txt); else if (txt.trim()){ arc.text.value = (arc.text.value + "\n\n" + txt).trim(); arcRefresh(); }
+});
+arc.tray.addEventListener("paste", ev => {
+  if (ev.target === arc.url) return;
+  const txt = ev.clipboardData && ev.clipboardData.getData("text/plain"); if (!txt) return;
+  ev.preventDefault();
+  if (/^https?:\/\/\S+$/i.test(txt.trim())) addLink(txt); else { arc.text.value = (arc.text.value + "\n\n" + txt).trim(); arcRefresh(); }
+});
+$("arc-add").addEventListener("click", () => { if (addLink(arc.url.value)) arc.url.value = ""; else arc.url.focus(); });
+arc.url.addEventListener("keydown", ev => { if (ev.key === "Enter"){ ev.preventDefault(); if (addLink(arc.url.value)) arc.url.value = ""; } });
+$("arc-file").addEventListener("change", ev => { addFiles([...ev.target.files]); ev.target.value = ""; });
+arc.text.addEventListener("input", () => arcRefresh());
+
+/* ---------- writing the article ---------- */
+const bytes = s => new TextEncoder().encode(s).length;
+function corpus(){
+  const parts = arcSources.filter(x => x.text).map(x => `=== Source: ${x.name} ===\n${x.text}`);
+  if (arc.text.value.trim()) parts.push(`=== Source: pasted text ===\n${arc.text.value.trim()}`);
+  return parts.join("\n\n");
+}
+const ARTICLE_SPEC = `Return ONLY a JSON object with exactly these keys:
+{"title": "short, specific title, at most 70 characters",
+ "summary": "one or two plain sentences: what this is and why it matters",
+ "need_to_know": ["3 to 6 bullets: the essentials someone must understand first"],
+ "key_points": ["4 to 10 bullets: decisions, facts, numbers, owners, systems, dates"],
+ "steps_kind": "to complete" if the source teaches how to do something, or "executed" if it records what was done,
+ "steps": ["ordered steps, each one short imperative sentence"],
+ "flow": {"nodes": [{"id": "n1", "label": "at most 6 words", "type": "start|step|decision|end"}], "edges": [{"from": "n1", "to": "n2", "label": "optional, e.g. Yes or No"}]},
+ "gaps": ["anything important the source left unclear; empty if none"]}
+Rules: use only what the source says; never invent names, numbers or links. The flow is a process map of the steps with 5 to 14 nodes, exactly one start node, at least one end node, and decision nodes whose outgoing edges are labeled. Write for a Salesforce CRM operations team at the University of Kentucky.`;
+async function arcWrite(){
+  if (arcBusy) return;
+  const text = corpus(); if (!text.trim()) return;
+  const sample = window.claude && window.claude.use ? await window.claude.use("sample").catch(() => null) : null;
+  if (!sample){ arcSay("My eyes fail me in this copy. Open the page in Claude and I'll write for you there."); return; }
+  arcBusy = true; arc.start.disabled = true; arc.result.hidden = true;
+  arcAbort = new AbortController();
+  const links = arcSources.filter(x => x.kind === "link").map(x => x.url);
+  const focus = arc.focus.value.trim();
+  try{
+    const lim = await sample.limits().catch(() => null);
+    const cap = lim && lim.maxPromptBytes ? lim.maxPromptBytes : 120000;
+    const budget = Math.max(12000, Math.floor(cap * .7) - bytes(ARTICLE_SPEC) - 2000);
+    let source = text;
+    if (bytes(source) > budget){
+      /* too long to read at once: condense it in parts, keeping every fact, then write from the notes */
+      const size = Math.floor(budget * .9), parts = [];
+      for (let i = 0; i < source.length; i += size) parts.push(source.slice(i, i + size));
+      const notes = [];
+      for (let k = 0; k < parts.length; k++){
+        arcSay(`Reading part ${k + 1} of ${parts.length}… ${ARC_LINES.reading[k % ARC_LINES.reading.length]}`, "reading");
+        const r = await sample(`You are condensing part ${k + 1} of ${parts.length} of a long source (a meeting transcript or document) so an article can be written from it later. Keep every decision, fact, number, owner, system, date, warning and step, in order, as terse bullet notes. Drop small talk.\n\n${parts[k]}`, {signal:arcAbort.signal, cache:false});
+        notes.push(`--- Notes on part ${k + 1} ---\n${r.text}`);
+      }
+      source = notes.join("\n\n");
+      if (bytes(source) > budget) source = source.slice(0, budget);
+    } else arcSay(ARC_LINES.reading[0], "reading");
+    arcSay(ARC_LINES.writing, "writing");
+    const prompt = `You are the archivist of a team knowledge base. Turn the source below into a knowledge article.\n${focus ? `The reader especially wants: ${focus}\n` : ""}${links.length ? `The source came from: ${links.join(" , ")}\n` : ""}\n${ARTICLE_SPEC}\n\nSOURCE:\n${source}`;
+    const art = await sample.json(prompt, {signal:arcAbort.signal, cache:false});
+    arcArticle = normalizeArticle(art, links);
+    showArticle(arcArticle);
+    paperSound("unroll");
+    arcSay(ARC_LINES.done, "done");
+  }catch(e){
+    const code = e && e.code;
+    arcSay(code === "not_granted" ? "You'll have to let me use Claude for this. Allow it when asked, then try again." :
+      code === "rate_limited" ? "My hand's cramped. Too many requests just now; try again in a little while." :
+      code === "cancelled" ? "Very well, I'll stop." :
+      code === "invalid_json" ? "I botched the lettering on that one. Ask me again." :
+      "Something went wrong in the writing. Try me again.", "");
+  }finally{ arcBusy = false; arcAbort = null; arcRefresh(); }
+}
+arc.start.addEventListener("click", arcWrite);
+function normalizeArticle(a, links){
+  const arr = v => (Array.isArray(v) ? v : []).map(x => String(x || "").trim()).filter(Boolean);
+  const flow = a && a.flow && Array.isArray(a.flow.nodes) ? a.flow : {nodes:[], edges:[]};
+  const ids = new Set();
+  const nodes = flow.nodes.map((n, i) => { let id = String(n.id || "n" + (i + 1)).replace(/[^\w]/g, "") || "n" + (i + 1); if (/^\d/.test(id)) id = "n" + id; while (ids.has(id)) id += "x"; ids.add(id); return {id, label:String(n.label || "").replace(/["\[\]{}|()]/g, "'").slice(0, 60) || id, type: ["start", "step", "decision", "end"].includes(n.type) ? n.type : "step", _orig:String(n.id)}; });
+  const map = new Map(nodes.map(n => [n._orig, n.id]));
+  const edges = (Array.isArray(flow.edges) ? flow.edges : []).map(e => ({from:map.get(String(e.from)), to:map.get(String(e.to)), label:e.label ? String(e.label).replace(/[|"]/g, "").slice(0, 24) : null})).filter(e => e.from && e.to);
+  return {title:String((a && a.title) || "Untitled knowledge").slice(0, 120), summary:String((a && a.summary) || ""), need:arr(a && a.need_to_know), points:arr(a && a.key_points), kind:(a && a.steps_kind) === "executed" ? "executed" : "to complete", steps:arr(a && a.steps), gaps:arr(a && a.gaps), flow:{nodes, edges}, links, files:arcSources.filter(x => x.kind === "file" && x.text).map(x => x.name)};
+}
+function mermaid(flow){
+  const lines = ["flowchart TD"];
+  flow.nodes.forEach(n => lines.push(`  ${n.id}${n.type === "decision" ? `{"${n.label}"}` : n.type === "start" ? `(["${n.label}"])` : n.type === "end" ? `(("${n.label}"))` : `["${n.label}"]`}`));
+  flow.edges.forEach(e => lines.push(`  ${e.from} -->${e.label ? `|${e.label}|` : ""} ${e.to}`));
+  return lines.join("\n");
+}
+const xe = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function articleHtml(a){
+  const li = xs => xs.map(x => `<li>${xe(x)}</li>`).join("");
+  let h = "<body>";
+  if (a.summary) h += `<blockquote>${xe(a.summary)}</blockquote>`;
+  if (a.need.length) h += `<h2>What you need to know</h2><ul>${li(a.need)}</ul>`;
+  if (a.points.length) h += `<h2>Key points</h2><ul>${li(a.points)}</ul>`;
+  if (a.steps.length) h += `<h2>Steps ${a.kind === "executed" ? "executed" : "to complete"}</h2><ol>${li(a.steps)}</ol>`;
+  if (a.flow.nodes.length) h += `<h2>Process map</h2><pre>${xe(mermaid(a.flow))}</pre>`;
+  if (a.gaps.length) h += `<h2>Still unclear</h2><ul>${li(a.gaps)}</ul>`;
+  if (a.links.length || a.files.length) h += `<h2>Sources</h2><ul>${a.links.map(u => `<li><a href="${xe(u)}">${xe(linkLabel(u))}</a></li>`).join("")}${a.files.map(f => `<li>${xe(f)}</li>`).join("")}</ul>`;
+  h += `<hr/><em>Written up by the Archivist of the Lost Athenaeum, ${xe(new Date().toLocaleDateString(undefined, {month:"long", day:"numeric", year:"numeric"}))}.</em></body>`;
+  return h;
+}
+function showArticle(a){
+  const r = arc.result; r.textContent = ""; r.hidden = false;
+  const card = mk("div", "arc-article");
+  const t = mk("input", "arc-title"); t.value = a.title; t.setAttribute("aria-label", "Article title"); t.addEventListener("input", () => { a.title = t.value; });
+  card.appendChild(mk("div", "ath-kicker", "Draft knowledge article"));
+  card.appendChild(t);
+  const body = richBody(articleHtml(a).replace(/<hr\/>.*$/, "</body>"));
+  if (body) card.appendChild(body);
+  const acts = mk("div", "ath-acts");
+  const seal = mk("button", "ath-btn", "Seal it onto the Knowledge shelf"); seal.type = "button";
+  const again = mk("button", "ath-btn ghost", "Ask him to write it again"); again.type = "button";
+  const toss = mk("button", "ath-btn ghost", "Throw it on the fire"); toss.type = "button";
+  seal.addEventListener("click", () => arcFile(a, seal));
+  again.addEventListener("click", () => arcWrite());
+  toss.addEventListener("click", () => { r.hidden = true; r.textContent = ""; arcArticle = null; arcSay("Pity. The ink was still wet."); });
+  acts.append(seal, again, toss);
+  card.appendChild(acts);
+  const msg = mk("div", "arc-msg"); card.appendChild(msg);
+  r.appendChild(card);
+  r.scrollIntoView({block:"nearest", behavior: REDUCED ? "auto" : "smooth"});
+}
+function findGid(x, depth){ if (!x || depth > 5) return null; if (typeof x === "object"){ if (x.gid && (x.name || x.resource_type === "task")) return String(x.gid); for (const k of Object.keys(x)){ const g = findGid(x[k], (depth || 0) + 1); if (g) return g; } } return null; }
+async function arcFile(a, btn){
+  const msg = arc.result.querySelector(".arc-msg");
+  const mcp = window.claude && window.claude.use ? await window.claude.use("mcp").catch(() => null) : null;
+  if (!mcp){ msg.textContent = "Asana isn't connected here, so I can't file it."; return; }
+  btn.disabled = true; msg.textContent = "Sealing it…";
+  try{
+    const res = payloadOf(await mcp.callTool(SERVER, "create_tasks", {default_assignee:"me", tasks:[{name:a.title.trim() || "Untitled knowledge", html_notes:articleHtml(a), assignee:"me", assignee_section:KNOWLEDGE_SECTION}]}, {cache:false}));
+    if (res && Array.isArray(res.failed) && res.failed.length && !(res.succeeded || []).length) throw {code:"tool_error", message:JSON.stringify(res.failed[0].errors || res.failed[0]).slice(0, 200)};
+    const gid = findGid(res && (res.succeeded || res.data || res));
+    msg.textContent = "";
+    arcSay(ARC_LINES.filed, "done"); paperSound("rollup");
+    arc.result.hidden = true; arcSources = []; arc.text.value = ""; arc.focus.value = ""; arcArticle = null; arcRefresh(); arcSay(ARC_LINES.filed, "done");
+    await load(true);
+    const el = gid && shelf.querySelector(`.ath-scroll[data-gid="${gid}"]`);
+    if (el){ el.scrollIntoView({block:"nearest", behavior:"smooth"}); el.classList.add("lit"); setTimeout(() => el.classList.remove("lit"), 2600); }
+  }catch(e){
+    btn.disabled = false;
+    msg.textContent = (e && e.code === "not_granted") ? "Asana needs your permission to create tasks from this page. Allow it when asked, then press Seal again." : "Asana wouldn't take it" + (e && e.message ? ": " + String(e.message).slice(0, 200) : ".") + " Nothing was filed.";
+  }
+}
+drawArchivist(); arcRefresh();
 
 drawCrypt(); dust();
 const c0 = readCache(); if (c0){ scrolls = c0.list; }
