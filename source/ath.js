@@ -251,9 +251,16 @@ async function load(fresh){
     }
     say("Lighting the lamps…");
     const opts = {cache: fresh ? {refresh:true, staleTime:0, gcTime:600000} : {staleTime:120000, gcTime:600000}};
+    /* the connector wants a full timestamp here ("now" is refused); if it still objects, ask for everything and drop finished ones ourselves */
+    const ask = input => mcp.callTool(SERVER, "get_tasks", input, opts).then(payloadOf);
+    const base = {section: KNOWLEDGE_SECTION, opt_fields: FIELDS, limit: 100};
     let res;
-    try{ res = payloadOf(await mcp.callTool(SERVER, "get_tasks", {section: KNOWLEDGE_SECTION, completed_since: "now", opt_fields: FIELDS, limit: 100}, opts)); }
-    catch(e){ if (e && e.retryable){ await new Promise(r => setTimeout(r, 1200)); res = payloadOf(await mcp.callTool(SERVER, "get_tasks", {section: KNOWLEDGE_SECTION, completed_since: "now", opt_fields: FIELDS, limit: 100}, opts)); } else throw e; }
+    try{ res = await ask(Object.assign({completed_since: new Date().toISOString()}, base)); }
+    catch(e){
+      if (e && e.retryable){ await new Promise(r => setTimeout(r, 1200)); res = await ask(Object.assign({completed_since: new Date().toISOString()}, base)); }
+      else if (e && (e.code === "tool_error" || e.code === "bad_request")) res = await ask(base);
+      else throw e;
+    }
     const list = ((res && res.data) || []).filter(t => !t.completed)
       .map(t => ({gid:t.gid, name:t.name || "Untitled", notes:t.notes || "", due_on:t.due_on || null, created_at:t.created_at || null, modified_at:t.modified_at || null, permalink_url:t.permalink_url || ""}));
     scrolls = list; loaded = true; saveCache(list); renderShelf();
@@ -263,7 +270,8 @@ async function load(fresh){
     const code = err && err.code;
     if (code === "server_not_connected" || code === "not_granted" || code === "capability_disabled") say("The crypt is sealed. Asana isn't connected here.", "warn");
     else if (code === "needs_reauth") say("Your Asana sign-in has expired. Reconnect Asana, then dust the shelves again.", "warn");
-    else if (code === "tool_error" || code === "forbidden" || code === "not_found") say("These scrolls are sealed: the Knowledge section lives in John's own My Tasks, which only his Asana account can open.", "warn");
+    else if (code === "forbidden" || code === "not_found" || (code === "tool_error" && /forbidden|not found|permission|access/i.test(String(err.message || "")))) say("These scrolls are sealed: the Knowledge section lives in John's own My Tasks, which only his Asana account can open.", "warn");
+    else if (code === "tool_error") say("Asana couldn't read the Knowledge section" + (err.message ? ": " + String(err.message).slice(0, 160) : ".") + " Try dusting the shelves again.", "warn");
     else say("The lamps guttered out before the scrolls could be read. Try dusting the shelves again.", "warn");
     if (!loaded){ const c = readCache(); if (c){ scrolls = c.list; renderShelf(); } }
   }finally{ loading = false; btn.disabled = false; }
@@ -277,6 +285,23 @@ function placeLamps(){
   [["ath-lamp-l", 158], ["ath-lamp-r", 1442]].forEach(([id, x]) => { const e = $(id); e.style.left = (ox + x * k) + "px"; e.style.top = (oy + 226 * k) + "px"; e.style.transform = `scale(${Math.max(.7, Math.min(1.4, k)).toFixed(2)})`; });
 }
 new ResizeObserver(placeLamps).observe(crypt);
+
+/* wide tabs (this one and the Trade Map) span the window, measured without the scrollbar */
+function bleed(){
+  const vw = document.documentElement.clientWidth, gut = vw <= 600 ? 16 : 24;
+  [root, document.querySelector(".trade-wrap")].forEach(el => {
+    if (!el) return;
+    const parent = el.parentElement.getBoundingClientRect(); if (!parent.width) return;
+    const w = Math.min(2400, vw - gut * 2), left = (vw - w) / 2;
+    el.style.width = w + "px"; el.style.maxWidth = "none";
+    const cs = getComputedStyle(el.parentElement), contentLeft = parent.left + (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.borderLeftWidth) || 0);
+    el.style.marginLeft = (left - contentLeft) + "px";
+  });
+}
+addEventListener("resize", bleed);
+new MutationObserver(bleed).observe(root, {attributes:true, attributeFilter:["hidden"]});
+const tr = $("tab-trade"); if (tr) new MutationObserver(bleed).observe(tr, {attributes:true, attributeFilter:["hidden"]});
+setTimeout(bleed, 0);
 
 drawCrypt(); dust();
 const c0 = readCache(); if (c0){ scrolls = c0.list; }
