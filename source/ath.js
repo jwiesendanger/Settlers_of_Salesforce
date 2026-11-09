@@ -144,6 +144,9 @@ function richBody(html){
       const tag = n.tagName;
       if (tag === "A"){
         const href = n.getAttribute("href") || "";
+        const blob = /\/_blob\/([0-9a-f]{32})/i.exec(href);
+        if (blob){ const f = mk("figure", "arc-shot ath-shot"); const im = mk("img"); im.src = "/_blob/" + blob[1]; im.alt = n.textContent; im.loading = "lazy";
+          im.addEventListener("error", () => f.remove()); f.append(im, mk("figcaption", null, n.textContent)); dst.appendChild(f); return; }
         if (/^https?:\/\//i.test(href)){ const a = mk("a", "ath-seal"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = href; const label = n.textContent.trim(); a.append(mk("i"), mk("span", null, label && label !== href ? label : linkLabel(href))); dst.appendChild(a); }
         else dst.appendChild(document.createTextNode(n.textContent));
         return;
@@ -668,6 +671,57 @@ function resJson(r){
   try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ return null; }
 }
 let arcTab = null;
+const offSec = o => { const m = /^(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(String(o || "")); return m ? +m[1] * 3600 + +m[2] * 60 + Math.floor(+m[3]) : null; };
+const clock = sec => { const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, x = sec % 60, p = n => String(n).padStart(2, "0"); return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`; };
+const unclock = t => { const p = String(t || "").replace(/[\[\]\s]/g, "").split(":").map(Number); if (!p.length || p.some(isNaN)) return null; return p.reduce((a, n) => a * 60 + n, 0); };
+/* the Stream player for a recording, opened at a given second */
+function streamBase(webUrl, host){
+  try{ const path = decodeURIComponent(new URL(webUrl).pathname), site = (/^\/(personal|sites|teams)\/[^/]+/.exec(path) || [""])[0];
+    return {host, site, path}; }catch(e){ return null; }
+}
+function streamAt(v, sec){
+  const nav = btoa(JSON.stringify({playbackOptions:{startTimeInSeconds:Math.max(0, Math.round(sec))}, referralInfo:{referralApp:"StreamWebApp", referralView:"ShareDialog-Link", referralAppPlatform:"Web", referralMode:"view"}}));
+  return `https://${v.host}${v.site}/_layouts/15/stream.aspx?id=${encodeURIComponent(v.path)}&nav=${encodeURIComponent(nav)}`;
+}
+/* find the player in a screenshot: the video's letterbox is pure black, the Stream page around it is not */
+function cropPlayer(img){
+  const c = document.createElement("canvas"), W = img.naturalWidth, H = img.naturalHeight; c.width = W; c.height = H;
+  const g = c.getContext("2d"); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, W, H).data;
+  const blk = (x, y) => { const i = (y * W + x) * 4; return Math.max(d[i], d[i + 1], d[i + 2]) < 10; };
+  const rows = []; for (let y = 0; y < H; y++){ let n = 0; for (let x = 0; x < W; x += 2) n += blk(x, y); if (n > .15 * W / 2) rows.push(y); }
+  let box = null;
+  if (rows.length > 20){
+    const y0 = rows[0], y1 = rows[rows.length - 1]; let best = [0, 0, 0];
+    for (const yy of [y0 + 2, y1 - 2]){ let st = -1; for (let x = 0; x <= W; x++){ const b = x < W && blk(x, yy); if (b && st < 0) st = x; if (!b && st >= 0){ if (x - st > best[0]) best = [x - st, st, x - 1]; st = -1; } } }
+    if (best[0] > W * .3 && y1 - y0 > H * .15) box = [best[1], y0, best[2] - best[1] + 1, y1 - y0 + 1];
+  }
+  if (!box) box = [0, 0, W, H];
+  const o = document.createElement("canvas"); o.width = box[2]; o.height = box[3];
+  o.getContext("2d").drawImage(c, box[0], box[1], box[2], box[3], 0, 0, box[2], box[3]);
+  return new Promise(res => o.toBlob(res, "image/jpeg", .88));
+}
+async function captureShots(a){
+  const v = (arcSources.find(x => x.video) || {}).video;
+  if (!v || !a.shots.length) return;
+  const mcp = await claude.use("mcp").catch(() => null); if (!mcp) return;
+  const call = (tool, input) => mcp.callTool(BROWSER, tool, input, {cache:false});
+  for (let k = 0; k < a.shots.length; k++){
+    const sh = a.shots[k];
+    sh.watch = streamAt(v, sh.sec);
+    arcSay(`Fetching the pictures: ${k + 1} of ${a.shots.length}, at ${clock(sh.sec)}…`, "reading");
+    try{
+      await call("navigate", arcTab ? {url:streamAt(v, sh.sec + 1), tabId:arcTab} : {url:streamAt(v, sh.sec + 1)});
+      await call("computer", {action:"hover", coordinate:[2, 2], ...(arcTab ? {tabId:arcTab} : {})});
+      await call("computer", {action:"wait", duration:6, ...(arcTab ? {tabId:arcTab} : {})});
+      const r = await call("computer", {action:"screenshot", ...(arcTab ? {tabId:arcTab} : {})});
+      const im = ((r && r.content) || []).find(b => b && b.type === "image" && b.data);
+      if (!im) continue;
+      const img = new Image(); img.src = `data:${im.mimeType || "image/jpeg"};base64,${im.data}`; await img.decode();
+      sh.blob = await cropPlayer(img); if (sh.blob) sh.preview = URL.createObjectURL(sh.blob);
+    }catch(e){ if (e && /server_not_connected|not_granted|not_in_manifest/.test(e.code || "")) break; }
+  }
+  try { await call("navigate", arcTab ? {url:streamAt(v, a.shots[0].sec), tabId:arcTab} : {url:streamAt(v, a.shots[0].sec)}); } catch(e){}
+}
 const pause = ms => new Promise(r => setTimeout(r, ms));
 async function fetchSigned(src){
   if (arcBusy || src.fetching) return;
@@ -687,7 +741,7 @@ async function fetchSigned(src){
       tab = arcTab = opened?.payload?.tabId || (/tab\s*_?id["'\s:=]+["']?([\w-]+)/i.exec(resText(opened)) || [])[1] || null;
     }
     await pause(1500);
-    await go(`https://${host}/_api/v2.0/shares/u!${b64url(src.url)}/driveItem?$select=id,name,parentReference,file`);
+    await go(`https://${host}/_api/v2.0/shares/u!${b64url(src.url)}/driveItem?$select=id,name,parentReference,file,webUrl`);
     const item = await page();
     if (!item || !item.id){
       const ec = item && item.error && String(item.error.code || "");
@@ -696,6 +750,7 @@ async function fetchSigned(src){
     }
     const base = `https://${host}/_api/v2.1/drives/${item.parentReference.driveId}/items/${item.id}`;
     src.label = item.name || src.label;
+    src.video = /\.(mp4|mov|m4v|webm)$/i.test(item.name || "") ? streamBase(item.webUrl, host) : null;
     await go(base + "/media/transcripts");
     const list = await page(), ts = (list && list.value) || [];
     if (!list) return await signIn();
@@ -707,9 +762,12 @@ async function fetchSigned(src){
     let text = "";
     const j = resJson({content:[{type:"text", text:raw}]}), e = j && (j.entries || j.value);
     if (Array.isArray(e)){
-      const out = []; let who = null;
+      /* one paragraph per speaker turn, each stamped with its time; long turns get a fresh stamp every minute or so */
+      const out = []; let who = null, mark = -1e9;
       e.forEach(x => { const s = (x.speakerDisplayName || "").replace(/^([^,]+),\s*(.+)$/, "$2 $1"), t = (x.text || "").trim(); if (!t) return;
-        if (s && s === who) out[out.length - 1] += " " + t; else { out.push((s ? s + ": " : "") + t); who = s; } });
+        const sec = offSec(x.startOffset), st = sec == null ? "" : `[${clock(sec)}] `;
+        if (s && s === who){ if (sec != null && sec - mark > 50){ out[out.length - 1] += " " + st + t; mark = sec; } else out[out.length - 1] += " " + t; }
+        else { out.push(st + (s ? s + ": " : "") + t); who = s; if (sec != null) mark = sec; } });
       text = out.join("\n");
     } else { const v = raw.indexOf("WEBVTT"); if (v >= 0) text = cleanCaptions(raw.slice(v)); }
     if (!text || text.length < 40) throw new Error("the transcript came back empty");
@@ -812,8 +870,9 @@ const ARTICLE_SPEC = `Return ONLY a JSON object with exactly these keys:
  "steps_kind": "to complete" if the source teaches how to do something, or "executed" if it records what was done,
  "steps": ["ordered steps, each one short imperative sentence"],
  "flow": {"nodes": [{"id": "n1", "label": "at most 6 words", "type": "start|step|decision|end"}], "edges": [{"from": "n1", "to": "n2", "label": "optional, e.g. Yes or No"}]},
- "gaps": ["anything important the source left unclear; empty if none"]}
-Rules: use only what the source says; never invent names, numbers or links. The flow is a process map of the steps with 5 to 14 nodes, exactly one start node, at least one end node, and decision nodes whose outgoing edges are labeled. Write for a Salesforce CRM operations team at the University of Kentucky.`;
+ "gaps": ["anything important the source left unclear; empty if none"],
+ "shots": [{"at": "a [m:ss] or [h:mm:ss] timestamp copied exactly from the source", "caption": "what is on screen at that moment, at most 14 words", "step": "number of the step it illustrates, or 0"}]}
+Rules: use only what the source says; never invent names, numbers or links. The flow is a process map of the steps with 5 to 14 nodes, exactly one start node, at least one end node, and decision nodes whose outgoing edges are labeled. Shots: only if the source carries [timestamps]; pick 0 to 6 moments where someone is showing a screen, a setting, a record or a result that a reader would want to see, preferring the moments that illustrate the steps; use timestamps that appear in the source. Write for a Salesforce CRM operations team at the University of Kentucky.`;
 async function arcWrite(){
   if (arcBusy) return;
   const text = corpus(); if (!text.trim()) return;
@@ -835,7 +894,7 @@ async function arcWrite(){
       const notes = [];
       for (let k = 0; k < parts.length; k++){
         arcSay(`Reading part ${k + 1} of ${parts.length}… ${ARC_LINES.reading[k % ARC_LINES.reading.length]}`, "reading");
-        const r = await sample(`You are condensing part ${k + 1} of ${parts.length} of a long source (a meeting transcript or document) so an article can be written from it later. Keep every decision, fact, number, owner, system, date, warning and step, in order, as terse bullet notes. Drop small talk.\n\n${parts[k]}`, {signal:arcAbort.signal, cache:false});
+        const r = await sample(`You are condensing part ${k + 1} of ${parts.length} of a long source (a meeting transcript or document) so an article can be written from it later. Keep every decision, fact, number, owner, system, date, warning and step, in order, as terse bullet notes. Start each note with the nearest [timestamp] from the source when there is one, and keep notes about what was being shown on screen. Drop small talk.\n\n${parts[k]}`, {signal:arcAbort.signal, cache:false});
         notes.push(`--- Notes on part ${k + 1} ---\n${r.text}`);
       }
       source = notes.join("\n\n");
@@ -845,6 +904,9 @@ async function arcWrite(){
     const prompt = `You are the archivist of a team knowledge base. Turn the source below into a knowledge article.\n${focus ? `The reader especially wants: ${focus}\n` : ""}${links.length ? `The source came from: ${links.join(" , ")}\n` : ""}\n${ARTICLE_SPEC}\n\nSOURCE:\n${source}`;
     const art = await sample.json(prompt, {signal:arcAbort.signal, cache:false});
     arcArticle = normalizeArticle(art, links);
+    arcArticle.shots.sort((x, y) => x.sec - y.sec);
+    if (arcArticle.shots.length && arcSources.some(x => x.video)) await captureShots(arcArticle);
+    arcArticle.shots = arcArticle.shots.filter(x => x.blob || x.watch);
     showArticle(arcArticle);
     paperSound("unroll");
     arcSay(ARC_LINES.done, "done");
@@ -876,7 +938,7 @@ function normalizeArticle(a, links){
   const nodes = flow.nodes.map((n, i) => { let id = String(n.id || "n" + (i + 1)).replace(/[^\w]/g, "") || "n" + (i + 1); if (/^\d/.test(id)) id = "n" + id; while (ids.has(id)) id += "x"; ids.add(id); return {id, label:String(n.label || "").replace(/["\[\]{}|()]/g, "'").slice(0, 60) || id, type: ["start", "step", "decision", "end"].includes(n.type) ? n.type : "step", _orig:String(n.id)}; });
   const map = new Map(nodes.map(n => [n._orig, n.id]));
   const edges = (Array.isArray(flow.edges) ? flow.edges : []).map(e => ({from:map.get(String(e.from)), to:map.get(String(e.to)), label:e.label ? String(e.label).replace(/[|"]/g, "").slice(0, 24) : null})).filter(e => e.from && e.to);
-  return {title:String((a && a.title) || "Untitled knowledge").slice(0, 120), summary:String((a && a.summary) || ""), need:arr(a && a.need_to_know), points:arr(a && a.key_points), kind:(a && a.steps_kind) === "executed" ? "executed" : "to complete", steps:arr(a && a.steps), gaps:arr(a && a.gaps), flow:{nodes, edges}, links, files:arcSources.filter(x => x.kind === "file" && x.text).map(x => x.name)};
+  return {title:String((a && a.title) || "Untitled knowledge").slice(0, 120), summary:String((a && a.summary) || ""), need:arr(a && a.need_to_know), points:arr(a && a.key_points), kind:(a && a.steps_kind) === "executed" ? "executed" : "to complete", steps:arr(a && a.steps), gaps:arr(a && a.gaps), flow:{nodes, edges}, links, shots:(Array.isArray(a && a.shots) ? a.shots : []).map(x => ({sec:unclock(x && x.at), caption:String((x && x.caption) || "").slice(0, 140), step:+(x && x.step) || 0})).filter(x => x.sec != null).slice(0, 6), files:arcSources.filter(x => x.kind === "file" && x.text).map(x => x.name)};
 }
 function mermaid(flow){
   const lines = ["flowchart TD"];
@@ -892,6 +954,7 @@ function articleHtml(a){
   if (a.need.length) h += `<h2>What you need to know</h2><ul>${li(a.need)}</ul>`;
   if (a.points.length) h += `<h2>Key points</h2><ul>${li(a.points)}</ul>`;
   if (a.steps.length) h += `<h2>Steps ${a.kind === "executed" ? "executed" : "to complete"}</h2><ol>${li(a.steps)}</ol>`;
+  if (a.shots.length) h += `<h2>Screens from the recording</h2><ul>${a.shots.map(x => `<li><strong>${clock(x.sec)}</strong>${x.step ? ` (step ${x.step})` : ""} ${xe(x.caption)}${x.asset ? ` <a href="${xe(x.asset)}">Screenshot at ${clock(x.sec)}</a>` : ""}${x.watch ? ` <a href="${xe(x.watch)}">Watch from ${clock(x.sec)}</a>` : ""}</li>`).join("")}</ul>`;
   if (a.flow.nodes.length) h += `<h2>Process map</h2><pre>${xe(mermaid(a.flow))}</pre>`;
   if (a.gaps.length) h += `<h2>Still unclear</h2><ul>${li(a.gaps)}</ul>`;
   if (a.links.length || a.files.length) h += `<h2>Sources</h2><ul>${a.links.map(u => `<li><a href="${xe(u)}">${xe(linkLabel(u))}</a></li>`).join("")}${a.files.map(f => `<li>${xe(f)}</li>`).join("")}</ul>`;
@@ -906,6 +969,17 @@ function showArticle(a){
   card.appendChild(t);
   const body = richBody(articleHtml(a).replace(/<hr\/>.*$/, "</body>"));
   if (body) card.appendChild(body);
+  const pics = a.shots.filter(x => x.preview);
+  if (pics.length){
+    const g = mk("div", "arc-shots");
+    pics.forEach(x => { const f = mk("figure", "arc-shot"); const i = mk("img"); i.src = x.preview; i.alt = x.caption; i.loading = "lazy";
+      const rm = mk("button", "arc-x", "×"); rm.type = "button"; rm.title = "Leave this one out";
+      rm.addEventListener("click", () => { a.shots.splice(a.shots.indexOf(x), 1); f.remove(); });
+      f.append(i, mk("figcaption", null, `${clock(x.sec)} · ${x.caption}`), rm); g.appendChild(f); });
+    const hd = [...card.querySelectorAll(".ath-rich h4")].find(h => /screens from/i.test(h.textContent));
+    const after = hd && hd.nextElementSibling;
+    if (after) after.after(g); else card.insertBefore(g, card.querySelector(".ath-acts"));
+  }
   const acts = mk("div", "ath-acts");
   const seal = mk("button", "ath-btn", "Seal it onto the Knowledge shelf"); seal.type = "button";
   const again = mk("button", "ath-btn ghost", "Ask him to write it again"); again.type = "button";
@@ -926,6 +1000,13 @@ async function arcFile(a, btn){
   if (!mcp){ msg.textContent = "Asana isn't connected here, so I can't file it."; return; }
   btn.disabled = true; msg.textContent = "Sealing it…";
   try{
+    const toUp = a.shots.filter(x => x.blob && !x.asset);
+    if (toUp.length){
+      const assets = await claude.use("assets").catch(() => null);
+      if (assets) for (const x of toUp){ msg.textContent = `Pressing the pictures into the page… ${toUp.indexOf(x) + 1} of ${toUp.length}`;
+        try { const up = await assets.upload(new File([x.blob], `screen-${clock(x.sec).replace(/:/g, "-")}.jpg`, {type:"image/jpeg"})); x.asset = new URL(up.url, location.href).href; } catch(e){} }
+      msg.textContent = "Sealing it…";
+    }
     const res = payloadOf(await mcp.callTool(SERVER, "create_tasks", {default_assignee:"me", tasks:[{name:a.title.trim() || "Untitled knowledge", html_notes:articleHtml(a), assignee:"me", assignee_section:KNOWLEDGE_SECTION}]}, {cache:false}));
     if (res && Array.isArray(res.failed) && res.failed.length && !(res.succeeded || []).length) throw {code:"tool_error", message:JSON.stringify(res.failed[0].errors || res.failed[0]).slice(0, 200)};
     const gid = findGid(res && (res.succeeded || res.data || res));
