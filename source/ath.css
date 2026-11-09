@@ -190,3 +190,6 @@
 .ath-shot{display:inline-block;width:min(100%,420px);margin:8px 0;vertical-align:top}
 .ath-shot figcaption{color:#3a2a1a}
 .ath-shot{background:#efe2bf;border-color:#a8946c}
+.arc-check{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--ink);cursor:pointer;margin:2px 0 4px}
+.arc-check input{accent-color:#e9c27a;width:17px;height:17px;margin:1px 0 0;flex:none}
+.arc-check em{font-style:normal;color:var(--muted);font-size:12.5px}

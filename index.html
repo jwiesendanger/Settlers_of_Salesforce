@@ -698,6 +698,9 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .ath-shot{display:inline-block;width:min(100%,420px);margin:8px 0;vertical-align:top}
 .ath-shot figcaption{color:#3a2a1a}
 .ath-shot{background:#efe2bf;border-color:#a8946c}
+.arc-check{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--ink);cursor:pointer;margin:2px 0 4px}
+.arc-check input{accent-color:#e9c27a;width:17px;height:17px;margin:1px 0 0;flex:none}
+.arc-check em{font-style:normal;color:var(--muted);font-size:12.5px}
 
 /* ---------- standalone: Asana connection ---------- */
 body{margin:0}
@@ -872,6 +875,7 @@ body{margin:0}
         </div>
         <label class="arc-field"><span>The words themselves <em>(paste a transcript or document text if he can't open the link)</em></span><textarea id="arc-text" rows="5" spellcheck="false" placeholder="Paste the meeting transcript, notes or document text here…"></textarea></label>
         <label class="arc-field"><span>Anything he should focus on? <em>(optional)</em></span><input type="text" id="arc-focus" maxlength="200" placeholder="e.g. the steps to build the postcard file"></label>
+        <label class="arc-check"><input type="checkbox" id="arc-shots-on"> <span>Include screenshots from the recording <em>(Claude desktop app only: he opens the video in the app’s browser and captures the moments he picks)</em></span></label>
         <div class="arc-go"><button type="button" id="arc-start" disabled>Hand it to the Archivist</button><span class="arc-meter" id="arc-meter"></span></div>
         <div class="arc-result" id="arc-result" hidden></div>
       </div>
@@ -4942,14 +4946,15 @@ function arcRefresh(quiet){
   const sp = arcSources.some(x => x.kind === "link" && !x.text && isSharePoint(x.url));
   arc.meter.classList.toggle("wait", !chars && !!links);
   arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read`
-    : links ? (sp ? "He’ll fetch the transcript with your sign-in when you hand it over (Claude desktop app only)."
+    : links ? (sp ? (arcShotsOn() ? "He’ll fetch the transcript and take screenshots with your sign-in when you hand it over (Claude desktop app only)."
+                                 : "In the Claude desktop app he’ll fetch the transcript himself. In Chrome, paste the transcript’s text above (or drop the file).")
              : vid ? "Waiting on the transcript. In Teams: meeting recap → Transcript → Download, then drop the file here or paste its text above."
                    : "Waiting on the words. He can't open links behind a sign-in, so drop the file itself or paste its text above.")
     : "";
   const pending = /^https?:\/\//i.test(arc.url.value.trim());
   arc.start.disabled = arcBusy || arcSources.some(s => s.fetching) || !(chars || links || pending);
   if (!quiet && !arcBusy && !arcSources.some(s => s.fetching)){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(sp ? ARC_LINES.spLink : vid ? ARC_LINES.video : ARC_LINES.linkOnly); }
-  arc.text.classList.toggle("arc-want", !chars && !!links && !sp);
+  arc.text.classList.toggle("arc-want", !chars && !!links && !(sp && arcShotsOn()));
 }
 /* ---------- reading SharePoint / OneDrive recordings through the viewer's own Microsoft sign-in ----------
    The page can't hold Microsoft credentials, but the Claude desktop app's browser can: the viewer signs in there once,
@@ -4968,6 +4973,17 @@ let arcTab = null;
 const offSec = o => { const m = /^(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(String(o || "")); return m ? +m[1] * 3600 + +m[2] * 60 + Math.floor(+m[3]) : null; };
 const clock = sec => { const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, x = sec % 60, p = n => String(n).padStart(2, "0"); return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`; };
 const unclock = t => { const p = String(t || "").replace(/[\[\]\s]/g, "").split(":").map(Number); if (!p.length || p.some(isNaN)) return null; return p.reduce((a, n) => a * 60 + n, 0); };
+/* a "watch from here" address, worked out from a SharePoint video link when the browser never opened it */
+function videoFromLink(){
+  const l = arcSources.find(x => x.kind === "link" && isSharePoint(x.url) && (/\/:v:\//.test(x.url) || /\.(mp4|mov|m4v|webm)(\?|$)/i.test(x.url) || /stream\.aspx/i.test(x.url)));
+  if (!l) return null;
+  try{
+    const u = new URL(l.url), m = /^\/:v:\/r(\/.*)$/.exec(u.pathname);
+    if (m){ const path = decodeURIComponent(m[1]); const site = (/^\/(personal|sites|teams)\/[^/]+/.exec(path) || [""])[0]; return {host:u.host, site, path}; }
+    if (/stream\.aspx/i.test(u.pathname) && u.searchParams.get("id")){ const path = u.searchParams.get("id"); return {host:u.host, site:u.pathname.replace(/\/_layouts\/15\/stream\.aspx$/i, ""), path}; }
+    return {share:l.url};
+  }catch(e){ return null; }
+}
 /* the Stream player for a recording, opened at a given second */
 function streamBase(webUrl, host){
   try{ const path = decodeURIComponent(new URL(webUrl).pathname), site = (/^\/(personal|sites|teams)\/[^/]+/.exec(path) || [""])[0];
@@ -4975,6 +4991,7 @@ function streamBase(webUrl, host){
 }
 function streamAt(v, sec){
   const nav = btoa(JSON.stringify({playbackOptions:{startTimeInSeconds:Math.max(0, Math.round(sec))}, referralInfo:{referralApp:"StreamWebApp", referralView:"ShareDialog-Link", referralAppPlatform:"Web", referralMode:"view"}}));
+  if (v.share) return v.share + (v.share.includes("?") ? "&" : "?") + "nav=" + encodeURIComponent(nav);
   return `https://${v.host}${v.site}/_layouts/15/stream.aspx?id=${encodeURIComponent(v.path)}&nav=${encodeURIComponent(nav)}`;
 }
 /* find the player in a screenshot: the video's letterbox is pure black, the Stream page around it is not */
@@ -5083,8 +5100,8 @@ function addLink(raw){
 const scriptCache = {};
 function loadScript(src){ return scriptCache[src] || (scriptCache[src] = new Promise((res, rej) => { const el = document.createElement("script"); el.src = src; el.onload = res; el.onerror = () => { delete scriptCache[src]; rej(new Error("Couldn't load a reader for that file type.")); }; document.head.appendChild(el); })); }
 function cleanCaptions(t){
-  return t.replace(/^WEBVTT.*$/m, "").replace(/^\d+\s*$/gm, "").replace(/^[\d:.,]+\s*-->\s*[\d:.,]+.*$/gm, "")
-    .replace(/<v\s+([^>]+)>/g, "$1: ").replace(/<\/?[^>]+>/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  return t.replace(/^WEBVTT.*$/m, "").replace(/^\d+\s*$/gm, "").replace(/^([\d:.,]+)\s*-->\s*[\d:.,]+.*$/gm, (m, a) => { const x = unclock(a.replace(",", ".")); return x == null ? "" : `[${clock(Math.floor(x))}]`; })
+    .replace(/<v\s+([^>]+)>/g, "$1: ").replace(/<\/?[^>]+>/g, "").replace(/(\[[\d:]+\])\s*\n+/g, "$1 ").replace(/\n{3,}/g, "\n\n").trim();
 }
 async function readFile(file){
   const name = file.name, ext = (name.split(".").pop() || "").toLowerCase();
@@ -5165,8 +5182,8 @@ const ARTICLE_SPEC = `Return ONLY a JSON object with exactly these keys:
  "steps": ["ordered steps, each one short imperative sentence"],
  "flow": {"nodes": [{"id": "n1", "label": "at most 6 words", "type": "start|step|decision|end"}], "edges": [{"from": "n1", "to": "n2", "label": "optional, e.g. Yes or No"}]},
  "gaps": ["anything important the source left unclear; empty if none"],
- "shots": [{"at": "a [m:ss] or [h:mm:ss] timestamp copied exactly from the source", "caption": "what is on screen at that moment, at most 14 words", "step": "number of the step it illustrates, or 0"}]}
-Rules: use only what the source says; never invent names, numbers or links. The flow is a process map of the steps with 5 to 14 nodes, exactly one start node, at least one end node, and decision nodes whose outgoing edges are labeled. Shots: only if the source carries [timestamps]; pick 0 to 6 moments where someone is showing a screen, a setting, a record or a result that a reader would want to see, preferring the moments that illustrate the steps; use timestamps that appear in the source. Write for a Salesforce CRM operations team at the University of Kentucky.`;
+ "shots": [{"at": "a timestamp copied exactly from the source, like 10:25 or 1:02:03", "caption": "what is on screen at that moment, at most 14 words", "step": "number of the step it illustrates, or 0"}]}
+Rules: use only what the source says; never invent names, numbers or links. The flow is a process map of the steps with 5 to 14 nodes, exactly one start node, at least one end node, and decision nodes whose outgoing edges are labeled. Shots: only if the source carries timestamps (like [10:25], 10:25 or 0:10:25); pick 0 to 6 moments where someone is showing a screen, a setting, a record or a result that a reader would want to see, preferring the moments that illustrate the steps; use timestamps that appear in the source. Write for a Salesforce CRM operations team at the University of Kentucky.`;
 async function arcWrite(){
   if (arcBusy) return;
   const text = corpus(); if (!text.trim()) return;
@@ -5199,7 +5216,9 @@ async function arcWrite(){
     const art = await sample.json(prompt, {signal:arcAbort.signal, cache:false});
     arcArticle = normalizeArticle(art, links);
     arcArticle.shots.sort((x, y) => x.sec - y.sec);
-    if (arcArticle.shots.length && arcSources.some(x => x.video)) await captureShots(arcArticle);
+    const vid = (arcSources.find(x => x.video) || {}).video || videoFromLink();
+    if (vid) arcArticle.shots.forEach(sh => { sh.watch = streamAt(vid, sh.sec); });
+    if (arcArticle.shots.length && arcShotsOn() && arcSources.some(x => x.video)) await captureShots(arcArticle);
     arcArticle.shots = arcArticle.shots.filter(x => x.blob || x.watch);
     showArticle(arcArticle);
     paperSound("unroll");
@@ -5217,7 +5236,8 @@ async function arcWrite(){
 async function arcGo(){
   if (arcBusy) return;
   if (addLink(arc.url.value)) arc.url.value = "";
-  for (const x of arcSources.filter(x => x.kind === "link" && !x.text && isSharePoint(x.url))) await fetchSigned(x);
+  const want = arcShotsOn() || !corpusChars();
+  if (want) for (const x of arcSources.filter(x => x.kind === "link" && !x.text && isSharePoint(x.url))) await fetchSigned(x);
   if (!corpusChars()){
     if (!arcSources.some(x => x.error)) arcSay(ARC_LINES.nothing, "");
     arc.text.focus(); return;
@@ -5225,6 +5245,11 @@ async function arcGo(){
   arcWrite();
 }
 arc.start.addEventListener("click", arcGo);
+/* screenshots need the Claude desktop app's browser; without them he works anywhere from the words you give him */
+const arcShotsBox = $("arc-shots-on");
+function arcShotsOn(){ return !!(arcShotsBox && arcShotsBox.checked); }
+try { if (arcShotsBox) arcShotsBox.checked = localStorage.getItem("settlers-arc-shots") === "1"; } catch(e){}
+if (arcShotsBox) arcShotsBox.addEventListener("change", () => { try { localStorage.setItem("settlers-arc-shots", arcShotsBox.checked ? "1" : "0"); } catch(e){} arcRefresh(); });
 function normalizeArticle(a, links){
   const arr = v => (Array.isArray(v) ? v : []).map(x => String(x || "").trim()).filter(Boolean);
   const flow = a && a.flow && Array.isArray(a.flow.nodes) ? a.flow : {nodes:[], edges:[]};
