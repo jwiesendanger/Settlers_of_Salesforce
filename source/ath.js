@@ -627,9 +627,16 @@ function arcRefresh(){
     li.appendChild(rm); arc.list.appendChild(li);
   });
   const chars = corpusChars(), links = arcSources.filter(x => x.kind === "link").length;
-  const w = Math.round(chars / 6); arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read` : "";
+  const w = Math.round(chars / 6);
+  const vid = arcSources.some(x => x.kind === "link" && /video|recording|stream/i.test(x.label + " " + x.url));
+  arc.meter.classList.toggle("wait", !chars && !!links);
+  arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read`
+    : links ? (vid ? "Waiting on the transcript. In Teams: meeting recap → Transcript → Download, then drop the file here or paste its text above."
+                   : "Waiting on the words. He can't open links behind a sign-in, so drop the file itself or paste its text above.")
+    : "";
   arc.start.disabled = arcBusy || !chars;
-  if (!arcBusy){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(ARC_LINES.linkOnly); }
+  if (!arcBusy){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(vid ? ARC_LINES.video : ARC_LINES.linkOnly); }
+  arc.text.classList.toggle("arc-want", !chars && !!links);
 }
 function addLink(raw){
   const u = String(raw || "").trim(); if (!/^https?:\/\//i.test(u)) return false;

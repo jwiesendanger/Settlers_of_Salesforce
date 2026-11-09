@@ -661,6 +661,10 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .arc-go button{font-family:"Cinzel",Georgia,serif;font-size:15px;padding:9px 18px;background:#e9c886;border-color:#8a6a3a}
 .arc-go button:disabled{opacity:.5;cursor:not-allowed}
 .arc-meter{font-size:13.5px;color:var(--muted)}
+.arc-meter.wait{color:#f0c96a;font-style:italic}
+#tab-athenaeum textarea.arc-want{border-color:#e0b04a;box-shadow:0 0 0 2px rgba(224,176,74,.35);animation:arcWant 2.4s ease-in-out infinite}
+@keyframes arcWant{50%{box-shadow:0 0 0 4px rgba(224,176,74,.15)}}
+@media (prefers-reduced-motion:reduce){#tab-athenaeum textarea.arc-want{animation:none}}
 .arc-article{position:relative;padding:22px 26px;border-radius:4px;background:var(--ath-blot,none) 20% 40%,var(--ath-grain,none),linear-gradient(180deg,#e2cf9e,#cdb47b 70%,#bfa067);color:#2e1f0c;font-family:"IM Fell English",Georgia,serif;font-size:17px;line-height:1.5;box-shadow:0 14px 30px rgba(0,0,0,.6),inset 0 0 40px rgba(70,40,10,.45)}
 .arc-title{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:2px 4px;font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:clamp(20px,2.2vw,26px);color:#2b1d0e;background:transparent;border:none;border-bottom:1px dashed rgba(110,58,18,.5)}
 .arc-title:focus{outline:none;background:rgba(255,248,225,.35)}
@@ -844,7 +848,7 @@ body{margin:0}
       <div class="arc-work">
         <div class="arc-headline">
           <h3>The Archivist</h3>
-          <p>Hand him a meeting recording, a big document or a transcript. He writes it up as a knowledge article (what you need to know, the key points, the steps, and a process map) and files it on the Knowledge shelf as a new scroll.</p>
+          <p>Hand him a meeting transcript or a big document (a link alone won't do; he needs the words). He writes it up as a knowledge article (what you need to know, the key points, the steps, and a process map) and files it on the Knowledge shelf as a new scroll.</p>
         </div>
         <div class="arc-tray" id="arc-tray" tabindex="0" role="group" aria-label="Drop links or files for the Archivist">
           <div class="arc-tray-hint"><b>Drop links or files here</b><span>Teams or SharePoint links, transcripts (.vtt, .docx), PDFs, Word or text files</span></div>
@@ -4906,9 +4910,16 @@ function arcRefresh(){
     li.appendChild(rm); arc.list.appendChild(li);
   });
   const chars = corpusChars(), links = arcSources.filter(x => x.kind === "link").length;
-  const w = Math.round(chars / 6); arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read` : "";
+  const w = Math.round(chars / 6);
+  const vid = arcSources.some(x => x.kind === "link" && /video|recording|stream/i.test(x.label + " " + x.url));
+  arc.meter.classList.toggle("wait", !chars && !!links);
+  arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read`
+    : links ? (vid ? "Waiting on the transcript. In Teams: meeting recap → Transcript → Download, then drop the file here or paste its text above."
+                   : "Waiting on the words. He can't open links behind a sign-in, so drop the file itself or paste its text above.")
+    : "";
   arc.start.disabled = arcBusy || !chars;
-  if (!arcBusy){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(ARC_LINES.linkOnly); }
+  if (!arcBusy){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(vid ? ARC_LINES.video : ARC_LINES.linkOnly); }
+  arc.text.classList.toggle("arc-want", !chars && !!links);
 }
 function addLink(raw){
   const u = String(raw || "").trim(); if (!/^https?:\/\//i.test(u)) return false;
