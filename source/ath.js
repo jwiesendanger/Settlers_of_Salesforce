@@ -602,11 +602,12 @@ const ARC_LINES = {
   idle:["Eh? Another visitor. Leave your link and the words behind it, and I'll set it down properly.", "Mind the ink. It never comes off, you know. Not in forty years.", "A recording, you say? I can't hear them. Bring me the transcript and I'll make sense of it.", "Everything worth knowing ends up in here eventually. Usually misfiled."],
   linkOnly:"A link, eh? The doors behind it are sealed to me, sign-ins and such. Paste me the words, or drop the transcript or file itself.",
   ready:"Ah, that's something I can read. Hand it over when you're ready.",
-  spLink:"SharePoint, is it? Lend me your key: press “Fetch with my sign-in” and I'll go through your own door for the transcript.",
+  spLink:"SharePoint, is it? Hand it over and I'll fetch the transcript through your own sign-in.",
   fetching:"Shuffling down to the SharePoint stacks with your key… a moment.",
   signIn:"The door wants your name. Sign in to Microsoft in the browser pane of the Claude app (Ctrl+Shift+B shows it), then press Fetch again.",
   noTranscript:"I found the recording, but no one kept a transcript of it. Transcription has to be on during the meeting. Paste me notes instead.",
   noBrowser:"My key only turns in the Claude desktop app, where its browser lives. Open this page there, or drop the transcript file.",
+  nothing:"I've nothing to read yet, only the name on the door. Give me the transcript or the words, or I'd be making it up.",
   fetched:w => `Got it: ${w} from the transcript. Hand it over when you're ready.`,
   reading:["Squinting at it now…", "Hmm. Hmm. Yes…", "Turning the pages…"],
   writing:"Setting it down: what you need to know, the key points, the steps, and a map of the process…",
@@ -644,13 +645,14 @@ function arcRefresh(quiet){
   const sp = arcSources.some(x => x.kind === "link" && !x.text && isSharePoint(x.url));
   arc.meter.classList.toggle("wait", !chars && !!links);
   arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read`
-    : links ? (sp ? "Press “Fetch with my sign-in” on the link (Claude desktop app), or drop the transcript file / paste its text above."
+    : links ? (sp ? "He’ll fetch the transcript with your sign-in when you hand it over (Claude desktop app only)."
              : vid ? "Waiting on the transcript. In Teams: meeting recap → Transcript → Download, then drop the file here or paste its text above."
                    : "Waiting on the words. He can't open links behind a sign-in, so drop the file itself or paste its text above.")
     : "";
-  arc.start.disabled = arcBusy || !chars;
+  const pending = /^https?:\/\//i.test(arc.url.value.trim());
+  arc.start.disabled = arcBusy || arcSources.some(s => s.fetching) || !(chars || links || pending);
   if (!quiet && !arcBusy && !arcSources.some(s => s.fetching)){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(sp ? ARC_LINES.spLink : vid ? ARC_LINES.video : ARC_LINES.linkOnly); }
-  arc.text.classList.toggle("arc-want", !chars && !!links);
+  arc.text.classList.toggle("arc-want", !chars && !!links && !sp);
 }
 /* ---------- reading SharePoint / OneDrive recordings through the viewer's own Microsoft sign-in ----------
    The page can't hold Microsoft credentials, but the Claude desktop app's browser can: the viewer signs in there once,
@@ -792,6 +794,8 @@ $("arc-add").addEventListener("click", () => { if (addLink(arc.url.value)) arc.u
 arc.url.addEventListener("keydown", ev => { if (ev.key === "Enter"){ ev.preventDefault(); if (addLink(arc.url.value)) arc.url.value = ""; } });
 $("arc-file").addEventListener("change", ev => { addFiles([...ev.target.files]); ev.target.value = ""; });
 arc.text.addEventListener("input", () => arcRefresh());
+arc.url.addEventListener("input", () => arcRefresh(true));
+arc.url.addEventListener("paste", () => setTimeout(() => { if (addLink(arc.url.value)) arc.url.value = ""; }, 0));
 
 /* ---------- writing the article ---------- */
 const bytes = s => new TextEncoder().encode(s).length;
@@ -851,9 +855,20 @@ async function arcWrite(){
       code === "cancelled" ? "Very well, I'll stop." :
       code === "invalid_json" ? "I botched the lettering on that one. Ask me again." :
       "Something went wrong in the writing. Try me again.", "");
-  }finally{ arcBusy = false; arcAbort = null; arcRefresh(); }
+  }finally{ arcBusy = false; arcAbort = null; arcRefresh(true); }
 }
-arc.start.addEventListener("click", arcWrite);
+/* the button gathers first: takes a link left in the box, fetches any SharePoint transcripts not yet read, then writes */
+async function arcGo(){
+  if (arcBusy) return;
+  if (addLink(arc.url.value)) arc.url.value = "";
+  for (const x of arcSources.filter(x => x.kind === "link" && !x.text && isSharePoint(x.url))) await fetchSigned(x);
+  if (!corpusChars()){
+    if (!arcSources.some(x => x.error)) arcSay(ARC_LINES.nothing, "");
+    arc.text.focus(); return;
+  }
+  arcWrite();
+}
+arc.start.addEventListener("click", arcGo);
 function normalizeArticle(a, links){
   const arr = v => (Array.isArray(v) ? v : []).map(x => String(x || "").trim()).filter(Boolean);
   const flow = a && a.flow && Array.isArray(a.flow.nodes) ? a.flow : {nodes:[], edges:[]};
