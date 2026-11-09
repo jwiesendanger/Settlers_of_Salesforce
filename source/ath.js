@@ -687,19 +687,29 @@ async function fetchSigned(src){
     await pause(1500);
     await go(`https://${host}/_api/v2.0/shares/u!${b64url(src.url)}/driveItem?$select=id,name,parentReference,file`);
     const item = await page();
-    if (!item || !item.id){ if (item && item.error) throw new Error(item.error.message || item.error.code); return await signIn(); }
+    if (!item || !item.id){
+      const ec = item && item.error && String(item.error.code || "");
+      if (item && item.error && !/unauthenticated|InvalidAuthenticationToken|unauthorized/i.test(ec)) throw new Error(ec === "accessDenied" || ec === "itemNotFound" ? "you don't have access to that recording" : (item.error.message || ec));
+      return await signIn();
+    }
     const base = `https://${host}/_api/v2.1/drives/${item.parentReference.driveId}/items/${item.id}`;
     src.label = item.name || src.label;
     await go(base + "/media/transcripts");
     const list = await page(), ts = (list && list.value) || [];
     if (!list) return await signIn();
     if (!ts.length){ src.error = "no transcript on it"; arcSay(ARC_LINES.noTranscript, ""); return; }
-    await go(`${base}/media/transcripts/${ts[0].id}/streamContent`);
-    let raw = resText(await call("get_page_text", {tabId:tab, max_chars:900000}));
-    const v = raw.indexOf("WEBVTT"); if (v > 0) raw = raw.slice(v);
-    let text = /-->/.test(raw) ? cleanCaptions(raw) : "";
-    if (!text){ const j = resJson({content:[{type:"text", text:raw}]}); const e = j && (j.entries || j.value);
-      if (Array.isArray(e)) text = e.map(x => (x.speakerDisplayName ? x.speakerDisplayName + ": " : "") + (x.text || "")).join("\n"); }
+    /* streamContent itself downloads as a file; /content?format=json redirects to a viewable JSON copy */
+    const tr = ts.find(t => t.isDefault) || ts[0];
+    await go(`${base}/media/transcripts/${tr.id}/content?format=json`); await pause(600);
+    let raw = resText(await call("get_page_text", {tabId:tab, max_chars:2000000}));
+    let text = "";
+    const j = resJson({content:[{type:"text", text:raw}]}), e = j && (j.entries || j.value);
+    if (Array.isArray(e)){
+      const out = []; let who = null;
+      e.forEach(x => { const s = (x.speakerDisplayName || "").replace(/^([^,]+),\s*(.+)$/, "$2 $1"), t = (x.text || "").trim(); if (!t) return;
+        if (s && s === who) out[out.length - 1] += " " + t; else { out.push((s ? s + ": " : "") + t); who = s; } });
+      text = out.join("\n");
+    } else { const v = raw.indexOf("WEBVTT"); if (v >= 0) text = cleanCaptions(raw.slice(v)); }
     if (!text || text.length < 40) throw new Error("the transcript came back empty");
     src.text = text.slice(0, ARC_MAX_CHARS); src.name = src.label;
     try { await go(src.url); } catch(e){}
