@@ -277,8 +277,12 @@ aside .who-sub{color:var(--muted);font-size:13px;margin-top:2px}
 .village-scene .forge{animation:vforge 1.4s ease-in-out infinite}
 @keyframes vforge{0%,100%{opacity:.35}50%{opacity:.7}}
 .village-scene .flame{animation:vflame .9s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+.village-scene .vfire{animation:vflame .8s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+.village-scene .vglow{animation:vforge 1.2s ease-in-out infinite}
+.village-scene .smoke.dark{animation-duration:2.6s}
+.village-scene .vfire-label{font-family:"MedievalSharp","Alegreya SC",Georgia,serif;font-size:15px;fill:#ffd27a}
 @keyframes vflame{from{transform:scale(1,1)}to{transform:scale(.85,1.12)}}
-@media (prefers-reduced-motion:reduce){.village-scene .vz{animation:none;opacity:.8}.village-scene .bob,.village-scene .bubble,.village-scene .smoke,.village-scene .flag,.village-scene .cloud,.village-scene .bird,.village-scene .forge,.village-scene .flame{animation:none}.village-scene .smoke{opacity:.5}}
+@media (prefers-reduced-motion:reduce){.village-scene .vz{animation:none;opacity:.8}.village-scene .bob,.village-scene .bubble,.village-scene .smoke,.village-scene .flag,.village-scene .cloud,.village-scene .bird,.village-scene .forge,.village-scene .flame,.village-scene .vfire,.village-scene .vglow{animation:none}.village-scene .smoke{opacity:.5}}
 .v-scroll{box-sizing:border-box;width:100%;height:100%;overflow:hidden;background:#efe1bb;border:3px solid #5a4128;border-radius:4px;padding:6px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;color:#2b1d08;box-shadow:inset 0 0 12px rgba(90,65,40,.35)}
 .v-scroll-head{font-family:"MedievalSharp","Alegreya SC",Georgia,serif;font-size:12.5px;color:#8e2a17}
 .v-scroll-text{font-family:"Alegreya SC",Georgia,serif;font-weight:700;font-size:14px;line-height:1.22}
@@ -646,6 +650,9 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .arc-src.link i{border-radius:50%;width:15px;height:15px;background:radial-gradient(circle at 38% 35%,#e0574a,#9a1f17 55%,#5e0f0b)}
 .arc-src a,.arc-src span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
 .arc-src em{font-style:normal;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.arc-fetch{flex:none;font-size:12px;padding:3px 9px;border-radius:999px;background:#e9c27a;color:#2a1c0e;border:1px solid #8a6a3a;cursor:pointer;font-weight:600}
+.arc-fetch:hover{background:#f3d38f}
+.arc-fetch:disabled{opacity:.5;cursor:default}
 .arc-x{background:none;border:none;color:var(--muted);font-size:18px;line-height:1;padding:0 4px;cursor:pointer}
 .arc-x:hover{color:#f0b37a;background:none}
 .arc-field{display:flex;flex-direction:column;gap:4px;font-family:var(--f-label);font-size:13px;letter-spacing:.04em;color:#e9c886}
@@ -655,6 +662,10 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 .arc-go button{font-family:"Cinzel",Georgia,serif;font-size:15px;padding:9px 18px;background:#e9c886;border-color:#8a6a3a}
 .arc-go button:disabled{opacity:.5;cursor:not-allowed}
 .arc-meter{font-size:13.5px;color:var(--muted)}
+.arc-meter.wait{color:#f0c96a;font-style:italic}
+#tab-athenaeum textarea.arc-want{border-color:#e0b04a;box-shadow:0 0 0 2px rgba(224,176,74,.35);animation:arcWant 2.4s ease-in-out infinite}
+@keyframes arcWant{50%{box-shadow:0 0 0 4px rgba(224,176,74,.15)}}
+@media (prefers-reduced-motion:reduce){#tab-athenaeum textarea.arc-want{animation:none}}
 .arc-article{position:relative;padding:22px 26px;border-radius:4px;background:var(--ath-blot,none) 20% 40%,var(--ath-grain,none),linear-gradient(180deg,#e2cf9e,#cdb47b 70%,#bfa067);color:#2e1f0c;font-family:"IM Fell English",Georgia,serif;font-size:17px;line-height:1.5;box-shadow:0 14px 30px rgba(0,0,0,.6),inset 0 0 40px rgba(70,40,10,.45)}
 .arc-title{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:2px 4px;font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:clamp(20px,2.2vw,26px);color:#2b1d0e;background:transparent;border:none;border-bottom:1px dashed rgba(110,58,18,.5)}
 .arc-title:focus{outline:none;background:rgba(255,248,225,.35)}
@@ -677,6 +688,36 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
 @keyframes arcread{0%,100%{transform:rotate(1deg)}25%{transform:rotate(4deg) translate(-3px,1px)}75%{transform:rotate(-1deg) translate(3px,0)}}
 @keyframes arcflourish{0%{transform:rotate(0)}40%{transform:rotate(-14deg)}100%{transform:rotate(0)}}
 @media (prefers-reduced-motion:reduce){#arc-svg *{animation:none!important}}
+.arc-shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin:10px 0 4px}
+.arc-shot{position:relative;margin:0;background:#1a120a;border:1px solid #6b5232;border-radius:6px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.arc-shot img{display:block;width:100%;height:auto;border-radius:3px;filter:sepia(.12) contrast(1.02)}
+.arc-shot figcaption{font-size:12.5px;color:#e6d3a8;margin-top:5px;line-height:1.35}
+.arc-shot .arc-x{position:absolute;top:8px;right:8px;background:rgba(20,14,8,.8);border-radius:50%;width:24px;height:24px}
+.ath-shot{display:inline-block;width:min(100%,420px);margin:8px 0;vertical-align:top}
+.ath-shot figcaption{color:#3a2a1a}
+.ath-shot{background:#efe2bf;border-color:#a8946c}
+.arc-check{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--ink);cursor:pointer;margin:2px 0 4px}
+.arc-check input{accent-color:#e9c27a;width:17px;height:17px;margin:1px 0 0;flex:none}
+.arc-check em{font-style:normal;color:var(--muted);font-size:12.5px}
+/* global search across the scrolls */
+.ath-search{display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,rgba(40,26,12,.85),rgba(24,16,8,.85));border:1px solid #6b5232;border-radius:12px;padding:12px 14px}
+.ath-search-box{display:flex;align-items:center;gap:10px;background:#efe2bf;border:2px solid #a8946c;border-radius:999px;padding:4px 16px}
+.ath-search-box svg{width:20px;height:20px;flex:none;fill:none;stroke:#6b5232;stroke-width:2.2;stroke-linecap:round}
+.ath-search-box input{flex:1;min-width:0;border:none;background:transparent;font:inherit;font-family:"IM Fell English",Georgia,serif;font-size:17px;color:#2a1c0e;padding:6px 0;outline:none}
+.ath-search-box:focus-within{border-color:#e9c27a;box-shadow:0 0 0 3px rgba(233,194,122,.3)}
+.ath-search-meta{font-size:13px;color:var(--muted);min-height:1em}
+.ath-search-meta:empty{display:none}
+.ath-hits{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:440px;overflow-y:auto}
+.ath-hits:empty{display:none}
+.ath-hit{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:rgba(239,226,191,.06);border:1px solid #4a3622;border-radius:8px;padding:8px 12px;color:var(--ink);font-family:var(--f-body);font-weight:400;letter-spacing:0;cursor:pointer}
+.ath-hit:hover{background:rgba(239,226,191,.12);border-color:#a8946c}
+.ath-hit-head{display:flex;align-items:baseline;gap:8px}
+.ath-hit-num{font-family:"Cinzel",var(--f-display);color:#e9c886;font-size:13px}
+.ath-hit-name{font-family:"IM Fell English",Georgia,serif;font-size:16.5px;color:#f3e3b8;flex:1}
+.ath-hit-head em{font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap}
+.ath-hit-snip{font-size:14px;line-height:1.45;color:#d9cdb0;padding-left:22px}
+.ath-hit-more{font-size:12.5px;color:var(--muted);padding-left:22px;font-style:italic}
+.ath-hit mark,.ath-found{background:#e9c27a;color:#2a1c0e;border-radius:2px;padding:0 2px}
 </style>
 
 <div class="wrap">
@@ -811,6 +852,12 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
       <h3>The Pinakes <small>· the catalogue of this crypt</small></h3>
       <ol id="ath-pinakes"></ol>
     </div>
+    <div class="ath-search" role="search">
+      <label class="ath-search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+        <input type="search" id="ath-q" placeholder="Search every scroll… e.g. user, HANA, error handling" autocomplete="off" spellcheck="false" aria-label="Search the knowledge scrolls"></label>
+      <div class="ath-search-meta" id="ath-q-meta" aria-live="polite"></div>
+      <ol class="ath-hits" id="ath-hits"></ol>
+    </div>
     <div class="arc-desk" id="arc-desk">
       <div class="arc-figure">
         <svg id="arc-svg" viewBox="0 0 380 400" role="img" aria-label="The Archivist: a hunched old scribe in a patched robe, ink on his fingers, at a cluttered desk"></svg>
@@ -819,7 +866,7 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
       <div class="arc-work">
         <div class="arc-headline">
           <h3>The Archivist</h3>
-          <p>Hand him a meeting recording, a big document or a transcript. He writes it up as a knowledge article (what you need to know, the key points, the steps, and a process map) and files it on the Knowledge shelf as a new scroll.</p>
+          <p>Hand him a meeting transcript or a big document (a link alone won't do; he needs the words). He writes it up as a knowledge article (what you need to know, the key points, the steps, and a process map) and files it on the Knowledge shelf as a new scroll.</p>
         </div>
         <div class="arc-tray" id="arc-tray" tabindex="0" role="group" aria-label="Drop links or files for the Archivist">
           <div class="arc-tray-hint"><b>Drop links or files here</b><span>Teams or SharePoint links, transcripts (.vtt, .docx), PDFs, Word or text files</span></div>
@@ -832,6 +879,7 @@ svg#trade-svg.picking .tm-town .tm-halo{opacity:.55}
         </div>
         <label class="arc-field"><span>The words themselves <em>(paste a transcript or document text if he can't open the link)</em></span><textarea id="arc-text" rows="5" spellcheck="false" placeholder="Paste the meeting transcript, notes or document text here…"></textarea></label>
         <label class="arc-field"><span>Anything he should focus on? <em>(optional)</em></span><input type="text" id="arc-focus" maxlength="200" placeholder="e.g. the steps to build the postcard file"></label>
+        <label class="arc-check"><input type="checkbox" id="arc-shots-on"> <span>Include screenshots from the recording <em>(Claude desktop app only: he opens the video in the app’s browser and captures the moments he picks)</em></span></label>
         <div class="arc-go"><button type="button" id="arc-start" disabled>Hand it to the Archivist</button><span class="arc-meter" id="arc-meter"></span></div>
         <div class="arc-result" id="arc-result" hidden></div>
       </div>
@@ -893,6 +941,13 @@ function dayIndex(y,m,d){ return Date.UTC(y,m-1,d)/864e5; }
 function todayIdx(){ const [y,m,d] = localYMD(new Date()); return dayIndex(y,m,d); }
 function dueIdx(s){ if(!s) return null; const [y,m,d] = s.split("-").map(Number); return dayIndex(y,m,d); }
 function createdIdx(iso){ const [y,m,d] = localYMD(new Date(iso)); return dayIndex(y,m,d); }
+/* last-minute work: due this week (Monday to Sunday), and due less than 3 days after it was created */
+function weekBounds(T){ const dow = new Date(T*864e5).getUTCDay(), mon = T - ((dow + 6) % 7); return [mon, mon + 6]; }
+function isRush(t, T){
+  if (!t || !t.due_on || !t.created_at) return false;
+  const due = dueIdx(t.due_on), c = createdIdx(t.created_at), [a, b] = weekBounds(T);
+  return due >= a && due <= b && due - c < 3;
+}
 function categorize(t, T){
   /* Brick: open work created or due within 3 business days either side of today */
   const start = bizShift(T, -3), end = bizShift(T, 3);
@@ -913,7 +968,7 @@ function buildPeople(users, tasks, done){
   for (const u of users){
     if (EXCLUDE.has(u.gid)) continue;
     const key = (u.name || u.email || u.gid).trim().toLowerCase();
-    if (!byKey.has(key)) byKey.set(key, {key, name:u.name || u.email || "Unnamed", gids:[], brick:[], ore:[], wool:[], gold:[]});
+    if (!byKey.has(key)) byKey.set(key, {key, name:u.name || u.email || "Unnamed", gids:[], brick:[], ore:[], wool:[], gold:[], rush:[]});
     byKey.get(key).gids.push(u.gid);
     gidToKey.set(u.gid, key);
   }
@@ -921,6 +976,12 @@ function buildPeople(users, tasks, done){
     const g = t.assignee && t.assignee.gid; const key = gidToKey.get(g);
     if (!key) continue;
     byKey.get(key)[categorize(t, T)].push({gid:t.gid, name:t.name || "(untitled task)", due:t.due_on || null, created:t.created_at, url:t.permalink_url || null, projects:t.projects || []});
+    if (isRush(t, T)) byKey.get(key).rush.push({gid:t.gid, name:t.name || "(untitled task)", due:t.due_on, created:t.created_at, url:t.permalink_url || null, done:false});
+  }
+  /* finished tasks count as last-minute work too, when they were due this week */
+  for (const t of (done || [])){
+    const key = gidToKey.get(t.assignee && t.assignee.gid);
+    if (key && isRush(t, T)) byKey.get(key).rush.push({gid:t.gid, name:t.name || "(untitled task)", due:t.due_on, created:t.created_at, url:t.permalink_url || null, done:true});
   }
   /* Gold: work completed in the last 5 business days, one coin per task */
   const goldFrom = bizShift(T, -5);
@@ -1633,7 +1694,7 @@ async function fetchDone(mcp, ids, fresh){
   const after = new Date(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate()).toISOString();
   const seen = new Map(); let before = null;
   for (let page = 0; page < 10; page++){
-    const input = {assignee_any: ids, completed: true, completed_at_after: after, limit: 100, sort_by: "completed_at", sort_ascending: false, opt_fields: "name,assignee.name,completed_at,permalink_url"};
+    const input = {assignee_any: ids, completed: true, completed_at_after: after, limit: 100, sort_by: "completed_at", sort_ascending: false, opt_fields: "name,assignee.name,completed_at,permalink_url,created_at,due_on"};
     if (before) input.completed_at_before = before;
     const res = await call(mcp, "search_tasks", input, fresh);
     const rows = (res && res.data) || [];
@@ -1642,7 +1703,7 @@ async function fetchDone(mcp, ids, fresh){
     if (rows.length < 100 || !added) break;
     before = rows[rows.length-1].completed_at;
   }
-  return [...seen.values()].map(t => ({gid:t.gid, name:t.name, completed_at:t.completed_at, permalink_url:t.permalink_url, assignee: t.assignee ? {gid:t.assignee.gid} : null}));
+  return [...seen.values()].map(t => ({gid:t.gid, name:t.name, completed_at:t.completed_at, created_at:t.created_at, due_on:t.due_on, permalink_url:t.permalink_url, assignee: t.assignee ? {gid:t.assignee.gid} : null}));
 }
 
 /* ---------- Asana via connector ---------- */
@@ -1986,6 +2047,12 @@ function teamMembers(team){
   if (team.members === "emily-brenzel+"){ const ids = [...descendantsOf("emily-brenzel")].filter(id => !taken.has(id)); return ["emily-brenzel"].concat(ids).filter(id => byId.has(id)).map(id => byId.get(id)); }
   const mc = new Set(["emily-brenzel", ...descendantsOf("emily-brenzel")]);
   return roster.filter(p => !taken.has(p.id) && !mc.has(p.id));
+}
+function teamRush(team){
+  const seen = new Map();
+  teamWork(team).forEach(r => (r.bp && r.bp.rush || []).forEach(t => seen.set(t.gid, t)));
+  const people = teamMembers(team).length, tasks = [...seen.values()];
+  return {tasks, people, onFire: people > 0 && tasks.length > people};
 }
 function teamWork(team){
   return teamMembers(team).map(h => ({hero:h, bp:boardPerson(h.id)}));
@@ -2365,6 +2432,8 @@ function renderVillage(force){
   sv("path", {d:`M0 540 Q600 500 ${VW} 540 V${VH} H0 Z`, fill:"url(#vcob)"}, s);
   sv("path", {d:`M0 540 Q600 500 ${VW} 540`, stroke:"#6b5a45", "stroke-width":"4", fill:"none"}, s);
   drawSmithy(s, SITES.dev); drawGuildhall(s, SITES.admin); drawPost(s, SITES.mc);
+  const fires = TEAMS.map(team => ({team, r:teamRush(team)})).filter(x => x.r.onFire);
+  fires.forEach(x => drawFire(s, SITES[x.team.key], x.team, x.r));
   /* team stories on heraldic banners */
   TEAMS.forEach(team => {
     const site = SITES[team.key]; if (!site) return;
@@ -2451,6 +2520,37 @@ function renderVillage(force){
   foot.textContent = allClaude ? "The banners and the castle proclamation were written by Claude from this week's Asana work. Villagers talk about their most urgent work; those with nothing urgent are napping. Click anyone to open their character sheet."
     : villageAsking ? "Claude is writing the banners and the proclamation from this week's Asana work…"
     : "Each villager is talking about their most urgent work from Asana; those with nothing urgent are napping. Click anyone to open their character sheet.";
+  foot.textContent += " A building catches fire when its team has more last-minute tasks this week (due less than 3 days after they were made) than people."
+    + (fires.length ? " Burning now: " + fires.map(x => `${x.team.name} (${x.r.tasks.length} tasks, ${x.r.people} people)`).join(", ") + "." : "");
+}
+/* a building burns when its team has more last-minute tasks this week than people */
+function flame(g, x, y, k, i){
+  const f = sv("g", {class:"vfire", style:`animation-delay:${(i * 0.17) % 1}s;animation-duration:${0.7 + (i % 3) * 0.15}s`}, g);
+  const shape = m => `M${x} ${y} c${-14*k*m} ${-10*k*m} ${-12*k*m} ${-30*k*m} ${2*k*m} ${-50*k*m} c${2*k*m} ${12*k*m} ${12*k*m} ${16*k*m} ${10*k*m} ${28*k*m} c${8*k*m} ${-6*k*m} ${8*k*m} ${-14*k*m} ${6*k*m} ${-20*k*m} c${12*k*m} ${14*k*m} ${14*k*m} ${34*k*m} ${-18*k*m} ${42*k*m} Z`;
+  sv("path", {d:shape(1), fill:"#d63a14"}, f);
+  sv("path", {d:shape(.72), fill:"#ff8a2a"}, f);
+  sv("path", {d:shape(.42), fill:"#ffe07a"}, f);
+}
+function drawFire(s, b, team, r){
+  if (!b) return;
+  const top = b.y + (team.key === "admin" ? 40 : 30), apex = top - (team.key === "admin" ? 92 : 96);
+  const g = sv("g", {class:"vburn", "aria-label":`${team.name} is on fire: ${r.tasks.length} last-minute tasks this week for ${r.people} people`}, s);
+  const tt = sv("title", null, g); tt.textContent = `${team.name}: ${r.tasks.length} last-minute tasks this week for ${r.people} people (due less than 3 days after they were made)`;
+  /* heat glow and dark smoke */
+  const gid = "vglow-" + team.key, defs = s.querySelector("defs");
+  if (defs && !s.querySelector("#" + gid)){ const rg = sv("radialGradient", {id:gid}, defs); sv("stop", {offset:"0%", "stop-color":"#ff7a1a", "stop-opacity":".55"}, rg); sv("stop", {offset:"100%", "stop-color":"#ff7a1a", "stop-opacity":"0"}, rg); }
+  sv("ellipse", {class:"vglow", cx:b.x + b.w/2, cy:top - 30, rx:b.w*0.7, ry:120, fill:`url(#${gid})`}, g);
+  [0, 1, 2, 3].forEach(i => sv("circle", {class:"smoke dark", cx:b.x + b.w*(0.3 + i*0.14), cy:apex - 10, r:16 + i*5, fill:"#3a3430", style:`animation-delay:${i*0.8}s`}, g));
+  /* flames along both slopes of the roof and out of the windows */
+  const pts = [];
+  for (let i = 0; i <= 6; i++){ const u = i / 6; pts.push([b.x - 10 + u*(b.w/2 + 10), top - u*(top - apex) + 6]); pts.push([b.x + b.w + 10 - u*(b.w/2 + 10), top - u*(top - apex) + 6]); }
+  pts.sort((p, q) => p[1] - q[1]).forEach(([x, y], i) => flame(g, x, y, i < 3 ? 1.25 : 0.95, i));
+  [[b.x + 40, b.y + b.h - 60], [b.x + b.w - 40, b.y + b.h - 60]].forEach(([x, y], i) => flame(g, x, y, 0.6, i + 20));
+  /* the count, on a scorched placard */
+  const px = b.x + b.w/2, py = apex - 34;
+  sv("rect", {x:px - 92, y:py - 20, width:184, height:30, rx:6, fill:"#2b1d08", stroke:"#ff8a2a", "stroke-width":"2"}, g);
+  const t = sv("text", {x:px, y:py, "text-anchor":"middle", class:"vfire-label"}, g);
+  t.textContent = `Ablaze · ${r.tasks.length} rush tasks, ${r.people} hands`;
 }
 function thatchRoof(s, x, y, w, fill){ sv("path", {d:`M${x - 18} ${y} L${x + w/2} ${y - 96} L${x + w + 18} ${y} Z`, fill, stroke:"#3b2a17", "stroke-width":"2.5", "stroke-linejoin":"round"}, s); sv("path", {d:`M${x - 18} ${y} h${w + 36}`, stroke:"#3b2a17", "stroke-width":"5", "stroke-linecap":"round"}, s); }
 function timbered(s, x, y, w, h){
@@ -4186,6 +4286,9 @@ function richBody(html){
       const tag = n.tagName;
       if (tag === "A"){
         const href = n.getAttribute("href") || "";
+        const blob = /\/_blob\/([0-9a-f]{32})/i.exec(href);
+        if (blob){ const f = mk("figure", "arc-shot ath-shot"); const im = mk("img"); im.src = "/_blob/" + blob[1]; im.alt = n.textContent; im.loading = "lazy";
+          im.addEventListener("error", () => f.remove()); f.append(im, mk("figcaption", null, n.textContent)); dst.appendChild(f); return; }
         if (/^https?:\/\//i.test(href)){ const a = mk("a", "ath-seal"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = href; const label = n.textContent.trim(); a.append(mk("i"), mk("span", null, label && label !== href ? label : linkLabel(href))); dst.appendChild(a); }
         else dst.appendChild(document.createTextNode(n.textContent));
         return;
@@ -4386,6 +4489,75 @@ function renderShelf(){
   $("ath-oracle").disabled = !scrolls.length;
 }
 
+/* ---------- searching every scroll: each hit shows the words around it ---------- */
+const qBox = $("ath-q"), qMeta = $("ath-q-meta"), qHits = $("ath-hits");
+const plainCache = new Map();
+function plainOf(t){
+  const k = t.gid + "|" + (t.modified_at || "");
+  if (plainCache.has(k)) return plainCache.get(k);
+  let txt = "";
+  if (t.html_notes){ try { const d = new DOMParser().parseFromString(t.html_notes.replace(/<\/(h1|h2|li|blockquote|pre|tr|p)>/gi, "$&\n").replace(/<br\s*\/?>/gi, "\n"), "text/html"); txt = d.body.textContent || ""; } catch(e){} }
+  if (!txt.trim()) txt = t.notes || "";
+  txt = txt.replace(/https?:\/\/[^\s<>"]+/g, u => "‹" + linkLabel(u) + "›").replace(/\s+/g, " ").trim();
+  plainCache.set(k, txt); return txt;
+}
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function snippets(text, re, max){
+  const out = []; re.lastIndex = 0; let m, n = 0;
+  while ((m = re.exec(text))){
+    n++;
+    if (out.length < max){
+      let st = m.index, en = m.index + m[0].length;
+      for (let k = 0; k <= 10 && st > 0; k++){ const j = text.lastIndexOf(" ", st - 2); st = j < 0 ? 0 : j + 1; if (j < 0) break; }
+      for (let k = 0; k <= 10 && en < text.length; k++){ const j = text.indexOf(" ", en + 1); en = j < 0 ? text.length : j; if (j < 0) break; }
+      out.push({pre:(st > 0 ? "…" : "") + text.slice(st, m.index), hit:m[0], post:text.slice(m.index + m[0].length, en) + (en < text.length ? "…" : "")});
+    }
+    if (m[0].length === 0) re.lastIndex++;
+  }
+  return {list:out, count:n};
+}
+function runSearch(){
+  const q = qBox.value.trim(); qHits.textContent = "";
+  if (q.length < 2){ qMeta.textContent = q ? "Type at least two letters." : ""; return; }
+  const re = new RegExp(reEsc(q), "gi"), res = [];
+  scrolls.forEach((t, i) => {
+    const inTitle = new RegExp(reEsc(q), "i").test(t.name);
+    const sn = snippets(plainOf(t), re, 3);
+    if (inTitle || sn.count) res.push({t, i, inTitle, sn});
+  });
+  res.sort((a, b) => (b.inTitle - a.inTitle) || (b.sn.count - a.sn.count));
+  const total = res.reduce((n, r) => n + r.sn.count, 0);
+  qMeta.textContent = res.length ? `${res.length} scroll${res.length === 1 ? "" : "s"} · ${total} mention${total === 1 ? "" : "s"} of “${q}”` : `No scroll mentions “${q}”.`;
+  const mark = (el, str) => { const parts = str.split(new RegExp(`(${reEsc(q)})`, "gi")); parts.forEach((p, k) => el.appendChild(k % 2 ? mk("mark", null, p) : document.createTextNode(p))); };
+  res.forEach(r => {
+    const li = mk("li"), btn = mk("button", "ath-hit"); btn.type = "button";
+    const head = mk("span", "ath-hit-head");
+    head.appendChild(mk("b", "ath-hit-num", roman(r.i + 1) + "."));
+    const nm = mk("span", "ath-hit-name"); mark(nm, r.t.name); head.appendChild(nm);
+    if (r.sn.count) head.appendChild(mk("em", null, `${r.sn.count} mention${r.sn.count === 1 ? "" : "s"}`));
+    btn.appendChild(head);
+    r.sn.list.forEach(x => { const q1 = mk("span", "ath-hit-snip"); q1.appendChild(document.createTextNode(x.pre)); q1.appendChild(mk("mark", null, x.hit)); q1.appendChild(document.createTextNode(x.post)); btn.appendChild(q1); });
+    if (r.sn.count > r.sn.list.length) btn.appendChild(mk("span", "ath-hit-more", `…and ${r.sn.count - r.sn.list.length} more in this scroll`));
+    btn.addEventListener("click", () => {
+      const el = shelf.querySelector(`.ath-scroll[data-gid="${r.t.gid}"]`);
+      crypt.scrollIntoView({block:"start", behavior: REDUCED ? "auto" : "smooth"});
+      draw(r.t, el).then(() => highlightInReader(q));
+    });
+    li.appendChild(btn); qHits.appendChild(li);
+  });
+}
+function highlightInReader(q){
+  const box = $("ath-reader"); if (!box || box.hidden) return;
+  const re = new RegExp(reEsc(q), "gi"), walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT), nodes = [];
+  while (walker.nextNode()){ const n = walker.currentNode; if (n.parentNode && !/^(MARK|SCRIPT|STYLE)$/.test(n.parentNode.nodeName) && !n.parentNode.closest("svg") && re.test(n.nodeValue)) nodes.push(n); re.lastIndex = 0; }
+  let first = null;
+  nodes.forEach(n => { const f = document.createDocumentFragment(); n.nodeValue.split(new RegExp(`(${reEsc(q)})`, "gi")).forEach((p, k) => { if (k % 2){ const m = mk("mark", "ath-found", p); f.appendChild(m); first = first || m; } else if (p) f.appendChild(document.createTextNode(p)); }); n.parentNode.replaceChild(f, n); });
+  if (first) setTimeout(() => first.scrollIntoView({block:"center", behavior: REDUCED ? "auto" : "smooth"}), 350);
+}
+let qTimer = 0;
+qBox.addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(runSearch, 120); });
+qBox.addEventListener("keydown", e => { if (e.key === "Escape"){ qBox.value = ""; runSearch(); } if (e.key === "Enter"){ const f = qHits.querySelector(".ath-hit"); if (f) f.click(); } });
+
 /* draw a scroll: it flies off the shelf to the reading table, then unrolls */
 async function draw(t, from){
   if (busy) return;
@@ -4493,21 +4665,26 @@ async function load(fresh){
     }
     say("Lighting the lamps…");
     const opts = {cache: fresh ? {refresh:true, staleTime:0, gcTime:600000} : {staleTime:120000, gcTime:600000}};
-    /* the connector wants a full timestamp here ("now" is refused); if it still objects, ask for everything and drop finished ones ourselves */
+    /* only finished work is shelved: ask for every task in the section (no completed_since), then keep the completed ones */
     const ask = input => mcp.callTool(SERVER, "get_tasks", input, opts).then(payloadOf);
-    const base = {section: KNOWLEDGE_SECTION, opt_fields: FIELDS, limit: 100};
-    let res;
-    try{ res = await ask(Object.assign({completed_since: new Date().toISOString()}, base)); }
-    catch(e){
-      if (e && e.retryable){ await new Promise(r => setTimeout(r, 1200)); res = await ask(Object.assign({completed_since: new Date().toISOString()}, base)); }
-      else if (e && (e.code === "tool_error" || e.code === "bad_request")) res = await ask(base);
-      else throw e;
+    const base = {section: KNOWLEDGE_SECTION, opt_fields: FIELDS + ",completed_at", limit: 100};
+    const all = [];
+    for (let page = 0, offset = null; page < 10; page++){
+      let res;
+      const input = offset ? Object.assign({offset}, base) : base;
+      try{ res = await ask(input); }
+      catch(e){ if (e && e.retryable){ await new Promise(r => setTimeout(r, 1200)); res = await ask(input); } else throw e; }
+      all.push(...((res && res.data) || []));
+      offset = res && res.next_page && res.next_page.offset;
+      if (!offset) break;
     }
-    const list = ((res && res.data) || []).filter(t => !t.completed)
+    const list = all.filter(t => t.completed)
       .map(t => ({gid:t.gid, name:t.name || "Untitled", notes:t.notes || "", html_notes:t.html_notes || "", due_on:t.due_on || null, created_at:t.created_at || null, modified_at:t.modified_at || null, permalink_url:t.permalink_url || ""}));
-    scrolls = list; loaded = true; saveCache(list); renderShelf();
+    scrolls = list; loaded = true; saveCache(list); renderShelf(); if (qBox && qBox.value.trim()) runSearch();
     status.dataset.empty = "";
-    say(list.length ? "Hold the lamp near a scroll, then draw it from its niche. Or ask the Librarian to choose." : "The shelves are bare. Nothing waits in your Knowledge section.");
+    const waiting = all.length - list.length;
+    say(list.length ? "Hold the lamp near a scroll, then draw it from its niche. Or ask the Librarian to choose." + (waiting ? ` (${waiting} unfinished task${waiting === 1 ? " waits" : "s wait"} in Asana and will be shelved once completed.)` : "")
+                    : (waiting ? `No finished scrolls yet. ${waiting} Knowledge task${waiting === 1 ? " is" : "s are"} still open; mark one complete in Asana to shelve it.` : "The shelves are bare. Nothing waits in your Knowledge section."));
   }catch(err){
     const code = err && err.code;
     if (code === "server_not_connected" || code === "not_granted" || code === "capability_disabled") say("The crypt is sealed. Asana isn't connected here.", "warn");
@@ -4644,6 +4821,13 @@ const ARC_LINES = {
   idle:["Eh? Another visitor. Leave your link and the words behind it, and I'll set it down properly.", "Mind the ink. It never comes off, you know. Not in forty years.", "A recording, you say? I can't hear them. Bring me the transcript and I'll make sense of it.", "Everything worth knowing ends up in here eventually. Usually misfiled."],
   linkOnly:"A link, eh? The doors behind it are sealed to me, sign-ins and such. Paste me the words, or drop the transcript or file itself.",
   ready:"Ah, that's something I can read. Hand it over when you're ready.",
+  spLink:"SharePoint, is it? Hand it over and I'll fetch the transcript through your own sign-in.",
+  fetching:"Shuffling down to the SharePoint stacks with your key… a moment.",
+  signIn:"The door wants your name. Sign in to Microsoft in the browser pane of the Claude app (Ctrl+Shift+B shows it), then press Fetch again.",
+  noTranscript:"I found the recording, but no one kept a transcript of it. Transcription has to be on during the meeting. Paste me notes instead.",
+  noBrowser:"My key only turns in the Claude desktop app, where its browser lives. Open this page there, or drop the transcript file.",
+  nothing:"I've nothing to read yet, only the name on the door. Give me the transcript or the words, or I'd be making it up.",
+  fetched:w => `Got it: ${w} from the transcript. Hand it over when you're ready.`,
   reading:["Squinting at it now…", "Hmm. Hmm. Yes…", "Turning the pages…"],
   writing:"Setting it down: what you need to know, the key points, the steps, and a map of the process…",
   done:"There. Read it over. If it suits you, I'll seal it onto the Knowledge shelf.",
@@ -4656,22 +4840,175 @@ arc.svg.addEventListener("click", () => { if (!arcBusy) arcSay(ARC_LINES.idle[Ma
 /* ---------- sources: links, files and pasted text ---------- */
 function corpusChars(){ return arcSources.reduce((n, x) => n + (x.text ? x.text.length : 0), 0) + arc.text.value.trim().length; }
 function wordsLabel(t){ const n = t.split(/\s+/).filter(Boolean).length; return n < 1000 ? `${n} words` : `${Math.round(n / 100) / 10}k words`; }
-function arcRefresh(){
+function arcRefresh(quiet){
   arc.list.textContent = "";
   arcSources.forEach((x, i) => {
     const li = mk("li", "arc-src" + (x.kind === "link" ? " link" : ""));
     const ic = mk("i"); li.appendChild(ic);
     if (x.kind === "link"){ const a = mk("a", null, x.label); a.href = x.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = x.url; li.appendChild(a); }
     else li.appendChild(mk("span", null, x.name));
-    li.appendChild(mk("em", null, x.kind === "link" ? "link" : x.error ? x.error : x.text ? wordsLabel(x.text) : "reading…"));
+    li.appendChild(mk("em", null, x.fetching ? "fetching…" : x.error ? x.error : x.text ? wordsLabel(x.text) : x.kind === "link" ? "link" : "reading…"));
+    if (x.kind === "link" && isSharePoint(x.url) && !x.text && !x.fetching){
+      const fb = mk("button", "arc-fetch", "Fetch with my sign-in"); fb.type = "button";
+      fb.title = "Opens it in the Claude app's browser, where you're signed in to Microsoft, and pulls the transcript";
+      fb.disabled = arcBusy || arcSources.some(s => s.fetching);
+      fb.addEventListener("click", () => fetchSigned(x)); li.appendChild(fb);
+    }
     const rm = mk("button", "arc-x", "×"); rm.type = "button"; rm.title = "Take it back"; rm.setAttribute("aria-label", "Remove " + (x.name || x.label));
     rm.addEventListener("click", () => { arcSources.splice(i, 1); arcRefresh(); });
     li.appendChild(rm); arc.list.appendChild(li);
   });
   const chars = corpusChars(), links = arcSources.filter(x => x.kind === "link").length;
-  const w = Math.round(chars / 6); arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read` : "";
-  arc.start.disabled = arcBusy || !chars;
-  if (!arcBusy){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(ARC_LINES.linkOnly); }
+  const w = Math.round(chars / 6);
+  const vid = arcSources.some(x => x.kind === "link" && !x.text && /video|recording|stream/i.test(x.label + " " + x.url));
+  const sp = arcSources.some(x => x.kind === "link" && !x.text && isSharePoint(x.url));
+  arc.meter.classList.toggle("wait", !chars && !!links);
+  arc.meter.textContent = chars ? `about ${w < 1000 ? w + " words" : Math.round(w / 100) / 10 + "k words"} to read`
+    : links ? (sp ? (arcShotsOn() ? "He’ll fetch the transcript and take screenshots with your sign-in when you hand it over (Claude desktop app only)."
+                                 : "In the Claude desktop app he’ll fetch the transcript himself. In Chrome, paste the transcript’s text above (or drop the file).")
+             : vid ? "Waiting on the transcript. In Teams: meeting recap → Transcript → Download, then drop the file here or paste its text above."
+                   : "Waiting on the words. He can't open links behind a sign-in, so drop the file itself or paste its text above.")
+    : "";
+  const pending = /^https?:\/\//i.test(arc.url.value.trim());
+  arc.start.disabled = arcBusy || arcSources.some(s => s.fetching) || !(chars || links || pending);
+  if (!quiet && !arcBusy && !arcSources.some(s => s.fetching)){ if (chars) arcSay(ARC_LINES.ready); else if (links) arcSay(sp ? ARC_LINES.spLink : vid ? ARC_LINES.video : ARC_LINES.linkOnly); }
+  arc.text.classList.toggle("arc-want", !chars && !!links && !(sp && arcShotsOn()));
+}
+/* ---------- reading SharePoint / OneDrive recordings through the viewer's own Microsoft sign-in ----------
+   The page can't hold Microsoft credentials, but the Claude desktop app's browser can: the viewer signs in there once,
+   and the Archivist asks that browser to open SharePoint's own file API (cookie-authenticated, read-only GETs). */
+const BROWSER = "host:claude_browser";
+function isSharePoint(u){ try { return /(^|\.)sharepoint\.com$/i.test(new URL(u).hostname); } catch(e){ return false; } }
+function b64url(s){ return btoa(unescape(encodeURIComponent(s))).replace(/=+$/, "").replace(/\//g, "_").replace(/\+/g, "-"); }
+function resText(r){ return ((r && r.content) || []).filter(b => b && b.type === "text").map(b => b.text).join("\n") || (typeof r?.payload === "string" ? r.payload : ""); }
+function resJson(r){
+  if (r && r.payload && typeof r.payload === "object" && !Array.isArray(r.payload) && (r.payload.id || r.payload.value)) return r.payload;
+  const t = resText(r), a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a < 0 || b < a) return null;
+  try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ return null; }
+}
+let arcTab = null;
+const offSec = o => { const m = /^(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(String(o || "")); return m ? +m[1] * 3600 + +m[2] * 60 + Math.floor(+m[3]) : null; };
+const clock = sec => { const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, x = sec % 60, p = n => String(n).padStart(2, "0"); return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`; };
+const unclock = t => { const p = String(t || "").replace(/[\[\]\s]/g, "").split(":").map(Number); if (!p.length || p.some(isNaN)) return null; return p.reduce((a, n) => a * 60 + n, 0); };
+/* a "watch from here" address, worked out from a SharePoint video link when the browser never opened it */
+function videoFromLink(){
+  const l = arcSources.find(x => x.kind === "link" && isSharePoint(x.url) && (/\/:v:\//.test(x.url) || /\.(mp4|mov|m4v|webm)(\?|$)/i.test(x.url) || /stream\.aspx/i.test(x.url)));
+  if (!l) return null;
+  try{
+    const u = new URL(l.url), m = /^\/:v:\/r(\/.*)$/.exec(u.pathname);
+    if (m){ const path = decodeURIComponent(m[1]); const site = (/^\/(personal|sites|teams)\/[^/]+/.exec(path) || [""])[0]; return {host:u.host, site, path}; }
+    if (/stream\.aspx/i.test(u.pathname) && u.searchParams.get("id")){ const path = u.searchParams.get("id"); return {host:u.host, site:u.pathname.replace(/\/_layouts\/15\/stream\.aspx$/i, ""), path}; }
+    return {share:l.url};
+  }catch(e){ return null; }
+}
+/* the Stream player for a recording, opened at a given second */
+function streamBase(webUrl, host){
+  try{ const path = decodeURIComponent(new URL(webUrl).pathname), site = (/^\/(personal|sites|teams)\/[^/]+/.exec(path) || [""])[0];
+    return {host, site, path}; }catch(e){ return null; }
+}
+function streamAt(v, sec){
+  const nav = btoa(JSON.stringify({playbackOptions:{startTimeInSeconds:Math.max(0, Math.round(sec))}, referralInfo:{referralApp:"StreamWebApp", referralView:"ShareDialog-Link", referralAppPlatform:"Web", referralMode:"view"}}));
+  if (v.share) return v.share + (v.share.includes("?") ? "&" : "?") + "nav=" + encodeURIComponent(nav);
+  return `https://${v.host}${v.site}/_layouts/15/stream.aspx?id=${encodeURIComponent(v.path)}&nav=${encodeURIComponent(nav)}`;
+}
+/* find the player in a screenshot: the video's letterbox is pure black, the Stream page around it is not */
+function cropPlayer(img){
+  const c = document.createElement("canvas"), W = img.naturalWidth, H = img.naturalHeight; c.width = W; c.height = H;
+  const g = c.getContext("2d"); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, W, H).data;
+  const blk = (x, y) => { const i = (y * W + x) * 4; return Math.max(d[i], d[i + 1], d[i + 2]) < 10; };
+  const rows = []; for (let y = 0; y < H; y++){ let n = 0; for (let x = 0; x < W; x += 2) n += blk(x, y); if (n > .15 * W / 2) rows.push(y); }
+  let box = null;
+  if (rows.length > 20){
+    const y0 = rows[0], y1 = rows[rows.length - 1]; let best = [0, 0, 0];
+    for (const yy of [y0 + 2, y1 - 2]){ let st = -1; for (let x = 0; x <= W; x++){ const b = x < W && blk(x, yy); if (b && st < 0) st = x; if (!b && st >= 0){ if (x - st > best[0]) best = [x - st, st, x - 1]; st = -1; } } }
+    if (best[0] > W * .3 && y1 - y0 > H * .15) box = [best[1], y0, best[2] - best[1] + 1, y1 - y0 + 1];
+  }
+  if (!box) box = [0, 0, W, H];
+  const o = document.createElement("canvas"); o.width = box[2]; o.height = box[3];
+  o.getContext("2d").drawImage(c, box[0], box[1], box[2], box[3], 0, 0, box[2], box[3]);
+  return new Promise(res => o.toBlob(res, "image/jpeg", .88));
+}
+async function captureShots(a){
+  const v = (arcSources.find(x => x.video) || {}).video;
+  if (!v || !a.shots.length) return;
+  const mcp = await claude.use("mcp").catch(() => null); if (!mcp) return;
+  const call = (tool, input) => mcp.callTool(BROWSER, tool, input, {cache:false});
+  for (let k = 0; k < a.shots.length; k++){
+    const sh = a.shots[k];
+    sh.watch = streamAt(v, sh.sec);
+    arcSay(`Fetching the pictures: ${k + 1} of ${a.shots.length}, at ${clock(sh.sec)}…`, "reading");
+    try{
+      await call("navigate", arcTab ? {url:streamAt(v, sh.sec + 1), tabId:arcTab} : {url:streamAt(v, sh.sec + 1)});
+      await call("computer", {action:"hover", coordinate:[2, 2], ...(arcTab ? {tabId:arcTab} : {})});
+      await call("computer", {action:"wait", duration:6, ...(arcTab ? {tabId:arcTab} : {})});
+      const r = await call("computer", {action:"screenshot", ...(arcTab ? {tabId:arcTab} : {})});
+      const im = ((r && r.content) || []).find(b => b && b.type === "image" && b.data);
+      if (!im) continue;
+      const img = new Image(); img.src = `data:${im.mimeType || "image/jpeg"};base64,${im.data}`; await img.decode();
+      sh.blob = await cropPlayer(img); if (sh.blob) sh.preview = URL.createObjectURL(sh.blob);
+    }catch(e){ if (e && /server_not_connected|not_granted|not_in_manifest/.test(e.code || "")) break; }
+  }
+  try { await call("navigate", arcTab ? {url:streamAt(v, a.shots[0].sec), tabId:arcTab} : {url:streamAt(v, a.shots[0].sec)}); } catch(e){}
+}
+const pause = ms => new Promise(r => setTimeout(r, ms));
+async function fetchSigned(src){
+  if (arcBusy || src.fetching) return;
+  const mcp = window.claude && await claude.use("mcp").catch(() => null);
+  if (!mcp){ src.error = "needs the Claude app"; arcRefresh(); arcSay(ARC_LINES.noBrowser, ""); return; }
+  src.fetching = true; src.error = null; arcRefresh(); arcSay(ARC_LINES.fetching, "reading");
+  const host = new URL(src.url).host, call = (tool, input) => mcp.callTool(BROWSER, tool, input, {cache:false});
+  let tab = arcTab;
+  const go = async url => { const r = await call("navigate", tab ? {url, tabId:tab} : {url}); await pause(900); return r; };
+  const page = async () => resJson(await call("get_page_text", tab ? {tabId:tab, max_chars:900000} : {max_chars:900000}));
+  const signIn = async () => { try { await go(src.url); } catch(e){} src.error = "sign in, then fetch again"; arcSay(ARC_LINES.signIn, ""); };
+  try {
+    let reused = false;
+    if (tab){ try { await go(src.url); reused = true; } catch(e){ tab = null; } }
+    if (!reused){
+      const opened = await call("preview_start", {url:src.url});
+      tab = arcTab = opened?.payload?.tabId || (/tab\s*_?id["'\s:=]+["']?([\w-]+)/i.exec(resText(opened)) || [])[1] || null;
+    }
+    await pause(1500);
+    await go(`https://${host}/_api/v2.0/shares/u!${b64url(src.url)}/driveItem?$select=id,name,parentReference,file,webUrl`);
+    const item = await page();
+    if (!item || !item.id){
+      const ec = item && item.error && String(item.error.code || "");
+      if (item && item.error && !/unauthenticated|InvalidAuthenticationToken|unauthorized/i.test(ec)) throw new Error(ec === "accessDenied" || ec === "itemNotFound" ? "you don't have access to that recording" : (item.error.message || ec));
+      return await signIn();
+    }
+    const base = `https://${host}/_api/v2.1/drives/${item.parentReference.driveId}/items/${item.id}`;
+    src.label = item.name || src.label;
+    src.video = /\.(mp4|mov|m4v|webm)$/i.test(item.name || "") ? streamBase(item.webUrl, host) : null;
+    await go(base + "/media/transcripts");
+    const list = await page(), ts = (list && list.value) || [];
+    if (!list) return await signIn();
+    if (!ts.length){ src.error = "no transcript on it"; arcSay(ARC_LINES.noTranscript, ""); return; }
+    /* streamContent itself downloads as a file; /content?format=json redirects to a viewable JSON copy */
+    const tr = ts.find(t => t.isDefault) || ts[0];
+    await go(`${base}/media/transcripts/${tr.id}/content?format=json`); await pause(600);
+    let raw = resText(await call("get_page_text", {tabId:tab, max_chars:2000000}));
+    let text = "";
+    const j = resJson({content:[{type:"text", text:raw}]}), e = j && (j.entries || j.value);
+    if (Array.isArray(e)){
+      /* one paragraph per speaker turn, each stamped with its time; long turns get a fresh stamp every minute or so */
+      const out = []; let who = null, mark = -1e9;
+      e.forEach(x => { const s = (x.speakerDisplayName || "").replace(/^([^,]+),\s*(.+)$/, "$2 $1"), t = (x.text || "").trim(); if (!t) return;
+        const sec = offSec(x.startOffset), st = sec == null ? "" : `[${clock(sec)}] `;
+        if (s && s === who){ if (sec != null && sec - mark > 50){ out[out.length - 1] += " " + st + t; mark = sec; } else out[out.length - 1] += " " + t; }
+        else { out.push(st + (s ? s + ": " : "") + t); who = s; if (sec != null) mark = sec; } });
+      text = out.join("\n");
+    } else { const v = raw.indexOf("WEBVTT"); if (v >= 0) text = cleanCaptions(raw.slice(v)); }
+    if (!text || text.length < 40) throw new Error("the transcript came back empty");
+    src.text = text.slice(0, ARC_MAX_CHARS); src.name = src.label;
+    try { await go(src.url); } catch(e){}
+    arcSay(ARC_LINES.fetched(wordsLabel(src.text)), "");
+  } catch(e){
+    const code = e && e.code;
+    if (code === "server_not_connected" || code === "not_in_manifest" || code === "capability_disabled"){ src.error = "needs the Claude app"; arcSay(ARC_LINES.noBrowser, ""); }
+    else if (code === "not_granted" || code === "consent_required"){ src.error = "browser not allowed"; arcSay("You'd not let me use the browser. Fair enough. Drop the transcript file instead.", ""); }
+    else { src.error = "couldn't fetch"; arcSay("The shelves wouldn't give it up: " + String((e && e.message) || e).slice(0, 140) + ". Drop the transcript file instead, if you have it.", ""); }
+  } finally { src.fetching = false; arcRefresh(true); }
 }
 function addLink(raw){
   const u = String(raw || "").trim(); if (!/^https?:\/\//i.test(u)) return false;
@@ -4681,8 +5018,8 @@ function addLink(raw){
 const scriptCache = {};
 function loadScript(src){ return scriptCache[src] || (scriptCache[src] = new Promise((res, rej) => { const el = document.createElement("script"); el.src = src; el.onload = res; el.onerror = () => { delete scriptCache[src]; rej(new Error("Couldn't load a reader for that file type.")); }; document.head.appendChild(el); })); }
 function cleanCaptions(t){
-  return t.replace(/^WEBVTT.*$/m, "").replace(/^\d+\s*$/gm, "").replace(/^[\d:.,]+\s*-->\s*[\d:.,]+.*$/gm, "")
-    .replace(/<v\s+([^>]+)>/g, "$1: ").replace(/<\/?[^>]+>/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  return t.replace(/^WEBVTT.*$/m, "").replace(/^\d+\s*$/gm, "").replace(/^([\d:.,]+)\s*-->\s*[\d:.,]+.*$/gm, (m, a) => { const x = unclock(a.replace(",", ".")); return x == null ? "" : `[${clock(Math.floor(x))}]`; })
+    .replace(/<v\s+([^>]+)>/g, "$1: ").replace(/<\/?[^>]+>/g, "").replace(/(\[[\d:]+\])\s*\n+/g, "$1 ").replace(/\n{3,}/g, "\n\n").trim();
 }
 async function readFile(file){
   const name = file.name, ext = (name.split(".").pop() || "").toLowerCase();
@@ -4744,6 +5081,8 @@ $("arc-add").addEventListener("click", () => { if (addLink(arc.url.value)) arc.u
 arc.url.addEventListener("keydown", ev => { if (ev.key === "Enter"){ ev.preventDefault(); if (addLink(arc.url.value)) arc.url.value = ""; } });
 $("arc-file").addEventListener("change", ev => { addFiles([...ev.target.files]); ev.target.value = ""; });
 arc.text.addEventListener("input", () => arcRefresh());
+arc.url.addEventListener("input", () => arcRefresh(true));
+arc.url.addEventListener("paste", () => setTimeout(() => { if (addLink(arc.url.value)) arc.url.value = ""; }, 0));
 
 /* ---------- writing the article ---------- */
 const bytes = s => new TextEncoder().encode(s).length;
@@ -4760,8 +5099,9 @@ const ARTICLE_SPEC = `Return ONLY a JSON object with exactly these keys:
  "steps_kind": "to complete" if the source teaches how to do something, or "executed" if it records what was done,
  "steps": ["ordered steps, each one short imperative sentence"],
  "flow": {"nodes": [{"id": "n1", "label": "at most 6 words", "type": "start|step|decision|end"}], "edges": [{"from": "n1", "to": "n2", "label": "optional, e.g. Yes or No"}]},
- "gaps": ["anything important the source left unclear; empty if none"]}
-Rules: use only what the source says; never invent names, numbers or links. The flow is a process map of the steps with 5 to 14 nodes, exactly one start node, at least one end node, and decision nodes whose outgoing edges are labeled. Write for a Salesforce CRM operations team at the University of Kentucky.`;
+ "gaps": ["anything important the source left unclear; empty if none"],
+ "shots": [{"at": "a timestamp copied exactly from the source, like 10:25 or 1:02:03", "caption": "what is on screen at that moment, at most 14 words", "step": "number of the step it illustrates, or 0"}]}
+Rules: use only what the source says; never invent names, numbers or links. The flow is a process map of the steps with 5 to 14 nodes, exactly one start node, at least one end node, and decision nodes whose outgoing edges are labeled. Shots: only if the source carries timestamps (like [10:25], 10:25 or 0:10:25); pick 0 to 6 moments where someone is showing a screen, a setting, a record or a result that a reader would want to see, preferring the moments that illustrate the steps; use timestamps that appear in the source. Write for a Salesforce CRM operations team at the University of Kentucky.`;
 async function arcWrite(){
   if (arcBusy) return;
   const text = corpus(); if (!text.trim()) return;
@@ -4783,7 +5123,7 @@ async function arcWrite(){
       const notes = [];
       for (let k = 0; k < parts.length; k++){
         arcSay(`Reading part ${k + 1} of ${parts.length}… ${ARC_LINES.reading[k % ARC_LINES.reading.length]}`, "reading");
-        const r = await sample(`You are condensing part ${k + 1} of ${parts.length} of a long source (a meeting transcript or document) so an article can be written from it later. Keep every decision, fact, number, owner, system, date, warning and step, in order, as terse bullet notes. Drop small talk.\n\n${parts[k]}`, {signal:arcAbort.signal, cache:false});
+        const r = await sample(`You are condensing part ${k + 1} of ${parts.length} of a long source (a meeting transcript or document) so an article can be written from it later. Keep every decision, fact, number, owner, system, date, warning and step, in order, as terse bullet notes. Start each note with the nearest [timestamp] from the source when there is one, and keep notes about what was being shown on screen. Drop small talk.\n\n${parts[k]}`, {signal:arcAbort.signal, cache:false});
         notes.push(`--- Notes on part ${k + 1} ---\n${r.text}`);
       }
       source = notes.join("\n\n");
@@ -4793,6 +5133,11 @@ async function arcWrite(){
     const prompt = `You are the archivist of a team knowledge base. Turn the source below into a knowledge article.\n${focus ? `The reader especially wants: ${focus}\n` : ""}${links.length ? `The source came from: ${links.join(" , ")}\n` : ""}\n${ARTICLE_SPEC}\n\nSOURCE:\n${source}`;
     const art = await sample.json(prompt, {signal:arcAbort.signal, cache:false});
     arcArticle = normalizeArticle(art, links);
+    arcArticle.shots.sort((x, y) => x.sec - y.sec);
+    const vid = (arcSources.find(x => x.video) || {}).video || videoFromLink();
+    if (vid) arcArticle.shots.forEach(sh => { sh.watch = streamAt(vid, sh.sec); });
+    if (arcArticle.shots.length && arcShotsOn() && arcSources.some(x => x.video)) await captureShots(arcArticle);
+    arcArticle.shots = arcArticle.shots.filter(x => x.blob || x.watch);
     showArticle(arcArticle);
     paperSound("unroll");
     arcSay(ARC_LINES.done, "done");
@@ -4803,9 +5148,26 @@ async function arcWrite(){
       code === "cancelled" ? "Very well, I'll stop." :
       code === "invalid_json" ? "I botched the lettering on that one. Ask me again." :
       "Something went wrong in the writing. Try me again.", "");
-  }finally{ arcBusy = false; arcAbort = null; arcRefresh(); }
+  }finally{ arcBusy = false; arcAbort = null; arcRefresh(true); }
 }
-arc.start.addEventListener("click", arcWrite);
+/* the button gathers first: takes a link left in the box, fetches any SharePoint transcripts not yet read, then writes */
+async function arcGo(){
+  if (arcBusy) return;
+  if (addLink(arc.url.value)) arc.url.value = "";
+  const want = arcShotsOn() || !corpusChars();
+  if (want) for (const x of arcSources.filter(x => x.kind === "link" && !x.text && isSharePoint(x.url))) await fetchSigned(x);
+  if (!corpusChars()){
+    if (!arcSources.some(x => x.error)) arcSay(ARC_LINES.nothing, "");
+    arc.text.focus(); return;
+  }
+  arcWrite();
+}
+arc.start.addEventListener("click", arcGo);
+/* screenshots need the Claude desktop app's browser; without them he works anywhere from the words you give him */
+const arcShotsBox = $("arc-shots-on");
+function arcShotsOn(){ return !!(arcShotsBox && arcShotsBox.checked); }
+try { if (arcShotsBox) arcShotsBox.checked = localStorage.getItem("settlers-arc-shots") === "1"; } catch(e){}
+if (arcShotsBox) arcShotsBox.addEventListener("change", () => { try { localStorage.setItem("settlers-arc-shots", arcShotsBox.checked ? "1" : "0"); } catch(e){} arcRefresh(); });
 function normalizeArticle(a, links){
   const arr = v => (Array.isArray(v) ? v : []).map(x => String(x || "").trim()).filter(Boolean);
   const flow = a && a.flow && Array.isArray(a.flow.nodes) ? a.flow : {nodes:[], edges:[]};
@@ -4813,7 +5175,7 @@ function normalizeArticle(a, links){
   const nodes = flow.nodes.map((n, i) => { let id = String(n.id || "n" + (i + 1)).replace(/[^\w]/g, "") || "n" + (i + 1); if (/^\d/.test(id)) id = "n" + id; while (ids.has(id)) id += "x"; ids.add(id); return {id, label:String(n.label || "").replace(/["\[\]{}|()]/g, "'").slice(0, 60) || id, type: ["start", "step", "decision", "end"].includes(n.type) ? n.type : "step", _orig:String(n.id)}; });
   const map = new Map(nodes.map(n => [n._orig, n.id]));
   const edges = (Array.isArray(flow.edges) ? flow.edges : []).map(e => ({from:map.get(String(e.from)), to:map.get(String(e.to)), label:e.label ? String(e.label).replace(/[|"]/g, "").slice(0, 24) : null})).filter(e => e.from && e.to);
-  return {title:String((a && a.title) || "Untitled knowledge").slice(0, 120), summary:String((a && a.summary) || ""), need:arr(a && a.need_to_know), points:arr(a && a.key_points), kind:(a && a.steps_kind) === "executed" ? "executed" : "to complete", steps:arr(a && a.steps), gaps:arr(a && a.gaps), flow:{nodes, edges}, links, files:arcSources.filter(x => x.kind === "file" && x.text).map(x => x.name)};
+  return {title:String((a && a.title) || "Untitled knowledge").slice(0, 120), summary:String((a && a.summary) || ""), need:arr(a && a.need_to_know), points:arr(a && a.key_points), kind:(a && a.steps_kind) === "executed" ? "executed" : "to complete", steps:arr(a && a.steps), gaps:arr(a && a.gaps), flow:{nodes, edges}, links, shots:(Array.isArray(a && a.shots) ? a.shots : []).map(x => ({sec:unclock(x && x.at), caption:String((x && x.caption) || "").slice(0, 140), step:+(x && x.step) || 0})).filter(x => x.sec != null).slice(0, 6), files:arcSources.filter(x => x.kind === "file" && x.text).map(x => x.name)};
 }
 function mermaid(flow){
   const lines = ["flowchart TD"];
@@ -4829,6 +5191,7 @@ function articleHtml(a){
   if (a.need.length) h += `<h2>What you need to know</h2><ul>${li(a.need)}</ul>`;
   if (a.points.length) h += `<h2>Key points</h2><ul>${li(a.points)}</ul>`;
   if (a.steps.length) h += `<h2>Steps ${a.kind === "executed" ? "executed" : "to complete"}</h2><ol>${li(a.steps)}</ol>`;
+  if (a.shots.length) h += `<h2>Screens from the recording</h2><ul>${a.shots.map(x => `<li><strong>${clock(x.sec)}</strong>${x.step ? ` (step ${x.step})` : ""} ${xe(x.caption)}${x.asset ? ` <a href="${xe(x.asset)}">Screenshot at ${clock(x.sec)}</a>` : ""}${x.watch ? ` <a href="${xe(x.watch)}">Watch from ${clock(x.sec)}</a>` : ""}</li>`).join("")}</ul>`;
   if (a.flow.nodes.length) h += `<h2>Process map</h2><pre>${xe(mermaid(a.flow))}</pre>`;
   if (a.gaps.length) h += `<h2>Still unclear</h2><ul>${li(a.gaps)}</ul>`;
   if (a.links.length || a.files.length) h += `<h2>Sources</h2><ul>${a.links.map(u => `<li><a href="${xe(u)}">${xe(linkLabel(u))}</a></li>`).join("")}${a.files.map(f => `<li>${xe(f)}</li>`).join("")}</ul>`;
@@ -4843,6 +5206,17 @@ function showArticle(a){
   card.appendChild(t);
   const body = richBody(articleHtml(a).replace(/<hr\/>.*$/, "</body>"));
   if (body) card.appendChild(body);
+  const pics = a.shots.filter(x => x.preview);
+  if (pics.length){
+    const g = mk("div", "arc-shots");
+    pics.forEach(x => { const f = mk("figure", "arc-shot"); const i = mk("img"); i.src = x.preview; i.alt = x.caption; i.loading = "lazy";
+      const rm = mk("button", "arc-x", "×"); rm.type = "button"; rm.title = "Leave this one out";
+      rm.addEventListener("click", () => { a.shots.splice(a.shots.indexOf(x), 1); f.remove(); });
+      f.append(i, mk("figcaption", null, `${clock(x.sec)} · ${x.caption}`), rm); g.appendChild(f); });
+    const hd = [...card.querySelectorAll(".ath-rich h4")].find(h => /screens from/i.test(h.textContent));
+    const after = hd && hd.nextElementSibling;
+    if (after) after.after(g); else card.insertBefore(g, card.querySelector(".ath-acts"));
+  }
   const acts = mk("div", "ath-acts");
   const seal = mk("button", "ath-btn", "Seal it onto the Knowledge shelf"); seal.type = "button";
   const again = mk("button", "ath-btn ghost", "Ask him to write it again"); again.type = "button";
@@ -4863,7 +5237,14 @@ async function arcFile(a, btn){
   if (!mcp){ msg.textContent = "Asana isn't connected here, so I can't file it."; return; }
   btn.disabled = true; msg.textContent = "Sealing it…";
   try{
-    const res = payloadOf(await mcp.callTool(SERVER, "create_tasks", {default_assignee:"me", tasks:[{name:a.title.trim() || "Untitled knowledge", html_notes:articleHtml(a), assignee:"me", assignee_section:KNOWLEDGE_SECTION}]}, {cache:false}));
+    const toUp = a.shots.filter(x => x.blob && !x.asset);
+    if (toUp.length){
+      const assets = await claude.use("assets").catch(() => null);
+      if (assets) for (const x of toUp){ msg.textContent = `Pressing the pictures into the page… ${toUp.indexOf(x) + 1} of ${toUp.length}`;
+        try { const up = await assets.upload(new File([x.blob], `screen-${clock(x.sec).replace(/:/g, "-")}.jpg`, {type:"image/jpeg"})); x.asset = new URL(up.url, location.href).href; } catch(e){} }
+      msg.textContent = "Sealing it…";
+    }
+    const res = payloadOf(await mcp.callTool(SERVER, "create_tasks", {default_assignee:"me", tasks:[{name:a.title.trim() || "Untitled knowledge", html_notes:articleHtml(a), assignee:"me", assignee_section:KNOWLEDGE_SECTION, completed:true}]}, {cache:false}));
     if (res && Array.isArray(res.failed) && res.failed.length && !(res.succeeded || []).length) throw {code:"tool_error", message:JSON.stringify(res.failed[0].errors || res.failed[0]).slice(0, 200)};
     const gid = findGid(res && (res.succeeded || res.data || res));
     msg.textContent = "";
