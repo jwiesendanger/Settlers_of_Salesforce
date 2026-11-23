@@ -50,7 +50,7 @@ const TOOLS = {
     }});
   },
   async add_comment({task_id, text}){ return asana("POST", `/tasks/${task_id}/stories`, {body: {text}}); },
-  async get_tasks(i){ return asana("GET", `/sections/${i.section}/tasks`, {query: {opt_fields: i.opt_fields, completed_since: i.completed_since, limit: i.limit}}); }
+  async get_tasks(i){ return asana("GET", `/sections/${i.section}/tasks`, {query: {opt_fields: i.opt_fields, completed_since: i.completed_since, limit: i.limit, offset: i.offset}}); }
 };
 const mcp = {
   async callTool(server, tool, input){

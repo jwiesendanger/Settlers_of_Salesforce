@@ -1001,7 +1001,7 @@ const TOOLS = {
     }});
   },
   async add_comment({task_id, text}){ return asana("POST", `/tasks/${task_id}/stories`, {body: {text}}); },
-  async get_tasks(i){ return asana("GET", `/sections/${i.section}/tasks`, {query: {opt_fields: i.opt_fields, completed_since: i.completed_since, limit: i.limit}}); }
+  async get_tasks(i){ return asana("GET", `/sections/${i.section}/tasks`, {query: {opt_fields: i.opt_fields, completed_since: i.completed_since, limit: i.limit, offset: i.offset}}); }
 };
 const mcp = {
   async callTool(server, tool, input){
@@ -4846,21 +4846,26 @@ async function load(fresh){
     }
     say("Lighting the lamps…");
     const opts = {cache: fresh ? {refresh:true, staleTime:0, gcTime:600000} : {staleTime:120000, gcTime:600000}};
-    /* the connector wants a full timestamp here ("now" is refused); if it still objects, ask for everything and drop finished ones ourselves */
+    /* only finished work is shelved: ask for every task in the section (no completed_since), then keep the completed ones */
     const ask = input => mcp.callTool(SERVER, "get_tasks", input, opts).then(payloadOf);
-    const base = {section: KNOWLEDGE_SECTION, opt_fields: FIELDS, limit: 100};
-    let res;
-    try{ res = await ask(Object.assign({completed_since: new Date().toISOString()}, base)); }
-    catch(e){
-      if (e && e.retryable){ await new Promise(r => setTimeout(r, 1200)); res = await ask(Object.assign({completed_since: new Date().toISOString()}, base)); }
-      else if (e && (e.code === "tool_error" || e.code === "bad_request")) res = await ask(base);
-      else throw e;
+    const base = {section: KNOWLEDGE_SECTION, opt_fields: FIELDS + ",completed_at", limit: 100};
+    const all = [];
+    for (let page = 0, offset = null; page < 10; page++){
+      let res;
+      const input = offset ? Object.assign({offset}, base) : base;
+      try{ res = await ask(input); }
+      catch(e){ if (e && e.retryable){ await new Promise(r => setTimeout(r, 1200)); res = await ask(input); } else throw e; }
+      all.push(...((res && res.data) || []));
+      offset = res && res.next_page && res.next_page.offset;
+      if (!offset) break;
     }
-    const list = ((res && res.data) || []).filter(t => !t.completed)
+    const list = all.filter(t => t.completed)
       .map(t => ({gid:t.gid, name:t.name || "Untitled", notes:t.notes || "", html_notes:t.html_notes || "", due_on:t.due_on || null, created_at:t.created_at || null, modified_at:t.modified_at || null, permalink_url:t.permalink_url || ""}));
     scrolls = list; loaded = true; saveCache(list); renderShelf(); if (qBox && qBox.value.trim()) runSearch();
     status.dataset.empty = "";
-    say(list.length ? "Hold the lamp near a scroll, then draw it from its niche. Or ask the Librarian to choose." : "The shelves are bare. Nothing waits in your Knowledge section.");
+    const waiting = all.length - list.length;
+    say(list.length ? "Hold the lamp near a scroll, then draw it from its niche. Or ask the Librarian to choose." + (waiting ? ` (${waiting} unfinished task${waiting === 1 ? " waits" : "s wait"} in Asana and will be shelved once completed.)` : "")
+                    : (waiting ? `No finished scrolls yet. ${waiting} Knowledge task${waiting === 1 ? " is" : "s are"} still open; mark one complete in Asana to shelve it.` : "The shelves are bare. Nothing waits in your Knowledge section."));
   }catch(err){
     const code = err && err.code;
     if (code === "server_not_connected" || code === "not_granted" || code === "capability_disabled") say("The crypt is sealed. Asana isn't connected here.", "warn");
@@ -5420,7 +5425,7 @@ async function arcFile(a, btn){
         try { const up = await assets.upload(new File([x.blob], `screen-${clock(x.sec).replace(/:/g, "-")}.jpg`, {type:"image/jpeg"})); x.asset = new URL(up.url, location.href).href; } catch(e){} }
       msg.textContent = "Sealing it…";
     }
-    const res = payloadOf(await mcp.callTool(SERVER, "create_tasks", {default_assignee:"me", tasks:[{name:a.title.trim() || "Untitled knowledge", html_notes:articleHtml(a), assignee:"me", assignee_section:KNOWLEDGE_SECTION}]}, {cache:false}));
+    const res = payloadOf(await mcp.callTool(SERVER, "create_tasks", {default_assignee:"me", tasks:[{name:a.title.trim() || "Untitled knowledge", html_notes:articleHtml(a), assignee:"me", assignee_section:KNOWLEDGE_SECTION, completed:true}]}, {cache:false}));
     if (res && Array.isArray(res.failed) && res.failed.length && !(res.succeeded || []).length) throw {code:"tool_error", message:JSON.stringify(res.failed[0].errors || res.failed[0]).slice(0, 200)};
     const gid = findGid(res && (res.succeeded || res.data || res));
     msg.textContent = "";
